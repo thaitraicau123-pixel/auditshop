@@ -6,6 +6,8 @@ import AuditDashboard from './components/AuditDashboard';
 import DisputeTable from './components/DisputeTable';
 import PaymentModal from './components/PaymentModal';
 import DisputeTemplateModal from './components/DisputeTemplateModal';
+import EmergencyAlertModal from './components/EmergencyAlertModal';
+import VictoryCelebrationModal from './components/VictoryCelebrationModal';
 import RoiCalculator from './components/RoiCalculator';
 import Testimonials from './components/Testimonials';
 import Footer from './components/Footer';
@@ -19,6 +21,10 @@ export default function App() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   
+  // Urgent & Radiant Pop-up Modals
+  const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState(false);
+  const [isVictoryModalOpen, setIsVictoryModalOpen] = useState(false);
+
   // AI State
   const [aiDiagnosis, setAiDiagnosis] = useState(null);
   const [isLoadingAi, setIsLoadingAi] = useState(false);
@@ -33,7 +39,6 @@ export default function App() {
 
       // Nếu Gemini 3.8 gắn cờ đơn hàng cụ thể, hợp nhất để kết quả chuẩn xác tuyệt đối
       if (aiResult.flaggedOrders && aiResult.flaggedOrders.length > 0) {
-        // Cập nhật thông tin chi tiết từ AI vào các đơn bất thường
         const aiMap = new Map(aiResult.flaggedOrders.map(f => [f.id, f]));
         baseResult.anomalies = baseResult.anomalies.map(item => {
           if (aiMap.has(item.id)) {
@@ -56,6 +61,13 @@ export default function App() {
     setActiveFilter('ALL');
     setIsUnlocked(false); // Reset lock state for new file
 
+    // 3. Mở pop-up tương ứng
+    if (baseResult.anomalies.length > 0) {
+      setIsEmergencyModalOpen(true);
+    } else {
+      setIsVictoryModalOpen(true);
+    }
+
     // Cuộn mượt xuống phần kết quả
     setTimeout(() => {
       window.scrollTo({ top: 400, behavior: 'smooth' });
@@ -67,6 +79,8 @@ export default function App() {
     setFileName('');
     setIsUnlocked(false);
     setAiDiagnosis(null);
+    setIsEmergencyModalOpen(false);
+    setIsVictoryModalOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -113,6 +127,7 @@ export default function App() {
               isLoadingAi={isLoadingAi}
             />
 
+            {/* Chỉ hiện DisputeTable khi có đơn lỗi */}
             {auditResult.anomalies.length > 0 && (
               <DisputeTable 
                 anomalies={displayedAnomalies}
@@ -133,6 +148,31 @@ export default function App() {
       </main>
 
       <Footer />
+
+      {/* 🚨 CỬA SỔ BÁO ĐỘNG ĐỎ KHI PHÁT HIỆN THẤT THOÁT TIỀN */}
+      <EmergencyAlertModal 
+        isOpen={isEmergencyModalOpen}
+        onClose={() => setIsEmergencyModalOpen(false)}
+        totalLeakage={auditResult?.totalLeakage || 0}
+        anomalyCount={auditResult?.anomalyCount || 0}
+        fileName={fileName}
+        breakdown={auditResult?.breakdown}
+        onGoToDispute={() => {
+          setIsEmergencyModalOpen(false);
+          const el = document.getElementById('dispute-section');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+          else window.scrollTo({ top: 500, behavior: 'smooth' });
+        }}
+      />
+
+      {/* 🌟 CỬA SỔ VINH DANH CHIẾN THẮNG KHI 100% KHÔNG MẤT TIỀN */}
+      <VictoryCelebrationModal 
+        isOpen={isVictoryModalOpen}
+        onClose={() => setIsVictoryModalOpen(false)}
+        totalOrders={auditResult?.totalOrders || 0}
+        fileName={fileName}
+        onReset={handleReset}
+      />
 
       {/* Payment & VietQR Checkout Modal */}
       <PaymentModal 

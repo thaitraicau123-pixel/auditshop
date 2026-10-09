@@ -16,7 +16,7 @@ export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onO
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
+    <div id="dispute-section" className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
       <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
         {/* Table header & actions bar */}
         <div className="p-4 sm:p-6 border-b border-slate-700/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-800/50">
