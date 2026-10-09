@@ -144,7 +144,7 @@ export default function AuditDashboard({
       {isLoadingAi && (
         <div className="mb-6 p-4 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center gap-3 text-indigo-900 text-xs sm:text-sm">
           <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
-          <span>🤖 AI Gemini 3.8 đang tổng hợp báo cáo chẩn đoán nguyên nhân thất thoát...</span>
+          <span>🤖 Hệ thống AI đang tổng hợp báo cáo chẩn đoán nguyên nhân thất thoát...</span>
         </div>
       )}
 
@@ -155,7 +155,7 @@ export default function AuditDashboard({
               <Sparkles className="w-4 h-4" />
             </div>
             <h3 className="text-xs sm:text-sm font-extrabold text-indigo-950 uppercase tracking-wide">
-              Báo Cáo Chẩn Đoán Chuyên Gia Logistics (Google Gemini 3.8 Flash)
+              Báo Cáo Chẩn Đoán Chuyên Gia Logistics (Hệ Thống AI Đối Soát Độc Quyền)
             </h3>
           </div>
           <div className="text-xs sm:text-sm text-slate-700 whitespace-pre-wrap leading-relaxed font-normal">

@@ -66,7 +66,7 @@ export async function aiDeepAuditOrders(orders, apiKey = DEFAULT_GEMINI_API_KEY)
     trang_thai: o.status
   }));
 
-  const prompt = `Bạn là Giám Đốc Kiểm Toán Logistics TMĐT Việt Nam chạy trên nền tảng Gemini 3.8 Flash.
+  const prompt = `Bạn là Giám Đốc Kiểm Toán Logistics TMĐT Việt Nam của Hệ thống SoatDon.vn.
 Dưới đây là danh sách các đơn hàng từ bảng kê đối soát của một shop online:
 ${JSON.stringify(sampleList, null, 2)}
 
@@ -79,7 +79,7 @@ Trả về kết quả DUY NHẤT dưới dạng JSON theo định dạng chuẩ
 {
   "carrierDetected": "Tên đơn vị vận chuyển chính (GHTK/GHN/Shopee/TikTok/Viettel)",
   "totalAnalyzed": ${sampleList.length},
-  "summaryDiagnosis": "Đoạn văn ngắn 3-4 câu nhận định của AI Gemini 3.8 về tình trạng thất thoát của shop, lỗi do đâu (băng chuyền cân lố hay giam đơn hoàn) và lời khuyên xử lý",
+  "summaryDiagnosis": "Đoạn văn ngắn 3-4 câu nhận định của Hệ thống AI Soát Đơn về tình trạng thất thoát của shop, lỗi do đâu (băng chuyền cân lố hay giam đơn hoàn) và lời khuyên xử lý",
   "flaggedOrders": [
     {
       "id": "Mã đơn",
@@ -91,7 +91,7 @@ Trả về kết quả DUY NHẤT dưới dạng JSON theo định dạng chuẩ
       "cod": 320000,
       "issueType": "WEIGHT_INFLATION",
       "leakAmount": 16000,
-      "issueDetail": "Chi tiết phân tích lỗi của AI Gemini 3.8"
+      "issueDetail": "Chi tiết phân tích lỗi của AI Soát Đơn"
     }
   ]
 }`;
@@ -102,19 +102,19 @@ Trả về kết quả DUY NHẤT dưới dạng JSON theo định dạng chuẩ
     const parsed = JSON.parse(cleanJson);
     return parsed;
   } catch (err) {
-    console.warn("Gemini 3.8 deep audit fallback:", err);
+    console.warn("AI deep audit fallback:", err);
     return null;
   }
 }
 
 /**
- * AI Gemini 3.8 tự động soạn thư khiếu nại đòi tiền đanh thép
+ * AI tự động soạn thư khiếu nại đòi tiền đanh thép
  */
 export async function aiWriteDisputeLetter38(carrier, anomalies, apiKey = DEFAULT_GEMINI_API_KEY) {
   const totalAmount = anomalies.reduce((sum, a) => sum + a.leakAmount, 0);
   const sampleCodes = anomalies.slice(0, 5).map(a => a.id).join(', ');
 
-  const prompt = `Bạn là Trợ lý Pháp lý & Kiểm toán chạy trên Gemini 3.8 Flash.
+  const prompt = `Bạn là Trợ lý Pháp lý & Kiểm toán độc quyền của Hệ thống SoatDon.vn.
 Hãy soạn bức thư khiếu nại chính thức gửi Ban Quản Lý và Trưởng Bưu Cục ${carrier}.
 - Số lượng đơn bị phát hiện sai phạm: ${anomalies.length} đơn.
 - Tổng số tiền đề nghị hoàn trả ngay: ${totalAmount.toLocaleString('vi-VN')} VNĐ.

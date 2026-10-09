@@ -14,10 +14,10 @@ export default function UploadZone({ onAuditComplete }) {
   const runAiAuditFlow = async (orders, filename) => {
     setIsScanning(true);
     setError(null);
-    setScanStep("🤖 Đang đọc cấu trúc bảng kê & nạp vào Google Gemini 3.8 Flash...");
+    setScanStep("🤖 Đang đọc cấu trúc bảng kê & nạp vào mô hình AI Kiểm Toán...");
 
     try {
-      setScanStep("🧠 Gemini 3.8 Flash đang thẩm định từng dòng cước & cân nặng...");
+      setScanStep("🧠 AI đang thẩm định đối chiếu từng dòng cước & cân nặng...");
       const aiResultPromise = aiDeepAuditOrders(orders);
       
       await new Promise(r => setTimeout(r, 600));
@@ -25,7 +25,7 @@ export default function UploadZone({ onAuditComplete }) {
       
       const aiResult = await aiResultPromise;
 
-      setScanStep("✨ Gemini 3.8 hoàn tất phân tích! Đang tổng hợp báo cáo...");
+      setScanStep("✨ AI hoàn tất phân tích! Đang tổng hợp báo cáo chi tiết...");
       await new Promise(r => setTimeout(r, 400));
 
       setIsScanning(false);
@@ -80,11 +80,11 @@ export default function UploadZone({ onAuditComplete }) {
             <div>
               <div className="text-xs sm:text-sm font-extrabold text-slate-900 flex items-center gap-1.5">
                 <span>Hệ thống Kiểm toán 100% bằng</span>
-                <span className="text-indigo-600 font-black">Google Gemini 3.8 Flash</span>
+                <span className="text-indigo-600 font-black">AI Đối Soát Độc Quyền</span>
                 <span className="text-[10px] uppercase font-bold px-1.5 py-0.2 rounded bg-indigo-200/60 text-indigo-800">Sẵn Sàng</span>
               </div>
               <p className="text-[11px] text-slate-500">
-                Tự động kích hoạt sẵn API Key — Bạn chỉ việc tải file lên và nhận kết quả phân tích trong vài giây.
+                Tự động nhận diện và quét sâu — Bạn chỉ việc tải file lên và nhận kết quả phân tích trong vài giây.
               </p>
             </div>
           </div>
@@ -103,7 +103,7 @@ export default function UploadZone({ onAuditComplete }) {
                 <Sparkles className="w-8 h-8 text-indigo-600 animate-pulse" />
               </div>
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Gemini 3.8 Flash Đang Phân Tích...</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Hệ Thống AI Đang Phân Tích...</h3>
             <p className="text-sm font-semibold text-indigo-600 font-mono animate-pulse">{scanStep}</p>
             <div className="w-64 h-2 bg-slate-100 rounded-full mx-auto mt-6 overflow-hidden">
               <div className="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 animate-pulse w-4/5 rounded-full" />
@@ -163,7 +163,7 @@ export default function UploadZone({ onAuditComplete }) {
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm shadow-md shadow-blue-500/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
               >
                 <PlayCircle className="w-5 h-5 text-indigo-100" />
-                <span>Thử ngay bằng Gemini 3.8 (Dữ liệu mẫu 130 đơn)</span>
+                <span>Quét thử ngay bằng AI (Dữ liệu mẫu 130 đơn)</span>
               </button>
 
               <button

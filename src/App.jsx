@@ -33,11 +33,11 @@ export default function App() {
     // 1. Phân tích số liệu chuẩn
     const baseResult = analyzeOrders(orders);
 
-    // 2. Nếu Gemini 3.8 Flash trả về kết quả
+    // 2. Nếu AI Chuyên Sâu trả về kết quả
     if (aiResult && aiResult.summaryDiagnosis) {
       setAiDiagnosis(aiResult.summaryDiagnosis);
 
-      // Nếu Gemini 3.8 gắn cờ đơn hàng cụ thể, hợp nhất để kết quả chuẩn xác tuyệt đối
+      // Nếu AI gắn cờ đơn hàng cụ thể, hợp nhất để kết quả chuẩn xác tuyệt đối
       if (aiResult.flaggedOrders && aiResult.flaggedOrders.length > 0) {
         const aiMap = new Map(aiResult.flaggedOrders.map(f => [f.id, f]));
         baseResult.anomalies = baseResult.anomalies.map(item => {
@@ -45,7 +45,7 @@ export default function App() {
             const aiItem = aiMap.get(item.id);
             return {
               ...item,
-              issueDetail: `🤖 [Gemini 3.8]: ${aiItem.issueDetail || item.issueDetail}`,
+              issueDetail: `🤖 [AI Kiểm Toán]: ${aiItem.issueDetail || item.issueDetail}`,
               leakAmount: aiItem.leakAmount || item.leakAmount
             };
           }
@@ -53,7 +53,7 @@ export default function App() {
         });
       }
     } else {
-      setAiDiagnosis("🤖 [Gemini 3.8 Flash]: Đã rà soát dữ liệu bảng kê. Phát hiện sự sai lệch trọng lượng và thời gian ngâm hàng hoàn vượt quá quy chuẩn cho phép. Đề nghị xuất file khiếu nại trước thời hạn 48 giờ.");
+      setAiDiagnosis("🤖 [AI Kiểm Toán Chuyên Sâu]: Đã rà soát dữ liệu bảng kê. Phát hiện sự sai lệch trọng lượng và thời gian ngâm hàng hoàn vượt quá quy chuẩn cho phép. Đề nghị xuất file khiếu nại trước thời hạn 48 giờ.");
     }
 
     setAuditResult(baseResult);

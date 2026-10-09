@@ -16,7 +16,7 @@ export default function Navbar({ onOpenPricing, onScrollToCalculator }) {
               </span>
               <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200/80 flex items-center gap-1">
                 <Sparkles className="w-3 h-3 text-indigo-600" />
-                <span>Gemini 3.8 AI Chuẩn Hóa</span>
+                <span>AI Kiểm Toán Độc Quyền</span>
               </span>
             </div>
             <p className="text-xs text-slate-500 hidden sm:block">Kiểm toán vận chuyển & COD thông minh bằng AI</p>

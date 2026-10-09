@@ -96,7 +96,7 @@ export default function VictoryCelebrationModal({ isOpen, onClose, totalOrders, 
         <div className="bg-gradient-to-br from-amber-950/40 via-slate-900 to-emerald-950/40 border-2 border-amber-400/40 rounded-2xl p-5 mb-8 text-left space-y-3 shadow-inner">
           <div className="text-xs font-bold text-amber-300 uppercase flex items-center gap-1.5 border-b border-amber-400/20 pb-2">
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>KẾT QUẢ THẨM ĐỊNH TỪ GEMINI 3.8 FLASH:</span>
+            <span>KẾT QUẢ THẨM ĐỊNH TỪ HỆ THỐNG AI ĐỐI SOÁT:</span>
           </div>
 
           <div className="flex items-center gap-2.5 text-xs text-slate-200">
