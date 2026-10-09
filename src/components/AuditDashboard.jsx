@@ -1,5 +1,9 @@
-import React from 'react';
-import { AlertTriangle, Scale, PackageX, Receipt, Banknote, ShieldAlert, RotateCcw, FileText, CheckCircle2, Sparkles, Bot, Loader2 } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { 
+  AlertTriangle, Scale, PackageX, Receipt, Banknote, ShieldAlert, 
+  RotateCcw, FileText, CheckCircle2, Sparkles, Bot, Loader2, Trophy, PartyPopper 
+} from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 export default function AuditDashboard({ 
   auditResult, 
@@ -16,6 +20,103 @@ export default function AuditDashboard({
 
   const { totalOrders, anomalyCount, totalLeakage, breakdown } = auditResult;
   const anomalyRate = ((anomalyCount / totalOrders) * 100).toFixed(1);
+
+  // Hiệu ứng bắn pháo hoa khi không có lỗi nào
+  useEffect(() => {
+    if (anomalyCount === 0) {
+      const end = Date.now() + 3500;
+      const colors = ['#10B981', '#34D399', '#F59E0B', '#60A5FA', '#A78BFA'];
+
+      (function frame() {
+        confetti({
+          particleCount: 5,
+          angle: 60,
+          spread: 60,
+          origin: { x: 0 },
+          colors: colors
+        });
+        confetti({
+          particleCount: 5,
+          angle: 120,
+          spread: 60,
+          origin: { x: 1 },
+          colors: colors
+        });
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      }());
+    }
+  }, [anomalyCount]);
+
+  // MÀN HÌNH CHÚC MỪNG NẾU KHÔNG CÓ LỖI NÀO
+  if (anomalyCount === 0) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 mb-16">
+        <div className="bg-gradient-to-b from-emerald-950/80 via-slate-900 to-slate-900 border-2 border-emerald-500/50 rounded-3xl p-8 sm:p-12 text-center shadow-2xl glow-emerald relative overflow-hidden">
+          {/* Glow backdrop */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Trophy Icon */}
+          <div className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-emerald-500/30 transform hover:scale-110 transition-transform">
+            <Trophy className="w-12 h-12 text-white animate-bounce" />
+          </div>
+
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs sm:text-sm font-bold uppercase tracking-wider mb-3">
+            <PartyPopper className="w-4 h-4 text-emerald-400" />
+            <span>Bảng kê đối soát hoàn hảo 100%</span>
+          </div>
+
+          <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight mb-3">
+            🎉 CHÚC MỪNG SHOP! KHÔNG PHÁT HIỆN THẤT THOÁT NÀO
+          </h2>
+
+          <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto mb-8 leading-relaxed">
+            Toàn bộ <b>{totalOrders} đơn hàng</b> trong file đối soát <b className="text-emerald-400 font-mono">{fileName}</b> đều được bên vận chuyển tính chuẩn xác: đúng nấc cân nặng, không bị tính phụ phí oan và không có đơn hoàn nào bị giam quá hạn!
+          </p>
+
+          {/* 3 Checkpoints */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto mb-8 text-left">
+            <div className="p-3.5 rounded-xl bg-slate-800/80 border border-emerald-500/30 flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+              <div>
+                <div className="text-xs font-bold text-white">Khối lượng chuẩn 100%</div>
+                <div className="text-[11px] text-slate-400">Không có đơn nào bị kê khống nấc cân</div>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-800/80 border border-emerald-500/30 flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+              <div>
+                <div className="text-xs font-bold text-white">0 đơn hoàn ngâm kho</div>
+                <div className="text-[11px] text-slate-400">Tất cả đơn chuyển hoàn đều đúng tiến độ</div>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-800/80 border border-emerald-500/30 flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+              <div>
+                <div className="text-xs font-bold text-white">Cước & COD đối soát đủ</div>
+                <div className="text-[11px] text-slate-400">Không phát sinh phụ phí bất thường</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={onReset}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-sm shadow-lg shadow-emerald-500/25 transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Quét bảng kê kỳ khác</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-8">
@@ -49,7 +150,7 @@ export default function AuditDashboard({
       {isLoadingAi && (
         <div className="mb-6 p-4 rounded-2xl bg-purple-950/40 border border-purple-500/30 flex items-center gap-3 text-purple-300 text-xs sm:text-sm">
           <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
-          <span>🤖 AI Gemini đang tổng hợp báo cáo chẩn đoán nguyên nhân thất thoát...</span>
+          <span>🤖 AI Gemini 3.8 đang tổng hợp báo cáo chẩn đoán nguyên nhân thất thoát...</span>
         </div>
       )}
 
@@ -60,7 +161,7 @@ export default function AuditDashboard({
               <Sparkles className="w-4 h-4" />
             </div>
             <h3 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
-              Báo Cáo Chẩn Đoán Của Chuyên Gia Logistics (Google Gemini AI)
+              Báo Cáo Chẩn Đoán Của Chuyên Gia Logistics (Google Gemini 3.8 Flash)
             </h3>
           </div>
           <div className="text-xs sm:text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">

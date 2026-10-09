@@ -113,13 +113,15 @@ export default function App() {
               isLoadingAi={isLoadingAi}
             />
 
-            <DisputeTable 
-              anomalies={displayedAnomalies}
-              isUnlocked={isUnlocked}
-              onUnlockClick={() => setIsPaymentModalOpen(true)}
-              onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
-              shopName={fileName.replace(/\.[^/.]+$/, "")}
-            />
+            {auditResult.anomalies.length > 0 && (
+              <DisputeTable 
+                anomalies={displayedAnomalies}
+                isUnlocked={isUnlocked}
+                onUnlockClick={() => setIsPaymentModalOpen(true)}
+                onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
+                shopName={fileName.replace(/\.[^/.]+$/, "")}
+              />
+            )}
           </>
         )}
 
