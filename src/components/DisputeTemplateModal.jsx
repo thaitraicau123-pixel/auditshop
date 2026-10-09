@@ -1,33 +1,17 @@
 import React, { useState } from 'react';
-import { X, Copy, Check, FileCheck, Send, Info, ExternalLink, Sparkles, Loader2, Bot } from 'lucide-react';
-import { generateDisputeTemplate } from '../utils/exportDispute';
-import { aiWriteDisputeLetter } from '../utils/aiAuditor';
+import { X, Copy, Check, FileCheck, Mail, Send, Info, Sparkles, Bot, Loader2 } from 'lucide-react';
+import { DISPUTE_TEMPLATES } from '../utils/exportDispute';
+import { aiGenerateDisputeScript } from '../utils/aiAuditor';
 
-export default function DisputeTemplateModal({ isOpen, onClose, anomalies, apiKey }) {
+export default function DisputeTemplateModal({ isOpen, onClose, anomalies }) {
   if (!isOpen) return null;
 
-  const [carrier, setCarrier] = useState(anomalies[0]?.carrier || 'GHTK');
+  const [carrier, setCarrier] = useState('GHTK');
   const [copied, setCopied] = useState(false);
-  const [customText, setCustomText] = useState(null);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [customText, setCustomText] = useState(null);
 
-  // Lọc các mã theo hãng được chọn an toàn chống undefined
-  const filteredAnomalies = anomalies.filter(a => {
-    const c = a && a.carrier ? String(a.carrier).toLowerCase() : '';
-    const target = carrier ? String(carrier).toLowerCase() : '';
-    return c.includes(target) || carrier === 'Tất cả';
-  });
-  const totalAmount = filteredAnomalies.reduce((sum, a) => sum + a.leakAmount, 0);
-  const topTrackingCodes = filteredAnomalies.slice(0, 5).map(a => a.id);
-
-  const defaultEmail = generateDisputeTemplate({
-    carrier,
-    totalAmount,
-    count: filteredAnomalies.length,
-    topTrackingCodes
-  });
-
-  const activeText = customText || defaultEmail;
+  const activeText = customText || DISPUTE_TEMPLATES[carrier] || DISPUTE_TEMPLATES.GHTK;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(activeText);
@@ -36,17 +20,13 @@ export default function DisputeTemplateModal({ isOpen, onClose, anomalies, apiKe
   };
 
   const handleAiDraft = async () => {
-    const key = apiKey || localStorage.getItem('gemini_api_key');
-    if (!key) {
-      alert("Vui lòng nhập Google Gemini API Key ở phần 'Cài đặt AI Key' trên trang chủ để kích hoạt AI soạn văn bản!");
-      return;
-    }
-
+    if (!anomalies || anomalies.length === 0) return;
+    setIsGeneratingAi(true);
     try {
-      setIsGeneratingAi(true);
-      const letter = await aiWriteDisputeLetter(carrier, filteredAnomalies, key);
-      if (letter) {
-        setCustomText(letter);
+      const topAnomalies = anomalies.slice(0, 5);
+      const script = await aiGenerateDisputeScript(topAnomalies, carrier);
+      if (script) {
+        setCustomText(script);
       }
     } catch (err) {
       alert("Lỗi AI: " + err.message);
@@ -56,30 +36,30 @@ export default function DisputeTemplateModal({ isOpen, onClose, anomalies, apiKe
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fadeIn">
+      <div className="bg-white border border-slate-200/90 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative my-8 text-slate-800">
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
         >
-          <X className="w-5 h-5" />
+          <X className="w-5 h-5 stroke-[2.5]" />
         </button>
 
         <div className="flex items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+            <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600 border border-amber-200 shadow-xs">
               <FileCheck className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white">Mẫu thư khiếu nại bồi hoàn chuẩn</h3>
-              <p className="text-xs text-slate-400">Sao chép nội dung này gửi email hoặc gửi group Zalo của bưu cục/CSKH</p>
+              <h3 className="text-xl font-bold text-slate-900">Mẫu thư khiếu nại bồi hoàn chuẩn</h3>
+              <p className="text-xs text-slate-500">Sao chép nội dung này gửi email hoặc gửi group Zalo của bưu cục/CSKH</p>
             </div>
           </div>
 
           <button
             onClick={handleAiDraft}
             disabled={isGeneratingAi}
-            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-purple-500/20 transition-all shrink-0 cursor-pointer disabled:opacity-50"
+            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-blue-500/20 transition-all shrink-0 cursor-pointer disabled:opacity-50"
           >
             {isGeneratingAi ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bot className="w-3.5 h-3.5" />}
             <span>{isGeneratingAi ? "AI đang viết..." : "🤖 AI Soạn Đơn Đanh Thép"}</span>
@@ -93,12 +73,12 @@ export default function DisputeTemplateModal({ isOpen, onClose, anomalies, apiKe
               key={c}
               onClick={() => {
                 setCarrier(c);
-                setCustomText(null); // Reset to default for new carrier
+                setCustomText(null);
               }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${
                 carrier === c
-                  ? 'bg-amber-400 text-slate-900 shadow'
-                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
               {c}
@@ -108,12 +88,12 @@ export default function DisputeTemplateModal({ isOpen, onClose, anomalies, apiKe
 
         {/* Template textarea */}
         <div className="relative mb-4">
-          <pre className="w-full h-64 p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs sm:text-sm text-slate-200 font-mono overflow-y-auto whitespace-pre-wrap leading-relaxed select-text">
+          <pre className="w-full h-64 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-800 font-mono overflow-y-auto whitespace-pre-wrap leading-relaxed select-text shadow-inner">
             {activeText}
           </pre>
           <button
             onClick={handleCopy}
-            className="absolute top-3 right-3 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95 cursor-pointer"
+            className="absolute top-3 right-3 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95 cursor-pointer"
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             <span>{copied ? 'Đã sao chép!' : 'Sao chép thư'}</span>
@@ -121,12 +101,12 @@ export default function DisputeTemplateModal({ isOpen, onClose, anomalies, apiKe
         </div>
 
         {/* 3 Step Guide to Dispute */}
-        <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-2 text-xs text-slate-300">
-          <div className="font-semibold text-white flex items-center gap-1.5">
-            <Info className="w-4 h-4 text-emerald-400" />
+        <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-xs text-emerald-900 space-y-2">
+          <div className="font-bold text-emerald-950 flex items-center gap-1.5">
+            <Info className="w-4 h-4 text-emerald-600" />
             <span>Mẹo gửi khiếu nại thành công 100%:</span>
           </div>
-          <ol className="list-decimal list-inside space-y-1 text-slate-400">
+          <ol className="list-decimal list-inside space-y-1 text-emerald-800/90 pl-1">
             <li>Đính kèm file Excel danh sách mã vừa tải về từ web vào email/tin nhắn.</li>
             <li>Gửi trực tiếp cho bạn Trưởng bưu cục phụ trách lấy hàng của shop (thường duyệt nhanh hơn tổng đài CSKH).</li>
             <li>Nhắc nhở hạn xử lý 48h theo đúng quy chế bồi thường của hãng.</li>

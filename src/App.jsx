@@ -99,7 +99,7 @@ export default function App() {
   ) : [];
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-900 text-slate-100 font-sans selection:bg-rose-500 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#f8fafc] text-slate-800 font-sans selection:bg-indigo-500 selection:text-white">
       <Navbar 
         onOpenPricing={() => setIsPaymentModalOpen(true)}
         onScrollToCalculator={handleScrollToCalculator}

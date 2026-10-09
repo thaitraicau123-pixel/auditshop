@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, FileSpreadsheet, PlayCircle, Download, CheckCircle, AlertCircle, Loader2, Sparkles, Bot, Zap } from 'lucide-react';
+import { UploadCloud, FileSpreadsheet, PlayCircle, Download, CheckCircle, AlertCircle, Loader2, Sparkles, Bot, Zap, ShieldCheck } from 'lucide-react';
 import { parseExcelFile, downloadSampleExcel } from '../utils/auditEngine';
 import { SAMPLE_ORDERS } from '../utils/sampleData';
 import { aiDeepAuditOrders } from '../utils/aiAuditor';
@@ -14,17 +14,14 @@ export default function UploadZone({ onAuditComplete }) {
   const runAiAuditFlow = async (orders, filename) => {
     setIsScanning(true);
     setError(null);
-    setScanStep("🤖 Đang đọc cấu trúc bảng kê & chuẩn bị nạp vào Gemini 3.8 Flash...");
+    setScanStep("🤖 Đang đọc cấu trúc bảng kê & nạp vào Google Gemini 3.8 Flash...");
 
     try {
-      // 1. Phân tích qua Gemini 3.8 Flash
       setScanStep("🧠 Gemini 3.8 Flash đang thẩm định từng dòng cước & cân nặng...");
-      
       const aiResultPromise = aiDeepAuditOrders(orders);
       
-      // Delay nhỏ để hiển thị tiến trình mượt mà
       await new Promise(r => setTimeout(r, 600));
-      setScanStep("🔍 Gemini 3.8 đang phát hiện kê lố cân nặng, phụ phí ảo và đơn hoàn giam kho...");
+      setScanStep("🔍 Đang phát hiện kê lố cân nặng, phụ phí ảo và đơn hoàn giam kho...");
       
       const aiResult = await aiResultPromise;
 
@@ -72,46 +69,44 @@ export default function UploadZone({ onAuditComplete }) {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 mb-12">
-      <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
-        {/* Subtle decorative glow */}
-        <div className="absolute -top-24 -right-24 w-60 h-60 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
-
+      <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+        
         {/* AI Badge header */}
-        <div className="mb-6 p-3.5 rounded-xl bg-gradient-to-r from-purple-950/60 via-indigo-950/40 to-slate-900 border border-purple-500/30 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-purple-500/30">
+        <div className="mb-6 p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
               <Bot className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs sm:text-sm font-extrabold text-white flex items-center gap-1.5">
+              <div className="text-xs sm:text-sm font-extrabold text-slate-900 flex items-center gap-1.5">
                 <span>Hệ thống Kiểm toán 100% bằng</span>
-                <span className="bg-gradient-to-r from-purple-400 to-indigo-300 bg-clip-text text-transparent">Google Gemini 3.8 Flash</span>
-                <span className="text-[10px] uppercase font-bold px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">Active</span>
+                <span className="text-indigo-600 font-black">Google Gemini 3.8 Flash</span>
+                <span className="text-[10px] uppercase font-bold px-1.5 py-0.2 rounded bg-indigo-200/60 text-indigo-800">Sẵn Sàng</span>
               </div>
-              <p className="text-[11px] text-slate-400">
-                Tự động kích hoạt sẵn API Key — Bạn chỉ cần tải file lên và chờ kết quả trong vài giây.
+              <p className="text-[11px] text-slate-500">
+                Tự động kích hoạt sẵn API Key — Bạn chỉ việc tải file lên và nhận kết quả phân tích trong vài giây.
               </p>
             </div>
           </div>
 
-          <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
-            <Zap className="w-3.5 h-3.5 fill-emerald-400" />
-            <span>AI Sẵn Sàng</span>
+          <div className="hidden sm:flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+            <span>Bảo mật 100%</span>
           </div>
         </div>
 
         {isScanning ? (
           <div className="py-14 text-center">
             <div className="relative w-16 h-16 mx-auto mb-6">
-              <div className="absolute inset-0 rounded-full border-4 border-purple-500/20 animate-ping" />
-              <div className="w-16 h-16 rounded-full border-4 border-purple-500 border-t-transparent animate-spin flex items-center justify-center">
-                <Sparkles className="w-8 h-8 text-purple-400 animate-pulse" />
+              <div className="absolute inset-0 rounded-full border-4 border-indigo-200 animate-ping" />
+              <div className="w-16 h-16 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin flex items-center justify-center">
+                <Sparkles className="w-8 h-8 text-indigo-600 animate-pulse" />
               </div>
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">Gemini 3.8 Flash Đang Phân Tích...</h3>
-            <p className="text-sm font-medium text-purple-300 font-mono animate-pulse">{scanStep}</p>
-            <div className="w-64 h-1.5 bg-slate-700 rounded-full mx-auto mt-6 overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-purple-500 via-indigo-500 to-rose-500 animate-pulse w-4/5 rounded-full" />
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Gemini 3.8 Flash Đang Phân Tích...</h3>
+            <p className="text-sm font-semibold text-indigo-600 font-mono animate-pulse">{scanStep}</p>
+            <div className="w-64 h-2 bg-slate-100 rounded-full mx-auto mt-6 overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 animate-pulse w-4/5 rounded-full" />
             </div>
           </div>
         ) : (
@@ -122,10 +117,10 @@ export default function UploadZone({ onAuditComplete }) {
               onDragLeave={() => setIsDragging(false)}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              className={`border-2 border-dashed rounded-xl p-8 sm:p-10 text-center cursor-pointer transition-all duration-200 ${
+              className={`border-2 border-dashed rounded-2xl p-8 sm:p-10 text-center cursor-pointer transition-all duration-200 ${
                 isDragging 
-                  ? 'border-purple-500 bg-purple-500/10 scale-[1.01]' 
-                  : 'border-slate-600/80 hover:border-purple-500/80 bg-slate-900/40 hover:bg-slate-900/70'
+                  ? 'border-indigo-600 bg-indigo-50/50 scale-[1.01]' 
+                  : 'border-slate-300 hover:border-indigo-500 bg-slate-50/60 hover:bg-slate-50'
               }`}
             >
               <input 
@@ -136,45 +131,45 @@ export default function UploadZone({ onAuditComplete }) {
                 className="hidden" 
               />
 
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform shadow-xs">
                 <UploadCloud className="w-8 h-8" />
               </div>
 
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-1.5">
-                Kéo thả file Excel đối soát vào đây, hoặc <span className="text-purple-400 underline decoration-purple-400/40">chọn từ máy tính</span>
+              <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-1.5">
+                Kéo thả file Excel đối soát vào đây, hoặc <span className="text-indigo-600 underline decoration-indigo-300 font-extrabold">chọn từ máy tính</span>
               </h3>
-              <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto mb-4">
+              <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto mb-4">
                 Hỗ trợ bảng kê của GHTK, GHN, Shopee Xpress, TikTok Shop, Viettel Post (.xlsx, .xls, .csv).
               </p>
 
-              <div className="inline-flex items-center gap-2 text-xs text-slate-400 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
-                <Sparkles className="w-4 h-4 text-purple-400" />
-                <span>AI tự động loại bỏ dòng rác, phân biệt kích thước thể tích và nhận diện chính xác 100%</span>
+              <div className="inline-flex items-center gap-2 text-xs text-slate-600 bg-white px-3.5 py-1.5 rounded-xl border border-slate-200 shadow-xs">
+                <Sparkles className="w-4 h-4 text-indigo-600" />
+                <span>AI tự động loại bỏ dòng thừa, đọc kích thước thể tích và nhận diện chính xác 100%</span>
               </div>
             </div>
 
             {error && (
-              <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs sm:text-sm flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+              <div className="mt-4 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
             {/* Quick action buttons */}
-            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-700/60">
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-100">
               <button
                 type="button"
                 onClick={handleSampleClick}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white font-semibold text-sm shadow-lg shadow-purple-500/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm shadow-md shadow-blue-500/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
               >
-                <PlayCircle className="w-5 h-5 text-purple-200" />
+                <PlayCircle className="w-5 h-5 text-indigo-100" />
                 <span>Thử ngay bằng Gemini 3.8 (Dữ liệu mẫu 130 đơn)</span>
               </button>
 
               <button
                 type="button"
                 onClick={downloadSampleExcel}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 text-xs text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
               >
                 <Download className="w-4 h-4 text-slate-400" />
                 <span>Tải file Excel mẫu về máy</span>

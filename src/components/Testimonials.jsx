@@ -25,17 +25,17 @@ export default function Testimonials() {
       platform: "Facebook Ads & Viettel Post",
       orders: "50 đơn/ngày",
       saved: "Đã cứu lại: 2.100.000 đ",
-      content: "Tool dùng cực kỳ tiện, kéo file vào là xong chứ ngồi soi Excel bằng mắt thì cận thị mất. Tháng bỏ ra 199k mà lấy lại tiền triệu, quá xứng đáng để dùng lâu dài."
+      content: "Tool dùng cực kỳ tiện, kéo file vào là xong chứ ngồi soi Excel bằng mắt thì cận thị mất. Bỏ ra vài chục nghìn mà lấy lại tiền triệu, quá xứng đáng để dùng lâu dài."
     }
   ];
 
   return (
     <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
       <div className="text-center max-w-2xl mx-auto mb-10">
-        <h3 className="text-2xl sm:text-3xl font-extrabold text-white">
+        <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
           Các chủ shop nói gì sau khi kiểm toán?
         </h3>
-        <p className="text-xs sm:text-sm text-slate-400 mt-2">
+        <p className="text-xs sm:text-sm text-slate-500 mt-2">
           Hơn 1.200 nhà bán hàng đã sử dụng và đòi lại quyền lợi thành công.
         </p>
       </div>
@@ -44,7 +44,7 @@ export default function Testimonials() {
         {reviews.map((rev, idx) => (
           <div 
             key={idx}
-            className="bg-slate-800/60 border border-slate-700/80 rounded-2xl p-6 flex flex-col justify-between hover:border-slate-600 transition-all shadow-xl"
+            className="bg-white border border-slate-200/90 rounded-3xl p-6 flex flex-col justify-between hover:shadow-md transition-shadow shadow-xs"
           >
             <div>
               <div className="flex items-center gap-1 text-amber-400 mb-3">
@@ -53,17 +53,19 @@ export default function Testimonials() {
                 ))}
               </div>
 
-              <p className="text-xs sm:text-sm text-slate-300 italic mb-6 leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-600 italic mb-6 leading-relaxed">
                 "{rev.content}"
               </p>
             </div>
 
-            <div className="pt-4 border-t border-slate-700/60">
-              <div className="font-bold text-white text-sm">{rev.name}</div>
-              <div className="text-xs text-slate-400">{rev.role} • <span className="text-amber-400">{rev.platform}</span></div>
-              <div className="mt-2 text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md inline-block border border-emerald-500/20">
-                {rev.saved}
+            <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+              <div>
+                <div className="font-bold text-slate-900 text-xs sm:text-sm">{rev.name}</div>
+                <div className="text-[11px] text-slate-400">{rev.role}</div>
               </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                {rev.saved}
+              </span>
             </div>
           </div>
         ))}

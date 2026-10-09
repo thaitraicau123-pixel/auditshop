@@ -125,4 +125,7 @@ Yêu cầu văn phong: Sắc sảo, đanh thép, viện dẫn rõ hạn định 
   return await askGemini38({ prompt, apiKey });
 }
 
+
 export const aiWriteDisputeLetter = aiWriteDisputeLetter38;
+export const aiGenerateDisputeScript = (anomalies, carrier, apiKey = DEFAULT_GEMINI_API_KEY) => aiWriteDisputeLetter38(carrier, anomalies, apiKey);
+

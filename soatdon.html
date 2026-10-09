@@ -25,7 +25,7 @@
     .glow-danger { box-shadow: 0 0 40px -10px rgba(239, 68, 68, 0.35); }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen antialiased selection:bg-rose-500 selection:text-white">
+<body class="bg-[#f8fafc] text-slate-800 min-h-screen antialiased selection:bg-indigo-500 selection:text-white">
   <div id="root"></div>
 
   <script type="text/babel">
@@ -605,152 +605,115 @@
 
           {/* Payment Modal */}
           {isModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/90 backdrop-blur-md overflow-y-auto">
-              <div className="bg-[#0b0f17] border border-slate-800 rounded-2xl max-w-4xl w-full p-4 sm:p-7 shadow-2xl relative my-6 text-white font-sans">
-                <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+              <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden relative my-auto max-h-[92vh] flex flex-col text-slate-800 font-sans">
+                
+                {/* Sticky Header with Always-Clickable X */}
+                <div className="sticky top-0 z-30 flex items-center justify-between px-5 py-3.5 bg-white/95 backdrop-blur-md border-b border-slate-100">
+                  <div>
+                    <h3 className="font-extrabold text-slate-900 text-base leading-tight">Thanh Toán & Mở Khóa Dữ Liệu</h3>
+                    <p className="text-[11px] text-slate-500 font-medium">VietQR Napas • MB Bank 0986019623</p>
+                  </div>
+                  <button 
+                    onClick={() => setIsModalOpen(false)} 
+                    className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                    aria-label="Đóng"
+                  >
+                    ✕
+                  </button>
+                </div>
 
-                {/* Chọn gói */}
-                <div className="mb-5">
-                  <span className="text-xs text-emerald-400 font-bold uppercase">Mô hình giá siêu bình dân</span>
-                  <h3 className="text-xl sm:text-2xl font-bold text-white mt-0.5">Chọn gói mở khóa & Đối soát</h3>
-                  
-                  <div className="grid grid-cols-3 gap-2 mt-3">
+                <div className="p-4 sm:p-5 overflow-y-auto space-y-4">
+                  {/* Chọn gói */}
+                  <div className="grid grid-cols-3 gap-2">
                     <div 
                       onClick={() => setSelectedPlan('single')}
-                      className={`p-3 rounded-xl border text-center cursor-pointer transition-all ${selectedPlan === 'single' ? 'border-emerald-500 bg-emerald-950/40 ring-1 ring-emerald-500' : 'border-slate-800 bg-slate-900/60'}`}
+                      className={`p-2.5 rounded-xl border text-center cursor-pointer transition-all ${selectedPlan === 'single' ? 'bg-emerald-50/70 border-emerald-500 ring-1 ring-emerald-500' : 'bg-slate-50 border-slate-200'}`}
                     >
-                      <div className="text-xs font-bold text-white">Gói Trà Đá</div>
-                      <div className="text-base font-black text-rose-500 font-mono mt-1">9.000 đ</div>
-                      <div className="text-[10px] text-slate-400">1 File</div>
+                      <div className="text-xs font-bold text-slate-900">Gói Trà Đá</div>
+                      <div className="text-sm sm:text-base font-black text-rose-600 font-mono mt-0.5">9.000 đ</div>
+                      <div className="text-[10px] text-slate-500">1 File</div>
                     </div>
 
                     <div 
                       onClick={() => setSelectedPlan('bundle')}
-                      className={`p-3 rounded-xl border text-center cursor-pointer relative transition-all ${selectedPlan === 'bundle' ? 'border-emerald-500 bg-emerald-950/40 ring-1 ring-emerald-500' : 'border-slate-800 bg-slate-900/60'}`}
+                      className={`p-2.5 rounded-xl border text-center cursor-pointer relative transition-all ${selectedPlan === 'bundle' ? 'bg-emerald-50/70 border-emerald-500 ring-1 ring-emerald-500' : 'bg-slate-50 border-slate-200'}`}
                     >
-                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.2 rounded-full bg-amber-500 text-[9px] font-bold text-slate-950 uppercase">Hot</span>
-                      <div className="text-xs font-bold text-white">Nạp 5 Lượt</div>
-                      <div className="text-base font-black text-rose-500 font-mono mt-1">29.000 đ</div>
-                      <div className="text-[10px] text-slate-400">Dùng dần</div>
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.2 rounded-full bg-emerald-600 text-[8px] font-extrabold text-white uppercase">Hot</span>
+                      <div className="text-xs font-bold text-slate-900">Nạp 5 Lượt</div>
+                      <div className="text-sm sm:text-base font-black text-rose-600 font-mono mt-0.5">29.000 đ</div>
+                      <div className="text-[10px] text-slate-500">Dùng dần</div>
                     </div>
 
                     <div 
                       onClick={() => setSelectedPlan('monthly')}
-                      className={`p-3 rounded-xl border text-center cursor-pointer transition-all ${selectedPlan === 'monthly' ? 'border-emerald-500 bg-emerald-950/40 ring-1 ring-emerald-500' : 'border-slate-800 bg-slate-900/60'}`}
+                      className={`p-2.5 rounded-xl border text-center cursor-pointer transition-all ${selectedPlan === 'monthly' ? 'bg-emerald-50/70 border-emerald-500 ring-1 ring-emerald-500' : 'bg-slate-50 border-slate-200'}`}
                     >
-                      <div className="text-xs font-bold text-white">Gói Tháng</div>
-                      <div className="text-base font-black text-rose-500 font-mono mt-1">79.000 đ</div>
-                      <div className="text-[10px] text-slate-400">Không giới hạn</div>
+                      <div className="text-xs font-bold text-slate-900">Gói Tháng</div>
+                      <div className="text-sm sm:text-base font-black text-rose-600 font-mono mt-0.5">79.000 đ</div>
+                      <div className="text-[10px] text-slate-500">Không giới hạn</div>
                     </div>
                   </div>
-                </div>
 
-                {/* Layout 2 cột như mẫu tamhongame */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 bg-black/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5 mb-4">
-                  {/* Cột trái */}
-                  <div className="lg:col-span-7 space-y-4">
-                    <div>
-                      <h3 className="text-lg sm:text-xl font-bold text-white mb-2">Thông tin chuyển khoản</h3>
-                      <div className="space-y-1.5 text-xs sm:text-sm">
-                        <div className="flex justify-between py-1 border-b border-slate-800">
-                          <span className="text-slate-300">Ngân Hàng</span>
-                          <span className="font-bold text-rose-500">MBBANK</span>
-                        </div>
-                        <div className="flex justify-between py-1 border-b border-slate-800">
-                          <span className="text-slate-300">Tên chủ tài khoản</span>
-                          <span className="font-bold text-rose-500">NGUYEN VAN THAI</span>
-                        </div>
-                        <div className="flex justify-between py-1 border-b border-slate-800">
-                          <span className="text-slate-300">Số tài khoản</span>
-                          <span className="font-mono font-bold text-rose-500 text-base">0986019623</span>
-                        </div>
-                        <div className="flex justify-between py-1 border-b border-slate-800">
-                          <span className="text-slate-300">Số tiền</span>
-                          <span className="font-mono font-bold text-rose-500 text-base">{selectedPlan==='single'?'9.000 đ':(selectedPlan==='bundle'?'29.000 đ':'79.000 đ')}</span>
-                        </div>
-                        <div className="flex justify-between py-1 border-b border-slate-800">
-                          <span className="text-slate-300">Nội dung chuyển khoản</span>
-                          <span className="font-mono font-bold text-rose-500 text-base bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/30">SOATDON 888</span>
-                        </div>
+                  {/* Thông tin chuyển khoản & VietQR */}
+                  <div className="bg-slate-50/80 border border-slate-200 rounded-2xl p-3.5">
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-xs shrink-0 text-center">
+                        <img 
+                          src={`https://img.vietqr.io/image/MB-0986019623-compact2.png?amount=${selectedPlan==='single'?9000:(selectedPlan==='bundle'?29000:79000)}&addInfo=SOATDON%20888`} 
+                          alt="VietQR" 
+                          className="w-32 h-32 object-contain rounded"
+                        />
+                        <span className="text-[10px] text-slate-500 font-semibold mt-1 block">Quét bằng app ngân hàng</span>
                       </div>
-                    </div>
 
-                    {/* Hướng dẫn 5 bước */}
-                    <div className="pt-1">
-                      <h4 className="text-sm sm:text-base font-bold text-white mb-1.5">Hướng dẫn nạp tiền qua quét mã QR</h4>
-                      <div className="space-y-1.5 text-xs leading-relaxed">
-                        <p className="text-amber-400">1. Đăng nhập ứng dụng Mobile Banking, chọn chức năng Scan QR và quét mã QR bên phải.</p>
-                        <p className="text-amber-400">2. Nhập số tiền muốn nạp (<span className="text-rose-500 font-bold">{selectedPlan==='single'?'9.000 đ':(selectedPlan==='bundle'?'29.000 đ':'79.000 đ')}</span>), kiểm tra thông tin đơn hàng trùng khớp với thông tin CK bên trên.</p>
-                        <p className="text-amber-400">3. Xác nhận thanh toán và chuyển tiền.</p>
-                        <p className="text-amber-400">4. Sau khi đã chuyển tiền thành công bấm vào nút "Xác nhận" bên dưới (<span className="text-rose-500 font-bold">đợi 1 đến 3 phút cho nó load xong</span>) để hệ thống tự động kiểm tra và cộng quyền lợi cho bạn.</p>
-                        <p className="text-rose-400 font-medium">5. Quan trọng: Trường hợp sau khi thực hiện bước 4 mà nó báo lỗi hoặc chưa tìm thấy giao dịch thì các bạn đợi khoảng 3-5 phút sau đó nhấn lại nút Xác Nhận (lặp lại khoảng 3 lần, nếu vẫn chưa được thì gửi tin nhắn vào Zalo 0986019623).</p>
+                      <div className="flex-1 space-y-1.5 text-xs w-full">
+                        <div className="flex justify-between py-1 border-b border-slate-200">
+                          <span className="text-slate-500">Ngân hàng:</span>
+                          <span className="font-bold text-slate-900">MB Bank (Quân Đội)</span>
+                        </div>
+                        <div className="flex justify-between py-1 border-b border-slate-200">
+                          <span className="text-slate-500">Chủ tài khoản:</span>
+                          <span className="font-bold text-slate-900">NGUYEN VAN THAI</span>
+                        </div>
+                        <div className="flex justify-between py-1 border-b border-slate-200">
+                          <span className="text-slate-500">STK / SĐT:</span>
+                          <b className="text-rose-600 font-mono text-base">0986019623</b>
+                        </div>
+                        <div className="flex justify-between py-1 border-b border-slate-200">
+                          <span className="text-slate-500">Số tiền:</span>
+                          <b className="text-rose-600 font-mono text-base">{selectedPlan==='single'?'9.000 đ':(selectedPlan==='bundle'?'29.000 đ':'79.000 đ')}</b>
+                        </div>
+                        <div className="flex justify-between py-1">
+                          <span className="text-slate-500">Nội dung CK:</span>
+                          <span className="font-mono font-extrabold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">SOATDON 888</span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Cột phải: QR */}
-                  <div className="lg:col-span-5 flex flex-col items-center justify-center p-3 bg-slate-900/60 rounded-xl border border-slate-800">
-                    <h3 className="text-lg sm:text-xl font-bold text-white mb-3 text-center">Quét mã QR</h3>
-                    <div className="bg-white p-2 rounded-xl shadow-lg">
-                      <img 
-                        src={`https://img.vietqr.io/image/MB-0986019623-compact2.png?amount=${selectedPlan==='single'?9000:(selectedPlan==='bundle'?29000:79000)}&addInfo=SOATDON%20888`} 
-                        alt="VietQR" 
-                        className="w-44 h-44 sm:w-52 sm:h-52 object-contain rounded"
-                      />
-                    </div>
-                    <p className="text-[11px] text-slate-400 mt-2 text-center">Quét bằng ứng dụng ngân hàng bất kỳ</p>
+                  {/* Hướng dẫn nhanh */}
+                  <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-900">
+                    <p className="leading-relaxed">
+                      1. Quét mã QR chuyển khoản đúng số tiền.<br />
+                      2. Tiền đã trừ xong, bấm nút <b>"TÔI ĐÃ CHUYỂN KHOẢN — MỞ KHÓA NGAY"</b> bên dưới để mở khóa bảng kê ngay lập tức!
+                    </p>
+                  </div>
+
+                  {/* Nút Xác Nhận Thanh Toán */}
+                  <button
+                    onClick={handleUnlockSuccess}
+                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-sm uppercase tracking-wide shadow-lg shadow-emerald-600/25 transition-all cursor-pointer"
+                  >
+                    ✓ TÔI ĐÃ CHUYỂN KHOẢN — MỞ KHÓA NGAY
+                  </button>
+
+                  <div className="text-center pt-1">
+                    <a href="https://zalo.me/0986019623" target="_blank" rel="noreferrer" className="text-emerald-700 hover:underline text-xs font-semibold">
+                      💬 Hỗ trợ Zalo: 0986019623 (24/7)
+                    </a>
                   </div>
                 </div>
-
-                {/* Box Tiến trình Tự Động Check */}
-                {isAutoChecking && (
-                  <div className="p-3.5 rounded-xl bg-slate-900 border border-emerald-500/50 mb-3 text-xs">
-                    <div className="flex justify-between items-center mb-1.5 font-bold">
-                      <span className="text-white">Đang tự động kiểm tra sao kê MB Bank...</span>
-                      <span className="font-mono text-rose-400">{Math.floor(countdown/60)}:{String(countdown%60).padStart(2,'0')}</span>
-                    </div>
-                    <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden mb-1.5">
-                      <div className="bg-emerald-500 h-2 rounded-full transition-all duration-1000" style={{ width: `${Math.round(((90-countdown)/90)*100)}%` }}></div>
-                    </div>
-                    <span className="text-emerald-300 font-mono">{checkLog}</span>
-                  </div>
-                )}
-
-                {/* Not Found Alert */}
-                {checkStatus === 'not_found' && !isAutoChecking && (
-                  <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/40 text-xs text-rose-200 mb-3 space-y-2">
-                    <div className="font-bold text-white">⚠️ Chưa tìm thấy giao dịch SOATDON 888 trên MB Bank (Ngân hàng có thể trễ 1-3 phút)</div>
-                    <div className="flex flex-wrap gap-2">
-                      <button onClick={handleStartAutoCheck} className="px-3 py-1.5 bg-slate-800 rounded-lg text-white font-bold text-[11px]">🔄 Thử lại lần {retryCount+1}</button>
-                      <a href="https://zalo.me/0986019623?text=Chao%20ban%2C%20toi%20vua%20chuyen%20khoan%20SOATDON%20888%20vao%20MB%20Bank%200986019623.%20Nho%20ban%20duyet%20giup%20toi%20nhe!" target="_blank" rel="noreferrer" className="px-3 py-1.5 bg-emerald-600 rounded-lg text-white font-bold text-[11px]">💬 Nhắn Zalo 0986019623</a>
-                      <button onClick={() => setShowManualPin(!showManualPin)} className="px-2 py-1.5 text-purple-300 text-[11px]">Nhập mã PIN</button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Form Nhập Mã PIN */}
-                {showManualPin && (
-                  <form onSubmit={handleActivateByCode} className="flex gap-2 mb-3">
-                    <input
-                      type="text"
-                      value={activationCode}
-                      onChange={(e) => { setActivationCode(e.target.value); setActivationError(''); }}
-                      placeholder="Nhập Mã Kích Hoạt (VD: 8888 hoặc mã từ Zalo)..."
-                      className="flex-1 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs font-mono"
-                    />
-                    <button type="submit" className="px-4 py-2 bg-purple-600 font-bold rounded-xl text-white text-xs">Kích Hoạt</button>
-                  </form>
-                )}
-                {activationError && <p className="text-xs text-rose-400 mb-2">{activationError}</p>}
-
-                {/* Nút To Xác Nhận Thanh Toán */}
-                <button
-                  onClick={handleStartAutoCheck}
-                  disabled={isAutoChecking}
-                  className="w-full py-3.5 rounded-xl bg-[#00a859] hover:bg-[#00924c] text-white font-black text-base uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                >
-                  {isAutoChecking ? `Đang Tự Động Kiểm Tra (${Math.floor(countdown/60)}:${String(countdown%60).padStart(2,'0')})...` : '✓ XÁC NHẬN THANH TOÁN'}
-                </button>
               </div>
             </div>
           )}
