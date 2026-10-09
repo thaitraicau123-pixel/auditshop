@@ -1,7 +1,7 @@
 import React from 'react';
-import { X, User, Store, Phone, Award, Zap, LogOut, PlusCircle, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { X, User, Store, Phone, Award, Zap, LogOut, PlusCircle, ShieldCheck, CheckCircle2, Clock } from 'lucide-react';
 
-export default function UserProfileModal({ isOpen, onClose, user, onLogout, onOpenPricing }) {
+export default function UserProfileModal({ isOpen, onClose, user, onLogout, onOpenPricing, onOpenHistory }) {
   if (!isOpen || !user) return null;
 
   return (
@@ -67,6 +67,18 @@ export default function UserProfileModal({ isOpen, onClose, user, onLogout, onOp
               </span>
             </div>
           </div>
+
+          {/* Nút Xem Lịch Sử Soát Đơn */}
+          <button
+            onClick={() => {
+              onClose();
+              if (onOpenHistory) onOpenHistory();
+            }}
+            className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer border border-slate-200"
+          >
+            <Clock className="w-4 h-4 text-indigo-600" />
+            <span>Xem Lịch Sử Các Lần Soát Đơn</span>
+          </button>
 
           {/* Nút Nạp Thêm Lượt / Mua Gói */}
           <button

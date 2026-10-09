@@ -10,6 +10,7 @@ import EmergencyAlertModal from './components/EmergencyAlertModal';
 import VictoryCelebrationModal from './components/VictoryCelebrationModal';
 import AuthModal from './components/AuthModal';
 import UserProfileModal from './components/UserProfileModal';
+import ScanHistoryModal from './components/ScanHistoryModal';
 import RoiCalculator from './components/RoiCalculator';
 import Testimonials from './components/Testimonials';
 import Footer from './components/Footer';
@@ -33,6 +34,16 @@ export default function App() {
   });
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  // Scan History State
+  const [scanHistory, setScanHistory] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('soatdon_scan_history') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   
   // Urgent & Radiant Pop-up Modals
   const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState(false);
@@ -99,7 +110,28 @@ export default function App() {
 
     setIsUnlocked(shouldUnlock);
 
-    // 3. Mở pop-up tương ứng
+    // 3. Tự động lưu thông tin lần soát đơn này vào lịch sử
+    const newScanRecord = {
+      id: 'SCAN_' + Date.now(),
+      fileName: name,
+      timestamp: new Date().toISOString(),
+      totalOrders: baseResult.totalOrders,
+      anomalyCount: baseResult.anomalyCount,
+      totalLeakage: baseResult.totalLeakage,
+      breakdown: baseResult.breakdown,
+      anomalies: baseResult.anomalies,
+      aiDiagnosis: (aiResult && aiResult.summaryDiagnosis) || "Đã rà soát dữ liệu bảng kê. Phát hiện sự sai lệch trọng lượng và đơn hoàn giam kho.",
+      isUnlocked: shouldUnlock
+    };
+
+    setScanHistory(prev => {
+      const filtered = prev.filter(item => item.fileName !== name);
+      const updated = [newScanRecord, ...filtered].slice(0, 15);
+      localStorage.setItem('soatdon_scan_history', JSON.stringify(updated));
+      return updated;
+    });
+
+    // 4. Mở pop-up tương ứng
     if (baseResult.anomalies.length > 0) {
       setIsEmergencyModalOpen(true);
     } else {
@@ -110,6 +142,39 @@ export default function App() {
     setTimeout(() => {
       window.scrollTo({ top: 400, behavior: 'smooth' });
     }, 100);
+  };
+
+  // Chọn xem lại một lần soát đơn trong quá khứ
+  const handleSelectHistoryScan = (record) => {
+    setAuditResult({
+      totalOrders: record.totalOrders,
+      anomalyCount: record.anomalyCount,
+      normalCount: record.totalOrders - record.anomalyCount,
+      totalLeakage: record.totalLeakage,
+      breakdown: record.breakdown,
+      anomalies: record.anomalies
+    });
+    setFileName(record.fileName);
+    setIsUnlocked(record.isUnlocked || false);
+    setAiDiagnosis(record.aiDiagnosis);
+    setActiveFilter('ALL');
+
+    setTimeout(() => {
+      window.scrollTo({ top: 400, behavior: 'smooth' });
+    }, 100);
+  };
+
+  const handleDeleteHistoryScan = (id) => {
+    setScanHistory(prev => {
+      const next = prev.filter(item => item.id !== id);
+      localStorage.setItem('soatdon_scan_history', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handleClearAllHistory = () => {
+    setScanHistory([]);
+    localStorage.removeItem('soatdon_scan_history');
   };
 
   const handleReset = () => {
@@ -144,6 +209,8 @@ export default function App() {
         user={user}
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
         onOpenProfileModal={() => setIsProfileModalOpen(true)}
+        onOpenHistory={() => setIsHistoryModalOpen(true)}
+        historyCount={scanHistory.length}
       />
 
       <main className="flex-1">
@@ -151,7 +218,11 @@ export default function App() {
         <Hero onStartDemo={() => {}} />
 
         {/* Upload & Scanner Zone */}
-        <UploadZone onAuditComplete={handleAuditComplete} />
+        <UploadZone 
+          onAuditComplete={handleAuditComplete} 
+          lastScan={scanHistory[0]}
+          onOpenHistory={() => setIsHistoryModalOpen(true)}
+        />
 
         {/* Results Dashboard if audited */}
         {auditResult && (
@@ -221,6 +292,11 @@ export default function App() {
         onClose={() => setIsPaymentModalOpen(false)}
         onSimulatePaymentSuccess={() => {
           setIsUnlocked(true);
+          setScanHistory(prev => {
+            const next = prev.map(item => item.fileName === fileName ? { ...item, isUnlocked: true } : item);
+            localStorage.setItem('soatdon_scan_history', JSON.stringify(next));
+            return next;
+          });
         }}
         currentUser={user}
         onUpdateUser={setUser}
@@ -254,6 +330,19 @@ export default function App() {
         onOpenPricing={() => {
           setIsPaymentModalOpen(true);
         }}
+        onOpenHistory={() => {
+          setIsHistoryModalOpen(true);
+        }}
+      />
+
+      {/* Modal Lịch Sử Các Lần Soát Đơn Trước */}
+      <ScanHistoryModal 
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        history={scanHistory}
+        onSelectScan={handleSelectHistoryScan}
+        onDeleteScan={handleDeleteHistoryScan}
+        onClearAll={handleClearAllHistory}
       />
     </div>
   );

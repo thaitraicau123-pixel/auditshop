@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, FileSpreadsheet, PlayCircle, Download, CheckCircle, AlertCircle, Loader2, Sparkles, Bot, Zap, ShieldCheck } from 'lucide-react';
+import { UploadCloud, FileSpreadsheet, PlayCircle, Download, CheckCircle, AlertCircle, Loader2, Sparkles, Bot, Zap, ShieldCheck, Clock, ArrowRight } from 'lucide-react';
 import { parseExcelFile, downloadSampleExcel } from '../utils/auditEngine';
 import { SAMPLE_ORDERS } from '../utils/sampleData';
 import { aiDeepAuditOrders } from '../utils/aiAuditor';
 
-export default function UploadZone({ onAuditComplete }) {
+export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory }) {
   const [isDragging, setIsDragging] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [scanStep, setScanStep] = useState('');
@@ -71,6 +71,33 @@ export default function UploadZone({ onAuditComplete }) {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 mb-12">
       <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
         
+        {/* Banner lần quét trước */}
+        {lastScan && (
+          <div className="mb-5 p-3 sm:p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-900 shadow-2xs">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                <Clock className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-extrabold text-amber-950">Lần soát đơn gần nhất:</span>
+                  <span className="font-bold text-slate-800 truncate max-w-[200px]">{lastScan.fileName}</span>
+                </div>
+                <p className="text-[11px] text-amber-800">
+                  Phát hiện <b className="text-rose-600">{lastScan.anomalyCount} đơn lệch</b> • Nguy cơ thất thoát: <b className="text-rose-600 font-mono">{(lastScan.totalLeakage || 0).toLocaleString('vi-VN')} đ</b>
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onOpenHistory}
+              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold text-xs transition-all cursor-pointer shrink-0 shadow-xs flex items-center gap-1.5"
+            >
+              <span>Xem lại kết quả</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* AI Badge header */}
         <div className="mb-6 p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 flex items-center justify-between">
           <div className="flex items-center gap-3">
