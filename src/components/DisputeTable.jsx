@@ -30,7 +30,7 @@ export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onO
             <p className="text-xs text-slate-500 mt-0.5">
               {isUnlocked 
                 ? "✅ Toàn bộ mã đơn đã được mở khóa. Bạn có thể xuất file Excel khiếu nại ngay." 
-                : "3 đơn đầu tiên hiển thị miễn phí làm bằng chứng. Các đơn còn lại đang được bảo mật."}
+                : "🔒 Chi tiết mã vận đơn và lý do thất thoát đang được bảo mật. Mở khóa gói cước để xem toàn bộ và tải file Excel khiếu nại."}
             </p>
           </div>
 
@@ -81,7 +81,7 @@ export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onO
             </thead>
             <tbody className="divide-y divide-slate-100">
               {anomalies.map((item, index) => {
-                const isItemLocked = !isUnlocked && item.isLocked;
+                const isItemLocked = !isUnlocked;
 
                 return (
                   <tr 

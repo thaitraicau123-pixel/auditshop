@@ -206,8 +206,8 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fadeIn">
-      {/* Modal Container: Nhỏ gọn, vừa màn hình, nền trắng tươi sáng & uy tín */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden relative my-auto max-h-[92vh] flex flex-col text-slate-800 font-sans">
+      {/* Modal Container: Rộng rãi, hiển thị QR to rõ ràng, nền trắng tươi sáng & uy tín */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl max-w-xl sm:max-w-2xl w-full shadow-2xl overflow-hidden relative my-auto max-h-[92vh] flex flex-col text-slate-800 font-sans">
         
         {/* Header Cố Định (Sticky): Dấu X luôn nằm trên đầu, bấm được 100% */}
         <div className="sticky top-0 z-30 flex items-center justify-between px-5 py-3.5 bg-white/95 backdrop-blur-md border-b border-slate-100">
@@ -266,22 +266,25 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
             })}
           </div>
 
-          {/* Khung Thông Tin Chuyển Khoản & Mã QR */}
-          <div className="bg-slate-50/80 border border-slate-200 rounded-2xl p-3.5 sm:p-4">
-            <div className="flex flex-col sm:flex-row items-center gap-4">
+          {/* Khung Thông Tin Chuyển Khoản & Mã QR To Rõ Ràng */}
+          <div className="bg-slate-50/80 border border-slate-200 rounded-2xl p-4 sm:p-5">
+            <div className="flex flex-col md:flex-row items-center gap-5">
               
-              {/* Mã VietQR */}
-              <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-xs shrink-0 text-center">
+              {/* Mã VietQR To Rõ, Dễ Quét 100% */}
+              <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-md shrink-0 text-center flex flex-col items-center">
                 <img
                   src={qrUrl}
                   alt="VietQR MB Bank - BUI QUOC THAI"
-                  className="w-32 h-32 sm:w-36 sm:h-36 object-contain rounded-lg bg-white"
+                  className="w-52 h-52 sm:w-60 sm:h-60 object-contain rounded-xl bg-white shadow-2xs"
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = `https://img.vietqr.io/image/MB-${bankAccount}-qr_only.png?amount=${currentPlan.price}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(accountHolder)}`;
                   }}
                 />
-                <span className="text-[10px] text-slate-500 font-semibold mt-1 block">Quét bằng app ngân hàng</span>
+                <div className="mt-2 text-center">
+                  <span className="text-[11px] font-extrabold text-slate-800 uppercase tracking-wide block">Quét bằng App Ngân Hàng / Momo</span>
+                  <span className="text-[10px] text-emerald-600 font-semibold">Tự động nhận diện & mở khóa tức thì</span>
+                </div>
               </div>
 
               {/* Chi tiết tài khoản với nút Copy */}

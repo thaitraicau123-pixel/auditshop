@@ -53,7 +53,7 @@ export default function UserProfileModal({ isOpen, onClose, user, onLogout, onOp
                 <span>Gói dịch vụ:</span>
               </span>
               <span className="px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold uppercase text-[10px]">
-                {user.plan === 'monthly' ? 'Gói Tháng (Vô Hạn)' : user.plan === 'free_trial' ? 'Trải Nghiệm Miễn Phí' : 'Nạp Lượt'}
+                {user.plan === 'monthly' ? 'Gói Tháng (Vô Hạn)' : (user.balanceScans > 0 ? 'Gói Nạp Lượt' : 'Tài Khoản Tiêu Chuẩn')}
               </span>
             </div>
 

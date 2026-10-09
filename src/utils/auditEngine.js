@@ -106,7 +106,7 @@ export function analyzeOrders(ordersData) {
         ...order,
         ...issue,
         index: index + 1,
-        isLocked: anomalies.length >= 3 // Chỉ cho xem 3 đơn đầu miễn phí
+        isLocked: true // Khóa toàn bộ mã đơn cho đến khi thanh toán gói cước
       });
     } else {
       normalOrders.push(order);

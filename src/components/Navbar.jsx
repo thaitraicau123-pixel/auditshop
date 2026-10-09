@@ -58,13 +58,10 @@ export default function Navbar({ onOpenPricing, onScrollToCalculator, user, onOp
           ) : (
             <button
               onClick={onOpenAuthModal}
-              className="text-xs sm:text-sm font-bold px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5 cursor-pointer relative"
+              className="text-xs sm:text-sm font-bold px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <UserPlus className="w-4 h-4" />
               <span>Đăng Ký / Đăng Nhập</span>
-              <span className="hidden sm:inline-block absolute -top-2 -right-1 px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-black uppercase tracking-wider shadow-xs animate-pulse">
-                +3 lượt free
-              </span>
             </button>
           )}
         </nav>
