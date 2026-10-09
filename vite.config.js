@@ -75,6 +75,34 @@ export default defineConfig({
         server.middlewares.use('/api/vietqr-callback', handleTransactionCallback);
 
 
+        // Helper tự động lấy Bearer Token từ VietQR bằng Username/Password hệ thống
+        const getSystemToken = async () => {
+          if (process.env.VIETQR_TOKEN) return process.env.VIETQR_TOKEN;
+          if (global.__VIETQR_SYSTEM_TOKEN__ && Date.now() < global.__VIETQR_SYSTEM_TOKEN_EXPIRY__) {
+            return global.__VIETQR_SYSTEM_TOKEN__;
+          }
+          const user = process.env.VIETQR_USERNAME || 'customer-soatdon-user26704';
+          const pass = process.env.VIETQR_PASSWORD || 'Y3VzdG9tZXItc29hdGRvbi11c2VyMjY3MDQ=';
+          const basic = Buffer.from(`${user}:${pass}`).toString('base64');
+          for (const ep of ['https://api.vietqr.org/vqr/api/token_generate', 'https://dev.vietqr.org/vqr/api/token_generate']) {
+            try {
+              const res = await fetch(ep, {
+                method: 'POST',
+                headers: { 'Authorization': `Basic ${basic}`, 'Content-Type': 'application/json' }
+              });
+              if (res.ok) {
+                const data = await res.json();
+                if (data.access_token) {
+                  global.__VIETQR_SYSTEM_TOKEN__ = data.access_token;
+                  global.__VIETQR_SYSTEM_TOKEN_EXPIRY__ = Date.now() + 270000;
+                  return data.access_token;
+                }
+              }
+            } catch (e) {}
+          }
+          return null;
+        };
+
         // 2. Endpoint Tạo Mã VietQR Động
         server.middlewares.use('/api/vietqr-generate', async (req, res) => {
           const url = new URL(req.url, `http://${req.headers.host}`);
@@ -84,7 +112,9 @@ export default defineConfig({
           const bankAccount = "0986019623";
           const bankCode = "MB";
           const userBankName = "NGUYEN VAN THAI";
-          const token = url.searchParams.get('token') || process.env.VIETQR_TOKEN || process.env.VITE_VIETQR_TOKEN || '';
+          let token = url.searchParams.get('token') || process.env.VIETQR_TOKEN || '';
+          if (!token) token = await getSystemToken();
+
 
           res.setHeader('Content-Type', 'application/json');
 
@@ -143,7 +173,8 @@ export default defineConfig({
           const code = (url.searchParams.get('code') || '').toUpperCase();
           const orderId = (url.searchParams.get('orderId') || url.searchParams.get('orderCode') || '').toUpperCase();
           const amount = Number(url.searchParams.get('amount') || 0);
-          const vietqrToken = url.searchParams.get('vietqrToken') || process.env.VIETQR_TOKEN || '';
+          let vietqrToken = url.searchParams.get('vietqrToken') || process.env.VIETQR_TOKEN || '';
+          if (!vietqrToken) vietqrToken = await getSystemToken();
           const sepayToken = url.searchParams.get('token') || process.env.SEPAY_API_TOKEN || '';
 
           res.setHeader('Content-Type', 'application/json');
