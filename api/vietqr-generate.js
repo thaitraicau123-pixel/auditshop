@@ -109,7 +109,7 @@ export default async function handler(req, res) {
             return res.status(200).json({
               success: true,
               source: 'vietqr_api',
-              qrUrl: vqrData.qrLink || fallbackQrUrl,
+              qrUrl: (vqrData.qrDataURL && vqrData.qrDataURL.startsWith('data:image')) ? vqrData.qrDataURL : fallbackQrUrl,
               qrCode: vqrData.qrCode || '',
               vaAccount: vqrData.vaAccount || null,
               orderId,

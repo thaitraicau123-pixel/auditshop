@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess }) {
+export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess, onUpdateUser }) {
   if (!isOpen) return null;
 
   const [selectedPlan, setSelectedPlan] = useState('single');
@@ -52,9 +52,9 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
   const bankName = "MB Bank (Quân Đội)";
   const accountHolder = "BUI QUOC THAI";
 
-  // Fallback URL theo chuẩn VietQR Napas Quicklink
+  // URL chuẩn ảnh VietQR Napas Quicklink PNG 100% không bị lỗi ảnh
   const fallbackQrUrl = `https://img.vietqr.io/image/MB-${bankAccount}-compact2.png?amount=${currentPlan.price}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(accountHolder)}`;
-  const qrUrl = dynamicQrUrl || fallbackQrUrl;
+  const qrUrl = (dynamicQrUrl && (dynamicQrUrl.startsWith('data:image') || dynamicQrUrl.includes('img.vietqr.io') || dynamicQrUrl.includes('.png'))) ? dynamicQrUrl : fallbackQrUrl;
 
   const zaloLink = `https://zalo.me/0986019623?text=${encodeURIComponent(
     `Chào bạn, tôi vừa chuyển khoản gói "${currentPlan.name}" (${currentPlan.price.toLocaleString('vi-VN')} đ) vào STK MB Bank 0986019623. Nội dung: ${transferContent}. Nhờ bạn hỗ trợ kiểm tra giúp tôi nhé!`
@@ -109,6 +109,35 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
 
     // Lưu trạng thái mở khóa vào máy khách
     localStorage.setItem('soatdon_unlocked', 'true');
+
+    // Cập nhật lượt quét nếu người dùng có tài khoản
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('soatdon_user') || 'null');
+      if (storedUser) {
+        if (selectedPlan === 'single') {
+          storedUser.balanceScans = (storedUser.balanceScans || 0) + 1;
+        } else if (selectedPlan === 'bundle') {
+          storedUser.balanceScans = (storedUser.balanceScans || 0) + 5;
+        } else if (selectedPlan === 'monthly') {
+          storedUser.plan = 'monthly';
+          storedUser.balanceScans = 9999;
+        }
+        localStorage.setItem('soatdon_user', JSON.stringify(storedUser));
+
+        const accounts = JSON.parse(localStorage.getItem('soatdon_accounts') || '[]');
+        const idx = accounts.findIndex(a => a.phone === storedUser.phone);
+        if (idx !== -1) {
+          accounts[idx] = storedUser;
+          localStorage.setItem('soatdon_accounts', JSON.stringify(accounts));
+        }
+
+        if (onUpdateUser) {
+          onUpdateUser(storedUser);
+        }
+      }
+    } catch (e) {
+      console.warn('Lỗi cập nhật số dư user:', e);
+    }
 
     // Mở khóa dữ liệu sau 1.5 giây
     setTimeout(() => {
@@ -245,8 +274,12 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
               <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-xs shrink-0 text-center">
                 <img
                   src={qrUrl}
-                  alt="VietQR MB Bank"
-                  className="w-32 h-32 sm:w-36 sm:h-36 object-contain rounded-lg"
+                  alt="VietQR MB Bank - BUI QUOC THAI"
+                  className="w-32 h-32 sm:w-36 sm:h-36 object-contain rounded-lg bg-white"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = `https://img.vietqr.io/image/MB-${bankAccount}-qr_only.png?amount=${currentPlan.price}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(accountHolder)}`;
+                  }}
                 />
                 <span className="text-[10px] text-slate-500 font-semibold mt-1 block">Quét bằng app ngân hàng</span>
               </div>

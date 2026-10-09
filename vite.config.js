@@ -144,7 +144,7 @@ export default defineConfig({
                 res.end(JSON.stringify({
                   success: true,
                   source: 'vietqr_api',
-                  qrUrl: vqrData.qrLink || fallbackQrUrl,
+                  qrUrl: (vqrData.qrDataURL && vqrData.qrDataURL.startsWith('data:image')) ? vqrData.qrDataURL : fallbackQrUrl,
                   orderId,
                   amount,
                   content,

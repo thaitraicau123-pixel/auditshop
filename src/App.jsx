@@ -8,6 +8,8 @@ import PaymentModal from './components/PaymentModal';
 import DisputeTemplateModal from './components/DisputeTemplateModal';
 import EmergencyAlertModal from './components/EmergencyAlertModal';
 import VictoryCelebrationModal from './components/VictoryCelebrationModal';
+import AuthModal from './components/AuthModal';
+import UserProfileModal from './components/UserProfileModal';
 import RoiCalculator from './components/RoiCalculator';
 import Testimonials from './components/Testimonials';
 import Footer from './components/Footer';
@@ -20,6 +22,17 @@ export default function App() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  
+  // User Authentication & Balance State
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('soatdon_user') || 'null');
+    } catch {
+      return null;
+    }
+  });
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   
   // Urgent & Radiant Pop-up Modals
   const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState(false);
@@ -59,7 +72,32 @@ export default function App() {
     setAuditResult(baseResult);
     setFileName(name);
     setActiveFilter('ALL');
-    setIsUnlocked(false); // Reset lock state for new file
+
+    // Tự động mở khóa nếu có gói tháng hoặc còn lượt quét
+    let shouldUnlock = false;
+    if (user) {
+      if (user.plan === 'monthly') {
+        shouldUnlock = true;
+      } else if ((user.balanceScans || 0) > 0) {
+        shouldUnlock = true;
+        // Trừ 1 lượt quét
+        const updatedUser = { ...user, balanceScans: Math.max(0, user.balanceScans - 1) };
+        setUser(updatedUser);
+        localStorage.setItem('soatdon_user', JSON.stringify(updatedUser));
+        try {
+          const accounts = JSON.parse(localStorage.getItem('soatdon_accounts') || '[]');
+          const idx = accounts.findIndex(a => a.phone === user.phone);
+          if (idx !== -1) {
+            accounts[idx] = updatedUser;
+            localStorage.setItem('soatdon_accounts', JSON.stringify(accounts));
+          }
+        } catch (e) {}
+      }
+    } else if (localStorage.getItem('soatdon_unlocked') === 'true') {
+      shouldUnlock = true;
+    }
+
+    setIsUnlocked(shouldUnlock);
 
     // 3. Mở pop-up tương ứng
     if (baseResult.anomalies.length > 0) {
@@ -103,6 +141,9 @@ export default function App() {
       <Navbar 
         onOpenPricing={() => setIsPaymentModalOpen(true)}
         onScrollToCalculator={handleScrollToCalculator}
+        user={user}
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
+        onOpenProfileModal={() => setIsProfileModalOpen(true)}
       />
 
       <main className="flex-1">
@@ -181,6 +222,8 @@ export default function App() {
         onSimulatePaymentSuccess={() => {
           setIsUnlocked(true);
         }}
+        currentUser={user}
+        onUpdateUser={setUser}
       />
 
       {/* Dispute Email & Zalo Script Modal with AI support */}
@@ -188,6 +231,29 @@ export default function App() {
         isOpen={isTemplateModalOpen}
         onClose={() => setIsTemplateModalOpen(false)}
         anomalies={auditResult?.anomalies || []}
+      />
+
+      {/* Modal Đăng Ký / Đăng Nhập Tài Khoản */}
+      <AuthModal 
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onAuthSuccess={(loggedInUser) => {
+          setUser(loggedInUser);
+        }}
+      />
+
+      {/* Modal Hồ Sơ & Quản Lý Lượt Quét */}
+      <UserProfileModal 
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        user={user}
+        onLogout={() => {
+          localStorage.removeItem('soatdon_user');
+          setUser(null);
+        }}
+        onOpenPricing={() => {
+          setIsPaymentModalOpen(true);
+        }}
       />
     </div>
   );
