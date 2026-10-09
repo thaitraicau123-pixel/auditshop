@@ -196,15 +196,15 @@ export async function parseExcelFile(file, aiSchema = null) {
           });
         };
 
-        const idIdx = findCol(['mã vận đơn', 'mã đơn', 'tracking', 'mã kiện', 'order id', 'mã bưu gửi', 'mã tra cứu', 'mã']);
-        const carrierIdx = findCol(['đối tác', 'hãng vận chuyển', 'đvvc', 'carrier', 'vận chuyển', 'đơn vị']);
-        const shopWeightIdx = findCol(['khai báo', 'shop cân', 'trọng lượng shop', 'cân nặng shop', 'khối lượng shop', 'trọng lượng ban đầu']);
-        const billedWeightIdx = findCol(['hãng cân', 'thực tế', 'tính cước', 'trọng lượng tính cước', 'cân nặng thực tế', 'khối lượng tính cước', 'trọng lượng qđ', 'quy đổi']);
-        const expectedFeeIdx = findCol(['cước dự kiến', 'phí ban đầu', 'tạm tính', 'cước gốc', 'phí chuẩn']);
-        const billedFeeIdx = findCol(['cước thực thu', 'phí giao', 'tổng cước', 'cước thực', 'phí ship', 'thực thu', 'tổng phí', 'chi phí']);
-        const codIdx = findCol(['tiền cod', 'thu hộ', 'cod', 'giá trị thu hộ', 'tiền thu hộ']);
+        const idIdx = findCol(['mã vận đơn bưu cục', 'mã vận đơn', 'mã bưu gửi', 'tracking', 'mã kiện', 'mã tra cứu', 'mã đơn hàng', 'mã đơn', 'order id', 'mã']);
+        const carrierIdx = findCol(['đơn vị vận chuyển', 'hãng vận chuyển', 'đvvc', 'carrier', 'vận chuyển', 'đối tác', 'đơn vị']);
+        const shopWeightIdx = findCol(['khai báo', 'shop cân', 'trọng lượng shop', 'cân nặng shop', 'khối lượng shop', 'trọng lượng ban đầu', 'kg khai báo']);
+        const billedWeightIdx = findCol(['bưu cục cân', 'bưu cục', 'hãng cân', 'thực tế', 'tính cước', 'trọng lượng tính cước', 'cân nặng thực tế', 'khối lượng tính cước', 'trọng lượng qđ', 'quy đổi', 'trọng lượng bưu cục']);
+        const expectedFeeIdx = findCol(['cước dự kiến', 'ban đầu', 'phí ban đầu', 'tạm tính', 'cước gốc', 'phí chuẩn', 'thỏa thuận']);
+        const billedFeeIdx = findCol(['cước vận chuyển thực thu', 'cước thực thu', 'thực tính', 'phí giao', 'tổng cước', 'cước thực', 'phí ship', 'thực thu', 'tổng phí', 'chi phí']);
+        const codIdx = findCol(['tiền thu hộ cod', 'tiền cod', 'thu hộ', 'cod', 'giá trị thu hộ', 'tiền thu hộ']);
         const statusIdx = findCol(['trạng thái', 'tình trạng', 'status', 'kết quả giao', 'tiến trình']);
-        const customerIdx = findCol(['khách hàng', 'người nhận', 'tên khách', 'họ tên']);
+        const customerIdx = findCol(['người nhận', 'khách hàng', 'tên khách', 'họ tên']);
         
         // Cột kích thước thể tích nếu có
         const lengthIdx = findCol(['dài', 'length']);
@@ -273,22 +273,10 @@ export async function parseExcelFile(file, aiSchema = null) {
  * Tải file Excel mẫu về máy để người dùng thử nghiệm
  */
 export function downloadSampleExcel() {
-  const ws = XLSX.utils.json_to_sheet(
-    SAMPLE_ORDERS.map(o => ({
-      "Mã Vận Đơn": o.id,
-      "Đơn Vị Vận Chuyển": o.carrier,
-      "Tên Khách Hàng": o.customer,
-      "Số Điện Thoại": o.phone,
-      "Trọng Lượng Khai Báo (gram)": o.shopWeight,
-      "Trọng Lượng Tính Cước (gram)": o.billedWeight,
-      "Cước Dự Kiến (VNĐ)": o.expectedFee,
-      "Cước Thực Thu (VNĐ)": o.billedFee,
-      "Tiền Thu Hộ COD (VNĐ)": o.cod,
-      "Trạng Thái Giao Hàng": o.status
-    }))
-  );
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "DanhSachDonHang");
-  XLSX.writeFile(wb, "Mau_Doi_Soat_Don_Hang_Thuc_Te.xlsx");
+  const link = document.createElement('a');
+  link.href = '/Bang_Ke_Doi_Soat_Chi_Tiet_300_Don.xlsx';
+  link.download = 'Bang_Ke_Doi_Soat_Chi_Tiet_300_Don.xlsx';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }

@@ -63,7 +63,21 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory })
     }
   };
 
-  const handleSampleClick = () => {
+  const handleSampleClick = async () => {
+    try {
+      setIsScanning(true);
+      setScanStep("📂 Đang tải và nạp bảng kê thực tế 300 đơn hàng đa hãng vận chuyển...");
+      const res = await fetch('/Bang_Ke_Doi_Soat_Chi_Tiet_300_Don.xlsx');
+      if (res.ok) {
+        const blob = await res.blob();
+        const file = new File([blob], "Bang_Ke_Doi_Soat_300_Don_GHTK_GHN_SPX.xlsx", { type: blob.type });
+        const parsedOrders = await parseExcelFile(file);
+        await runAiAuditFlow(parsedOrders, "Bang_Ke_Doi_Soat_300_Don_GHTK_GHN_SPX.xlsx");
+        return;
+      }
+    } catch (e) {
+      console.warn("Lỗi tải file 300 đơn, fallback:", e);
+    }
     runAiAuditFlow(SAMPLE_ORDERS, "File_Mau_Shop_Thoi_Trang_130_Don.xlsx");
   };
 
@@ -190,7 +204,7 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory })
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm shadow-md shadow-blue-500/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
               >
                 <PlayCircle className="w-5 h-5 text-indigo-100" />
-                <span>Quét thử ngay bằng AI (Dữ liệu mẫu 130 đơn)</span>
+                <span>Quét thử ngay bằng AI (Bảng kê thực tế 300 đơn)</span>
               </button>
 
               <button
@@ -199,7 +213,7 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory })
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 text-xs text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
               >
                 <Download className="w-4 h-4 text-slate-400" />
-                <span>Tải file Excel mẫu về máy</span>
+                <span>Tải bảng kê mẫu 300 đơn (.xlsx)</span>
               </button>
             </div>
           </>
