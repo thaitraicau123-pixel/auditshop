@@ -1,4 +1,43 @@
 // Vercel Serverless Function: Tạo mã VietQR động theo chuẩn VietQR API (api.vietqr.org)
+
+async function getVietQrBearerToken() {
+  if (process.env.VIETQR_TOKEN) return process.env.VIETQR_TOKEN;
+  
+  if (global.__VIETQR_SYSTEM_TOKEN__ && Date.now() < global.__VIETQR_SYSTEM_TOKEN_EXPIRY__) {
+    return global.__VIETQR_SYSTEM_TOKEN__;
+  }
+
+  const username = process.env.VIETQR_USERNAME || 'customer-soatdon-user26704';
+  const password = process.env.VIETQR_PASSWORD || 'Y3VzdG9tZXItc29hdGRvbi11c2VyMjY3MDQ=';
+  const basicAuth = Buffer.from(`${username}:${password}`).toString('base64');
+
+  const tokenEndpoints = [
+    'https://api.vietqr.org/vqr/api/token_generate',
+    'https://dev.vietqr.org/vqr/api/token_generate'
+  ];
+
+  for (const ep of tokenEndpoints) {
+    try {
+      const res = await fetch(ep, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${basicAuth}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.access_token) {
+          global.__VIETQR_SYSTEM_TOKEN__ = data.access_token;
+          global.__VIETQR_SYSTEM_TOKEN_EXPIRY__ = Date.now() + 270000;
+          return data.access_token;
+        }
+      }
+    } catch (e) {}
+  }
+  return null;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -23,18 +62,22 @@ export default async function handler(req, res) {
     const bankAccount = "0986019623";
     const bankCode = "MB";
     const userBankName = "NGUYEN VAN THAI";
-    const token = String(
+
+    let token = String(
       query.token || 
       body.token || 
       process.env.VIETQR_TOKEN || 
-      process.env.VITE_VIETQR_TOKEN || 
       ''
     ).trim();
+
+    if (!token) {
+      token = await getVietQrBearerToken();
+    }
 
     // Chuẩn bị fallback URL (Quicklink VietQR chuẩn Napas 24/7)
     const fallbackQrUrl = `https://img.vietqr.io/image/${bankCode}-${bankAccount}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(content)}&accountName=${encodeURIComponent(userBankName)}`;
 
-    // Nếu có token VietQR API, gọi endpoint chính thức của VietQR
+    // Nếu có token VietQR API, gọi endpoint tạo mã động chính thức của VietQR
     if (token) {
       const endpoints = [
         'https://api.vietqr.org/vqr/api/qr/generate-customer',
@@ -83,7 +126,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // Nếu không có token hoặc token chưa kích hoạt, trả về VietQR Quicklink Napas
+    // Nếu không có token hoặc token chưa được duyệt UAT, trả về VietQR Quicklink Napas
     return res.status(200).json({
       success: true,
       source: 'vietqr_quicklink',

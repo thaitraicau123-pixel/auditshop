@@ -2,6 +2,44 @@
 import fs from 'fs';
 import path from 'path';
 
+async function getVietQrBearerToken() {
+  if (process.env.VIETQR_TOKEN) return process.env.VIETQR_TOKEN;
+
+  if (global.__VIETQR_SYSTEM_TOKEN__ && Date.now() < global.__VIETQR_SYSTEM_TOKEN_EXPIRY__) {
+    return global.__VIETQR_SYSTEM_TOKEN__;
+  }
+
+  const username = process.env.VIETQR_USERNAME || 'customer-soatdon-user26704';
+  const password = process.env.VIETQR_PASSWORD || 'Y3VzdG9tZXItc29hdGRvbi11c2VyMjY3MDQ=';
+  const basicAuth = Buffer.from(`${username}:${password}`).toString('base64');
+
+  const tokenEndpoints = [
+    'https://api.vietqr.org/vqr/api/token_generate',
+    'https://dev.vietqr.org/vqr/api/token_generate'
+  ];
+
+  for (const ep of tokenEndpoints) {
+    try {
+      const res = await fetch(ep, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${basicAuth}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.access_token) {
+          global.__VIETQR_SYSTEM_TOKEN__ = data.access_token;
+          global.__VIETQR_SYSTEM_TOKEN_EXPIRY__ = Date.now() + 270000;
+          return data.access_token;
+        }
+      }
+    } catch (e) {}
+  }
+  return null;
+}
+
 export default async function handler(req, res) {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -26,13 +64,16 @@ export default async function handler(req, res) {
     const amount = Number(query.amount || body.amount || 0);
     const bankAccount = "0986019623";
 
-    const vietqrToken = String(
+    let vietqrToken = String(
       query.vietqrToken || 
       body.vietqrToken || 
       process.env.VIETQR_TOKEN || 
-      process.env.VITE_VIETQR_TOKEN || 
       ''
     ).trim();
+
+    if (!vietqrToken) {
+      vietqrToken = await getVietQrBearerToken();
+    }
 
     const sepayToken = String(
       query.token || 
