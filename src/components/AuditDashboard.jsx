@@ -1,7 +1,17 @@
 import React from 'react';
-import { AlertTriangle, Scale, PackageX, Receipt, Banknote, ShieldAlert, RotateCcw, FileText, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, Scale, PackageX, Receipt, Banknote, ShieldAlert, RotateCcw, FileText, CheckCircle2, Sparkles, Bot, Loader2 } from 'lucide-react';
 
-export default function AuditDashboard({ auditResult, fileName, onReset, activeFilter, onFilterChange, isUnlocked, onUnlockClick }) {
+export default function AuditDashboard({ 
+  auditResult, 
+  fileName, 
+  onReset, 
+  activeFilter, 
+  onFilterChange, 
+  isUnlocked, 
+  onUnlockClick,
+  aiDiagnosis,
+  isLoadingAi
+}) {
   if (!auditResult) return null;
 
   const { totalOrders, anomalyCount, totalLeakage, breakdown } = auditResult;
@@ -34,6 +44,30 @@ export default function AuditDashboard({ auditResult, fileName, onReset, activeF
           <span>Quét file khác</span>
         </button>
       </div>
+
+      {/* AI Diagnosis Insights if available */}
+      {isLoadingAi && (
+        <div className="mb-6 p-4 rounded-2xl bg-purple-950/40 border border-purple-500/30 flex items-center gap-3 text-purple-300 text-xs sm:text-sm">
+          <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
+          <span>🤖 AI Gemini đang tổng hợp báo cáo chẩn đoán nguyên nhân thất thoát...</span>
+        </div>
+      )}
+
+      {aiDiagnosis && (
+        <div className="mb-6 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-purple-950/70 via-indigo-950/50 to-slate-900 border border-purple-500/40 shadow-xl">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400 border border-purple-500/30">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <h3 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
+              Báo Cáo Chẩn Đoán Của Chuyên Gia Logistics (Google Gemini AI)
+            </h3>
+          </div>
+          <div className="text-xs sm:text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">
+            {aiDiagnosis}
+          </div>
+        </div>
+      )}
 
       {/* Main Alert Banner */}
       <div className="bg-gradient-to-r from-red-950/80 via-rose-950/70 to-slate-900 border-2 border-red-500/50 rounded-2xl p-6 sm:p-8 mb-8 shadow-2xl glow-danger relative overflow-hidden">

@@ -10,6 +10,7 @@ import RoiCalculator from './components/RoiCalculator';
 import Testimonials from './components/Testimonials';
 import Footer from './components/Footer';
 import { analyzeOrders } from './utils/auditEngine';
+import { aiGenerateAuditDiagnosis } from './utils/aiAuditor';
 
 export default function App() {
   const [auditResult, setAuditResult] = useState(null);
@@ -18,24 +19,53 @@ export default function App() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  
+  // AI State
+  const [aiDiagnosis, setAiDiagnosis] = useState(null);
+  const [isLoadingAi, setIsLoadingAi] = useState(false);
+  const [activeApiKey, setActiveApiKey] = useState('');
 
-  const handleAuditComplete = (orders, name) => {
+  const handleAuditComplete = async (orders, name, apiKey = '') => {
     const result = analyzeOrders(orders);
     setAuditResult(result);
     setFileName(name);
     setActiveFilter('ALL');
     setIsUnlocked(false); // Reset lock state for new file
-    
+    setActiveApiKey(apiKey);
+    setAiDiagnosis(null);
+
     // Cuộn mượt xuống phần kết quả
     setTimeout(() => {
       window.scrollTo({ top: 400, behavior: 'smooth' });
     }, 100);
+
+    // Nếu có API Key, chạy phân tích chẩn đoán bằng AI
+    const keyToUse = apiKey || localStorage.getItem('gemini_api_key');
+    if (keyToUse && result.anomalies.length > 0) {
+      try {
+        setIsLoadingAi(true);
+        const diagnosis = await aiGenerateAuditDiagnosis(
+          result.anomalies,
+          result.totalOrders,
+          result.totalLeakage,
+          keyToUse
+        );
+        if (diagnosis) {
+          setAiDiagnosis(diagnosis);
+        }
+      } catch (err) {
+        console.warn("Lỗi tạo chẩn đoán AI:", err);
+      } finally {
+        setIsLoadingAi(false);
+      }
+    }
   };
 
   const handleReset = () => {
     setAuditResult(null);
     setFileName('');
     setIsUnlocked(false);
+    setAiDiagnosis(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -78,6 +108,8 @@ export default function App() {
               onFilterChange={setActiveFilter}
               isUnlocked={isUnlocked}
               onUnlockClick={() => setIsPaymentModalOpen(true)}
+              aiDiagnosis={aiDiagnosis}
+              isLoadingAi={isLoadingAi}
             />
 
             <DisputeTable 
@@ -108,11 +140,12 @@ export default function App() {
         }}
       />
 
-      {/* Dispute Email & Zalo Script Modal */}
+      {/* Dispute Email & Zalo Script Modal with AI support */}
       <DisputeTemplateModal 
         isOpen={isTemplateModalOpen}
         onClose={() => setIsTemplateModalOpen(false)}
         anomalies={auditResult?.anomalies || []}
+        apiKey={activeApiKey}
       />
     </div>
   );

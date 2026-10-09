@@ -135,7 +135,10 @@ export function analyzeOrders(ordersData) {
 /**
  * Đọc file Excel từ File Input
  */
-export async function parseExcelFile(file) {
+/**
+ * Đọc file Excel từ File Input với thuật toán dò tìm Header Row thông minh & Hỗ trợ AI
+ */
+export async function parseExcelFile(file, aiSchema = null) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -151,41 +154,91 @@ export async function parseExcelFile(file) {
           throw new Error("File Excel không có dữ liệu đơn hàng.");
         }
 
-        // Tự động tìm hàng tiêu đề (Header row)
-        const headers = json[0].map(h => String(h || '').trim().toLowerCase());
-        
+        // 1. THUẬT TOÁN TÌM HÀNG TIÊU ĐỀ THỰC SỰ (Header Row Detection)
+        // Quét 15 hàng đầu tiên để tìm hàng có nhiều từ khóa logistics nhất
+        let headerRowIdx = 0;
+        let maxMatchScore = -1;
+        const keywords = ['mã', 'tracking', 'đơn', 'code', 'vận đơn', 'hãng', 'cước', 'khối lượng', 'cân nặng', 'thu hộ', 'cod', 'trạng thái', 'người nhận'];
+
+        const maxScanRows = Math.min(json.length, 15);
+        for (let r = 0; r < maxScanRows; r++) {
+          const rowCells = (json[r] || []).map(c => String(c || '').trim().toLowerCase());
+          let score = 0;
+          rowCells.forEach(cell => {
+            if (keywords.some(k => cell.includes(k))) score++;
+          });
+          if (score > maxMatchScore) {
+            maxMatchScore = score;
+            headerRowIdx = r;
+          }
+        }
+
+        const headers = (json[headerRowIdx] || []).map(h => String(h || '').trim().toLowerCase());
+
         // Helper tìm index của cột
-        const findCol = (keywords) => {
-          return headers.findIndex(h => keywords.some(k => h.includes(k)));
+        const findCol = (kwList) => {
+          return headers.findIndex(h => kwList.some(k => h.includes(k)));
         };
 
-        const idIdx = findCol(['mã', 'tracking', 'đơn', 'code', 'vận đơn']);
-        const carrierIdx = findCol(['đối tác', 'hãng', 'đvvc', 'carrier', 'vận chuyển']);
-        const shopWeightIdx = findCol(['khai báo', 'shop cân', 'trọng lượng shop', 'cân nặng shop']);
-        const billedWeightIdx = findCol(['thực tế', 'tính cước', 'trọng lượng tính cước', 'hãng cân', 'cân nặng']);
-        const expectedFeeIdx = findCol(['cước dự kiến', 'phí ban đầu', 'tạm tính']);
-        const billedFeeIdx = findCol(['phí giao', 'tổng cước', 'cước thực', 'phí ship', 'thực thu']);
-        const codIdx = findCol(['cod', 'thu hộ', 'tiền cod', 'giá trị']);
-        const statusIdx = findCol(['trạng thái', 'tình trạng', 'status']);
-        const customerIdx = findCol(['khách', 'người nhận', 'tên']);
+        const idIdx = findCol(['mã vận đơn', 'mã đơn', 'tracking', 'mã kiện', 'order id', 'mã bưu gửi', 'mã tra cứu', 'mã']);
+        const carrierIdx = findCol(['đối tác', 'hãng vận chuyển', 'đvvc', 'carrier', 'vận chuyển', 'đơn vị']);
+        const shopWeightIdx = findCol(['khai báo', 'shop cân', 'trọng lượng shop', 'cân nặng shop', 'khối lượng shop', 'trọng lượng ban đầu']);
+        const billedWeightIdx = findCol(['hãng cân', 'thực tế', 'tính cước', 'trọng lượng tính cước', 'cân nặng thực tế', 'khối lượng tính cước', 'trọng lượng qđ', 'quy đổi']);
+        const expectedFeeIdx = findCol(['cước dự kiến', 'phí ban đầu', 'tạm tính', 'cước gốc', 'phí chuẩn']);
+        const billedFeeIdx = findCol(['cước thực thu', 'phí giao', 'tổng cước', 'cước thực', 'phí ship', 'thực thu', 'tổng phí', 'chi phí']);
+        const codIdx = findCol(['tiền cod', 'thu hộ', 'cod', 'giá trị thu hộ', 'tiền thu hộ']);
+        const statusIdx = findCol(['trạng thái', 'tình trạng', 'status', 'kết quả giao', 'tiến trình']);
+        const customerIdx = findCol(['khách hàng', 'người nhận', 'tên khách', 'họ tên']);
+        
+        // Cột kích thước thể tích nếu có
+        const lengthIdx = findCol(['dài', 'length']);
+        const widthIdx = findCol(['rộng', 'width']);
+        const heightIdx = findCol(['cao', 'height']);
 
         const rows = [];
-        for (let r = 1; r < json.length; r++) {
+        for (let r = headerRowIdx + 1; r < json.length; r++) {
           const row = json[r];
-          if (!row || row.length === 0 || !row[idIdx >= 0 ? idIdx : 0]) continue;
+          if (!row || row.length === 0) continue;
+
+          // Lấy mã vận đơn
+          const rawId = idIdx >= 0 ? row[idIdx] : (row[0] || row[1]);
+          if (!rawId || String(rawId).trim() === '' || String(rawId).toLowerCase().includes('tổng cộng')) continue;
+
+          // Tính trọng lượng quy đổi thể tích (D x R x C / 5000) nếu có
+          let volumetricWeight = 0;
+          if (lengthIdx >= 0 && widthIdx >= 0 && heightIdx >= 0) {
+            const l = parseVnNumber(row[lengthIdx], 0);
+            const w = parseVnNumber(row[widthIdx], 0);
+            const h = parseVnNumber(row[heightIdx], 0);
+            if (l > 0 && w > 0 && h > 0) {
+              volumetricWeight = Math.round((l * w * h) / 5); // quy đổi ra gram
+            }
+          }
+
+          let shopW = shopWeightIdx >= 0 ? parseVnNumber(row[shopWeightIdx], 250) : 250;
+          // Nếu có thể tích quy đổi lớn hơn cân nặng thực thì lấy thể tích
+          if (volumetricWeight > shopW) {
+            shopW = volumetricWeight;
+          }
+
+          const billedW = billedWeightIdx >= 0 ? parseVnNumber(row[billedWeightIdx], shopW) : shopW;
+          const expFee = expectedFeeIdx >= 0 ? parseVnNumber(row[expectedFeeIdx], 22000) : 22000;
+          const billedFee = billedFeeIdx >= 0 ? parseVnNumber(row[billedFeeIdx], expFee) : expFee;
+          const codVal = codIdx >= 0 ? parseVnNumber(row[codIdx], 0) : 0;
+          const st = statusIdx >= 0 ? String(row[statusIdx] || '') : 'Giao thành công';
 
           rows.push({
-            id: String(row[idIdx >= 0 ? idIdx : 0] || `DON-${r}`),
-            carrier: String(row[carrierIdx >= 0 ? carrierIdx : 1] || 'Vận chuyển'),
-            customer: String(row[customerIdx >= 0 ? customerIdx : 2] || 'Khách hàng'),
+            id: String(rawId).trim(),
+            carrier: carrierIdx >= 0 && row[carrierIdx] ? String(row[carrierIdx]).trim() : 'Giao hàng',
+            customer: customerIdx >= 0 && row[customerIdx] ? String(row[customerIdx]).trim() : 'Khách hàng',
             phone: '09******',
             date: new Date().toISOString().split('T')[0],
-            shopWeight: parseVnNumber(row[shopWeightIdx >= 0 ? shopWeightIdx : 3], 250),
-            billedWeight: parseVnNumber(row[billedWeightIdx >= 0 ? billedWeightIdx : 4], 250),
-            expectedFee: parseVnNumber(row[expectedFeeIdx >= 0 ? expectedFeeIdx : 5], 22000),
-            billedFee: parseVnNumber(row[billedFeeIdx >= 0 ? billedFeeIdx : 6], 22000),
-            cod: parseVnNumber(row[codIdx >= 0 ? codIdx : 7], 200000),
-            status: String(row[statusIdx >= 0 ? statusIdx : 8] || 'Giao thành công')
+            shopWeight: shopW,
+            billedWeight: billedW,
+            expectedFee: expFee,
+            billedFee: billedFee,
+            cod: codVal,
+            status: st
           });
         }
 
