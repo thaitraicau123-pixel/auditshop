@@ -61,7 +61,7 @@ export default async function handler(req, res) {
     const content = String(query.content || body.content || orderId).slice(0, 23);
     const bankAccount = "0986019623";
     const bankCode = "MB";
-    const userBankName = "NGUYEN VAN THAI";
+    const userBankName = "BUI QUOC THAI";
 
     let token = String(
       query.token || 

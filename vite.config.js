@@ -111,7 +111,7 @@ export default defineConfig({
           const content = String(url.searchParams.get('content') || orderId).slice(0, 23);
           const bankAccount = "0986019623";
           const bankCode = "MB";
-          const userBankName = "NGUYEN VAN THAI";
+          const userBankName = "BUI QUOC THAI";
           let token = url.searchParams.get('token') || process.env.VIETQR_TOKEN || '';
           if (!token) token = await getSystemToken();
 

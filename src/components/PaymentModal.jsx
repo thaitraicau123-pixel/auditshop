@@ -50,7 +50,7 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
   const transferContent = orderId; // Chuẩn VietQR không dấu, <= 23 ký tự
   const bankAccount = "0986019623";
   const bankName = "MB Bank (Quân Đội)";
-  const accountHolder = "NGUYEN VAN THAI";
+  const accountHolder = "BUI QUOC THAI";
 
   // Fallback URL theo chuẩn VietQR Napas Quicklink
   const fallbackQrUrl = `https://img.vietqr.io/image/MB-${bankAccount}-compact2.png?amount=${currentPlan.price}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(accountHolder)}`;
