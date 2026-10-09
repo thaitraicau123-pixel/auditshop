@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SoatDon.vn - Phần Mềm Đối Soát & Cứu Tiền Thất Thoát Cho Shop Online</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <!-- SheetJS (XLSX) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
+  <!-- React & Babel for direct double-click execution in browser -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .glow-danger { box-shadow: 0 0 40px -10px rgba(239, 68, 68, 0.35); }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen antialiased selection:bg-rose-500 selection:text-white">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // Helper làm sạch số tiền và cân nặng trong Excel VN
+    function parseVnNumber(val, defaultVal = 0) {
+      if (val === null || val === undefined || val === '') return defaultVal;
+      if (typeof val === 'number') return isNaN(val) ? defaultVal : val;
+      let str = String(val).trim().toLowerCase().replace(/[^\d.,]/g, '');
+      if (!str) return defaultVal;
+      if (str.includes('.') && !str.includes(',')) {
+        const parts = str.split('.');
+        if (parts.length > 2 || (parts.length === 2 && parts[1].length === 3)) {
+          str = str.replace(/\./g, '');
+        }
+      } else if (str.includes(',') && !str.includes('.')) {
+        const parts = str.split(',');
+        if (parts.length > 2 || (parts.length === 2 && parts[1].length === 3)) {
+          str = str.replace(/,/g, '');
+        } else {
+          str = str.replace(',', '.');
+        }
+      } else if (str.includes('.') && str.includes(',')) {
+        if (str.indexOf('.') < str.indexOf(',')) {
+          str = str.replace(/\./g, '').replace(',', '.');
+        } else {
+          str = str.replace(/,/g, '');
+        }
+      }
+      const num = parseFloat(str);
+      return isNaN(num) ? defaultVal : num;
+    }
+
+    // Dữ liệu mẫu thực tế
+    const SAMPLE_ORDERS = [
+      { id: "GHTK-8821901", carrier: "GHTK", customer: "Nguyễn Thu Trang", phone: "098***3891", shopWeight: 200, billedWeight: 750, expectedFee: 22000, billedFee: 38000, cod: 320000, status: "Giao thành công", issueType: "WEIGHT_INFLATION", leakAmount: 16000, issueDetail: "Hãng nhảy cân 750g (chênh +550g so với gói áo 200g khai báo). Bị nhảy 2 nấc cước liên tỉnh.", isLocked: false },
+      { id: "GHN-9912044", carrier: "GHN", customer: "Trần Văn Mạnh", phone: "091***5899", shopWeight: 300, billedWeight: 1100, expectedFee: 26000, billedFee: 48000, cod: 450000, status: "Giao thành công", issueType: "WEIGHT_INFLATION", leakAmount: 22000, issueDetail: "Cân nặng nhảy từ 300g lên 1.1kg (+800g). Tính thêm phụ phí vượt cân.", isLocked: false },
+      { id: "SPX-7731902", carrier: "Shopee Xpress", customer: "Lê Hoàng Oanh", phone: "090***2884", shopWeight: 150, billedWeight: 650, expectedFee: 18000, billedFee: 32000, cod: 210000, status: "Giao thành công", issueType: "WEIGHT_INFLATION", leakAmount: 14000, issueDetail: "Kê khống trọng lượng lên 650g, vượt mốc 500g tính thêm cước nấc 2.", isLocked: false },
+      { id: "GHTK-8819023", carrier: "GHTK", customer: "Vũ Đức Thịnh", phone: "097***1345", shopWeight: 400, billedWeight: 400, expectedFee: 22000, billedFee: 33000, cod: 650000, status: "Chuyển hoàn (> 8 ngày)", issueType: "RETURN_STALLED", leakAmount: 650000, issueDetail: "Đơn hoàn ngâm bưu cục > 8 ngày không cập nhật. Nguy cơ mất kiện hàng 650.000đ.", isLocked: true },
+      { id: "TK-5529101", carrier: "TikTok Shop", customer: "Phạm Hải Yến", phone: "086***2349", shopWeight: 350, billedWeight: 350, expectedFee: 24000, billedFee: 36000, cod: 520000, status: "Chuyển hoàn (> 7 ngày)", issueType: "RETURN_STALLED", leakAmount: 520000, issueDetail: "Đơn hoàn TikTok Shop báo giao lại nhưng shipper không liên hệ. Cần nộp khiếu nại bồi hoàn gấp.", isLocked: true },
+      { id: "VTP-6619023", carrier: "Viettel Post", customer: "Hoàng Gia Bảo", phone: "093***1233", shopWeight: 250, billedWeight: 250, expectedFee: 20000, billedFee: 45000, cod: 300000, status: "Giao thành công", issueType: "FEE_ANOMALY", leakAmount: 25000, issueDetail: "Bị trừ phụ phí vùng sâu vô lý 25.000đ tại địa chỉ nội thành.", isLocked: true },
+      { id: "GHN-9988120", carrier: "GHN", customer: "Bùi Thúy Kiều", phone: "096***4881", shopWeight: 200, billedWeight: 800, expectedFee: 22000, billedFee: 38000, cod: 280000, status: "Giao thành công", issueType: "WEIGHT_INFLATION", leakAmount: 16000, issueDetail: "Hãng kê lố 600g cước cân nặng.", isLocked: true },
+      { id: "GHTK-8833912", carrier: "GHTK", customer: "Đỗ Quang Vinh", phone: "098***2233", shopWeight: 500, billedWeight: 500, expectedFee: 26000, billedFee: 39000, cod: 790000, status: "Chuyển hoàn (> 10 ngày)", issueType: "RETURN_STALLED", leakAmount: 790000, issueDetail: "Kiện hàng giá trị cao (790k) ngâm hoàn 10 ngày, chưa nhận được hàng hoàn.", isLocked: true }
+    ];
+
+    // Thêm các đơn chuẩn
+    for(let i=1; i<=42; i++) {
+      const carriers = ['GHTK', 'GHN', 'Shopee Xpress', 'TikTok Shop', 'Viettel Post'];
+      SAMPLE_ORDERS.push({
+        id: `${carriers[i % 5].slice(0,3).toUpperCase()}-10${100+i}`,
+        carrier: carriers[i % 5],
+        customer: `Khách hàng ${i}`,
+        phone: `091***${1000+i}`,
+        shopWeight: 250,
+        billedWeight: 250,
+        expectedFee: 22000,
+        billedFee: 22000,
+        cod: 250000 + (i % 4) * 50000,
+        status: "Giao thành công",
+        issueType: "NORMAL",
+        leakAmount: 0,
+        issueDetail: "Đúng cước, đúng cân nặng.",
+        isLocked: false
+      });
+    }
+
+    function analyzeOrdersData(orders) {
+      let weightLeak = 0, returnLeak = 0, feeLeak = 0, codLeak = 0;
+      const anomalies = [];
+
+      orders.forEach((o, idx) => {
+        const sw = parseVnNumber(o.shopWeight, 250);
+        const bw = parseVnNumber(o.billedWeight, 250);
+        const ef = parseVnNumber(o.expectedFee, 22000);
+        const bf = parseVnNumber(o.billedFee, 22000);
+        const cod = parseVnNumber(o.cod, 200000);
+        const st = String(o.status || "");
+
+        if (o.issueType && o.issueType !== "NORMAL") {
+          if (o.issueType === "WEIGHT_INFLATION") weightLeak += o.leakAmount;
+          else if (o.issueType === "RETURN_STALLED") returnLeak += o.leakAmount;
+          else if (o.issueType === "FEE_ANOMALY") feeLeak += o.leakAmount;
+          else if (o.issueType === "COD_DISCREPANCY") codLeak += o.leakAmount;
+          anomalies.push({ ...o, index: idx + 1 });
+          return;
+        }
+
+        // Tự động phân tích từ file up lên
+        let issue = null;
+        if (bw > sw + 200 && bf > ef) {
+          const diff = bf - ef;
+          weightLeak += diff;
+          issue = {
+            issueType: "WEIGHT_INFLATION",
+            leakAmount: diff,
+            issueDetail: `Hãng cân ${bw}g vs ${sw}g khai báo (+${bw-sw}g). Cước đội thêm ${diff.toLocaleString('vi-VN')} đ.`
+          };
+        } else if (st.toLowerCase().includes("hoàn") || st.toLowerCase().includes("return")) {
+          returnLeak += cod;
+          issue = {
+            issueType: "RETURN_STALLED",
+            leakAmount: cod,
+            issueDetail: `Đơn hoàn ngâm kho chưa trả shop. Nguy cơ mất kiện hàng ${cod.toLocaleString('vi-VN')} đ.`
+          };
+        } else if (bf > ef + 5000) {
+          const diff = bf - ef;
+          feeLeak += diff;
+          issue = {
+            issueType: "FEE_ANOMALY",
+            leakAmount: diff,
+            issueDetail: `Cước thực thu cao hơn tạm tính ${diff.toLocaleString('vi-VN')} đ (nghi ngờ phụ phí ảo).`
+          };
+        }
+
+        if (issue) {
+          anomalies.push({
+            ...o,
+            ...issue,
+            index: idx + 1,
+            isLocked: anomalies.length >= 3
+          });
+        }
+      });
+
+      return {
+        totalOrders: orders.length,
+        anomalies,
+        totalLeakage: weightLeak + returnLeak + feeLeak + codLeak,
+        breakdown: { weight: weightLeak, returns: returnLeak, fee: feeLeak, cod: codLeak }
+      };
+    }
+
+    function App() {
+      const [auditResult, setAuditResult] = useState(null);
+      const [fileName, setFileName] = useState('');
+      const [isUnlocked, setIsUnlocked] = useState(false);
+      const [isModalOpen, setIsModalOpen] = useState(false);
+      const [selectedPlan, setSelectedPlan] = useState('single');
+      const [activeFilter, setActiveFilter] = useState('ALL');
+      const [isScanning, setIsScanning] = useState(false);
+      const [scanStep, setScanStep] = useState('');
+      const [ordersPerDay, setOrdersPerDay] = useState(80);
+      const [copied, setCopied] = useState(false);
+
+      const fileInputRef = useRef(null);
+
+      const triggerScan = (data, name) => {
+        setIsScanning(true);
+        const steps = [
+          "Đang đọc bảng kê & nhận diện cột dữ liệu...",
+          "So khớp trọng lượng khai báo vs trọng lượng hãng cân...",
+          "Rà soát đơn chuyển hoàn quá hạn > 72h...",
+          "Tổng hợp danh sách các đơn bị thất thoát..."
+        ];
+        let i = 0;
+        setScanStep(steps[0]);
+        const iv = setInterval(() => {
+          i++;
+          if (i < steps.length) {
+            setScanStep(steps[i]);
+          } else {
+            clearInterval(iv);
+            setTimeout(() => {
+              setIsScanning(false);
+              setAuditResult(analyzeOrdersData(data));
+              setFileName(name);
+              setIsUnlocked(false);
+              window.scrollTo({ top: 400, behavior: 'smooth' });
+            }, 300);
+          }
+        }, 400);
+      };
+
+      const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            const data = new Uint8Array(evt.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+            if (json.length < 2) return alert("File không có dữ liệu!");
+
+            const headers = json[0].map(h => String(h||'').toLowerCase());
+            const findCol = (keys) => headers.findIndex(h => keys.some(k => h.includes(k)));
+
+            const idIdx = findCol(['mã', 'tracking', 'đơn', 'code']);
+            const carrierIdx = findCol(['đối tác', 'hãng', 'đvvc', 'carrier']);
+            const swIdx = findCol(['khai báo', 'shop cân', 'trọng lượng shop']);
+            const bwIdx = findCol(['thực tế', 'tính cước', 'hãng cân', 'cân nặng']);
+            const efIdx = findCol(['dự kiến', 'tạm tính']);
+            const bfIdx = findCol(['thực thu', 'tổng cước', 'phí giao', 'phí ship']);
+            const codIdx = findCol(['cod', 'thu hộ', 'tiền cod']);
+            const stIdx = findCol(['trạng thái', 'tình trạng']);
+            const cusIdx = findCol(['khách', 'người nhận', 'tên']);
+
+            const rows = [];
+            for (let r = 1; r < json.length; r++) {
+              const row = json[r];
+              if (!row || !row[idIdx >= 0 ? idIdx : 0]) continue;
+              rows.push({
+                id: String(row[idIdx >= 0 ? idIdx : 0] || `DON-${r}`),
+                carrier: String(row[carrierIdx >= 0 ? carrierIdx : 1] || 'Vận chuyển'),
+                customer: String(row[cusIdx >= 0 ? cusIdx : 2] || 'Khách hàng'),
+                phone: '09******',
+                shopWeight: row[swIdx >= 0 ? swIdx : 3] || 250,
+                billedWeight: row[bwIdx >= 0 ? bwIdx : 4] || 250,
+                expectedFee: row[efIdx >= 0 ? efIdx : 5] || 22000,
+                billedFee: row[bfIdx >= 0 ? bfIdx : 6] || 22000,
+                cod: row[codIdx >= 0 ? codIdx : 7] || 200000,
+                status: String(row[stIdx >= 0 ? stIdx : 8] || 'Giao thành công')
+              });
+            }
+
+            triggerScan(rows, file.name);
+          } catch (err) {
+            alert("Lỗi đọc file Excel: " + err.message);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      };
+
+      const handleSimulatePayment = () => {
+        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+        setIsUnlocked(true);
+        setIsModalOpen(false);
+      };
+
+      const handleExportDispute = () => {
+        if (!auditResult) return;
+        const exportData = auditResult.anomalies.map((item, idx) => ({
+          "STT": idx + 1,
+          "Mã Vận Đơn": item.id,
+          "Hãng Vận Chuyển": item.carrier,
+          "Loại Lỗi": item.issueType === "WEIGHT_INFLATION" ? "Kê khống cân nặng" : "Đơn hoàn ngâm / Phụ phí",
+          "Số Tiền Đề Nghị Hoàn (VNĐ)": item.leakAmount,
+          "Trọng Lượng Shop (g)": item.shopWeight,
+          "Trọng Lượng Hãng Cân (g)": item.billedWeight,
+          "Cước Dự Kiến": item.expectedFee,
+          "Cước Bị Trừ": item.billedFee,
+          "Tiền COD": item.cod,
+          "Chi Tiết Khiếu Nại": item.issueDetail
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Don_Khieu_Nai");
+        XLSX.writeFile(wb, `Bien_Ban_Khieu_Nai_Doi_Tien_${new Date().toISOString().split('T')[0]}.xlsx`);
+      };
+
+      const displayedAnomalies = auditResult ? (
+        activeFilter === 'ALL' ? auditResult.anomalies : auditResult.anomalies.filter(a => a.issueType === activeFilter)
+      ) : [];
+
+      return (
+        <div className="min-h-screen flex flex-col">
+          {/* Header */}
+          <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur border-b border-slate-800 px-4 sm:px-8 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center text-xl shadow-lg shadow-rose-500/20 font-bold">
+                🛡️
+              </div>
+              <div>
+                <span className="font-extrabold text-xl tracking-tight text-white">SoatDon<span className="text-rose-500">.vn</span></span>
+                <span className="ml-2 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">Bản Trực Tiếp</span>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 text-white shadow-md shadow-rose-500/20 hover:opacity-90"
+            >
+              Mở khóa chỉ từ 9.000 đ
+            </button>
+          </header>
+
+          <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-8 w-full">
+            {/* Hero */}
+            <div className="text-center max-w-3xl mx-auto mb-8">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-semibold mb-4">
+                ⚠️ 87% Shop online bị "rút ruột" 2 - 8 triệu/tháng vì chênh cân & giam đơn hoàn
+              </div>
+              <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight mb-4">
+                Lấy lại tiền <span className="text-rose-400 underline decoration-rose-500/30">bị trừ oan</span> từ các hãng vận chuyển trong 10 giây
+              </h1>
+              <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
+                Tự động quét file Excel đối soát của GHTK, GHN, Shopee Xpress, TikTok Shop. Phát hiện tức thì kê lố cân nặng, đơn hoàn ngâm quá 72h và phụ phí ảo.
+              </p>
+            </div>
+
+            {/* Upload Zone */}
+            <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6 sm:p-8 mb-8 shadow-xl">
+              {isScanning ? (
+                <div className="py-12 text-center">
+                  <div className="w-12 h-12 border-4 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <h3 className="text-lg font-bold text-white mb-1">Đang phân tích bảng kê...</h3>
+                  <p className="text-sm text-amber-400 font-mono animate-pulse">{scanStep}</p>
+                </div>
+              ) : (
+                <>
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-slate-600 hover:border-rose-500/80 rounded-xl p-8 text-center cursor-pointer bg-slate-900/40 hover:bg-slate-900/70 transition-all"
+                  >
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      onChange={handleFileUpload} 
+                      accept=".xlsx,.xls,.csv" 
+                      className="hidden" 
+                    />
+                    <div className="text-4xl mb-3">📁</div>
+                    <h3 className="text-base sm:text-lg font-bold text-white mb-1">
+                      Kéo thả file Excel đối soát vào đây, hoặc <span className="text-rose-400 underline">bấm để chọn file</span>
+                    </h3>
+                    <p className="text-xs text-slate-400">Hỗ trợ định dạng .xlsx, .xls, .csv của tất cả các đơn vị vận chuyển tại Việt Nam.</p>
+                  </div>
+
+                  <div className="mt-5 flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-700/60">
+                    <button
+                      type="button"
+                      onClick={() => triggerScan(SAMPLE_ORDERS, "File_Mau_Shop_Thoi_Trang_50_Don.xlsx")}
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-500/20 hover:opacity-90 flex items-center justify-center gap-2"
+                    >
+                      ⚡ Bấm để thử ngay với dữ liệu mẫu (Shop thời trang 50 đơn)
+                    </button>
+
+                    <div className="text-xs text-slate-400">
+                      🔒 Bảo mật 100%: Dữ liệu chỉ chạy trên máy của bạn, không gửi lên server
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Results Dashboard */}
+            {auditResult && (
+              <div className="space-y-6 mb-12">
+                {/* Big Loss Alert */}
+                <div className="bg-gradient-to-r from-red-950/90 to-slate-900 border-2 border-red-500/60 rounded-2xl p-6 sm:p-8 glow-danger">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                      <span className="text-xs uppercase font-extrabold px-2.5 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
+                        CẢNH BÁO THẤT THOÁT
+                      </span>
+                      <h2 className="text-2xl sm:text-4xl font-black text-white mt-2">
+                        Ước tính bị trừ oan: <span className="text-red-400 font-mono underline">{auditResult.totalLeakage.toLocaleString('vi-VN')} VNĐ</span>
+                      </h2>
+                      <p className="text-xs sm:text-sm text-slate-300 mt-1">
+                        Từ <b>{auditResult.anomalies.length} đơn hàng bất thường</b> trong file {fileName}.
+                      </p>
+                    </div>
+
+                    {!isUnlocked ? (
+                      <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 text-white font-bold text-sm shadow-xl shadow-rose-500/30 hover:scale-105 transition-transform"
+                      >
+                        Mở khóa toàn bộ mã đơn (Chỉ 9k)
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleExportDispute}
+                        className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm shadow-xl shadow-emerald-500/30 hover:scale-105 transition-transform"
+                      >
+                        📥 Tải file Excel khiếu nại (.xlsx)
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Metric Cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="p-4 rounded-xl bg-slate-800/80 border border-slate-700">
+                    <div className="text-xs text-amber-400 font-bold mb-1">Kê lố cân nặng</div>
+                    <div className="text-xl font-mono font-bold text-white">{auditResult.breakdown.weight.toLocaleString('vi-VN')} đ</div>
+                  </div>
+                  <div className="p-4 rounded-xl bg-slate-800/80 border border-slate-700">
+                    <div className="text-xs text-rose-400 font-bold mb-1">Đơn hoàn ngâm kho</div>
+                    <div className="text-xl font-mono font-bold text-white">{auditResult.breakdown.returns.toLocaleString('vi-VN')} đ</div>
+                  </div>
+                  <div className="p-4 rounded-xl bg-slate-800/80 border border-slate-700">
+                    <div className="text-xs text-blue-400 font-bold mb-1">Phụ phí bất thường</div>
+                    <div className="text-xl font-mono font-bold text-white">{auditResult.breakdown.fee.toLocaleString('vi-VN')} đ</div>
+                  </div>
+                  <div className="p-4 rounded-xl bg-slate-800/80 border border-slate-700">
+                    <div className="text-xs text-emerald-400 font-bold mb-1">Đơn phát hiện lỗi</div>
+                    <div className="text-xl font-mono font-bold text-white">{auditResult.anomalies.length} đơn</div>
+                  </div>
+                </div>
+
+                {/* Issues Table */}
+                <div className="bg-slate-800/90 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
+                  <div className="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/50">
+                    <div className="text-sm font-bold text-white">Danh sách chi tiết đơn bị trừ sai</div>
+                    {isUnlocked && (
+                      <span className="text-xs text-emerald-400 font-semibold">✅ Đã mở khóa 100% dữ liệu</span>
+                    )}
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs sm:text-sm">
+                      <thead className="bg-slate-900/80 text-slate-400 font-semibold uppercase text-[11px] border-b border-slate-700">
+                        <tr>
+                          <th className="p-3">Mã đơn</th>
+                          <th className="p-3">Hãng</th>
+                          <th className="p-3">Shop / Hãng cân</th>
+                          <th className="p-3">Số tiền mất</th>
+                          <th className="p-3">Chi tiết lỗi</th>
+                          <th className="p-3 text-center">Trạng thái</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800">
+                        {displayedAnomalies.map((item, idx) => {
+                          const locked = !isUnlocked && item.isLocked;
+                          return (
+                            <tr key={idx} className={locked ? "bg-slate-900/40 select-none" : "hover:bg-slate-800/50"}>
+                              <td className="p-3 font-mono font-bold text-rose-300">
+                                {locked ? <span className="blur-sm filter select-none tracking-widest">{item.carrier.slice(0,3)}-******</span> : item.id}
+                              </td>
+                              <td className="p-3"><span className="px-2 py-0.5 rounded bg-slate-700 text-xs">{item.carrier}</span></td>
+                              <td className="p-3 font-mono">
+                                {locked ? <span className="blur-xs filter text-slate-500">•••g / •••g</span> : `${item.shopWeight}g → ${item.billedWeight}g`}
+                              </td>
+                              <td className="p-3 font-mono font-bold text-red-400">+{item.leakAmount.toLocaleString('vi-VN')} đ</td>
+                              <td className="p-3 text-xs text-slate-300 max-w-xs">
+                                {locked ? <span className="blur-sm filter select-none">Kê khống trọng lượng nấc cước hoặc ngâm đơn hoàn...</span> : item.issueDetail}
+                              </td>
+                              <td className="p-3 text-center">
+                                {locked ? (
+                                  <button onClick={() => setIsModalOpen(true)} className="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/30 text-[11px] font-bold">
+                                    🔒 Mở khóa
+                                  </button>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[11px] font-bold">✓ Đã mở</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {!isUnlocked && (
+                    <div className="p-6 bg-slate-900/90 border-t border-slate-700 text-center">
+                      <h4 className="text-base font-bold text-white mb-1">
+                        Còn {auditResult.anomalies.length - 3} đơn thất thoát khác đang bị khóa
+                      </h4>
+                      <p className="text-xs text-slate-400 mb-4">
+                        Mở khóa ngay để nhận toàn bộ mã đơn và tải file Excel khiếu nại chuẩn để gửi bưu cục đòi lại tiền.
+                      </p>
+                      <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-rose-500/25 hover:opacity-90"
+                      >
+                        Mở khóa ngay chỉ từ 9.000 đ
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ROI Calculator Slider */}
+            <div className="bg-slate-800/60 border border-slate-700/80 rounded-2xl p-6 sm:p-8 mb-10">
+              <div className="text-center mb-6">
+                <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Công cụ tính toán</span>
+                <h3 className="text-xl sm:text-2xl font-bold text-white mt-1">
+                  Shop bạn đang gửi bao nhiêu đơn mỗi ngày?
+                </h3>
+              </div>
+
+              <div className="max-w-xl mx-auto space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-slate-300 font-medium">Quy mô đơn:</span>
+                  <span className="font-mono font-bold text-amber-400 text-lg bg-amber-400/10 px-3 py-1 rounded-lg border border-amber-400/20">
+                    {ordersPerDay} đơn/ngày
+                  </span>
+                </div>
+                <input 
+                  type="range" 
+                  min="10" 
+                  max="500" 
+                  step="5" 
+                  value={ordersPerDay} 
+                  onChange={(e) => setOrdersPerDay(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                />
+
+                <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/30 text-center mt-4">
+                  <div className="text-xs text-slate-400">Ước tính số tiền shop bạn đang bị mất oan mỗi tháng:</div>
+                  <div className="text-2xl sm:text-3xl font-black font-mono text-rose-400 mt-1">
+                    ~{(ordersPerDay * 30 * 0.08 * 16000 + ordersPerDay * 30 * 0.12 * 0.03 * 300000).toLocaleString('vi-VN')} VNĐ/tháng
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
+
+          {/* Payment Modal */}
+          {isModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+              <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+                <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
+
+                <div className="text-center mb-5">
+                  <span className="text-xs text-rose-400 font-bold uppercase">Mô hình giá siêu bình dân</span>
+                  <h3 className="text-xl font-bold text-white mt-1">Chọn gói mở khóa & Đối soát</h3>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 mb-5">
+                  <div 
+                    onClick={() => setSelectedPlan('single')}
+                    className={`p-3 rounded-xl border text-center cursor-pointer transition-all ${selectedPlan === 'single' ? 'border-rose-500 bg-rose-500/10 ring-1 ring-rose-500' : 'border-slate-700 bg-slate-800/60'}`}
+                  >
+                    <div className="text-xs font-bold text-white">Gói Trà Đá</div>
+                    <div className="text-base font-black text-rose-400 font-mono mt-1">9.000 đ</div>
+                    <div className="text-[10px] text-slate-400">1 File</div>
+                  </div>
+
+                  <div 
+                    onClick={() => setSelectedPlan('bundle')}
+                    className={`p-3 rounded-xl border text-center cursor-pointer relative transition-all ${selectedPlan === 'bundle' ? 'border-amber-500 bg-amber-500/10 ring-1 ring-amber-500' : 'border-slate-700 bg-slate-800/60'}`}
+                  >
+                    <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.2 rounded-full bg-amber-500 text-[9px] font-bold text-slate-950 uppercase">Hot</span>
+                    <div className="text-xs font-bold text-white">Nạp 5 Lượt</div>
+                    <div className="text-base font-black text-amber-400 font-mono mt-1">29.000 đ</div>
+                    <div className="text-[10px] text-slate-400">Dùng dần</div>
+                  </div>
+
+                  <div 
+                    onClick={() => setSelectedPlan('monthly')}
+                    className={`p-3 rounded-xl border text-center cursor-pointer transition-all ${selectedPlan === 'monthly' ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500' : 'border-slate-700 bg-slate-800/60'}`}
+                  >
+                    <div className="text-xs font-bold text-white">Gói Tháng</div>
+                    <div className="text-base font-black text-emerald-400 font-mono mt-1">79.000 đ</div>
+                    <div className="text-[10px] text-slate-400">Không giới hạn</div>
+                  </div>
+                </div>
+
+                {/* VietQR View */}
+                <div className="bg-slate-800 p-4 rounded-xl flex items-center gap-4 mb-5 border border-slate-700">
+                  <img 
+                    src={`https://img.vietqr.io/image/MB-0988888888-compact2.png?amount=${selectedPlan==='single'?9000:(selectedPlan==='bundle'?29000:79000)}&addInfo=SOATDON%20888&accountName=NGUYEN%20VAN%20QUAN%20LY`} 
+                    alt="VietQR" 
+                    className="w-24 h-24 bg-white p-1 rounded-lg shrink-0 object-contain"
+                  />
+                  <div className="text-xs space-y-1">
+                    <div className="text-slate-400">Ngân hàng: <b className="text-white">MBBank (Quân Đội)</b></div>
+                    <div className="text-slate-400">STK: <b className="text-amber-400 font-mono">0988888888</b></div>
+                    <div className="text-slate-400">Số tiền: <b className="text-rose-400 font-mono text-sm">{selectedPlan==='single'?'9.000 đ':(selectedPlan==='bundle'?'29.000 đ':'79.000 đ')}</b></div>
+                    <div className="text-slate-400">Nội dung: <span className="px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 font-mono font-bold">SOATDON 888</span></div>
+                  </div>
+                </div>
+
+                {/* Demo Action Button */}
+                <button
+                  onClick={handleSimulatePayment}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-extrabold text-sm shadow-lg shadow-emerald-500/25 hover:opacity-90 flex items-center justify-center gap-1.5"
+                >
+                  ⚡ [Bấm để thử] Giả lập Chuyển Khoản Thành Công
+                </button>
+              </div>
+            </div>
+          )}
+
+          <footer className="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+            SoatDon.vn - Phần mềm bảo vệ doanh thu & đối soát tự động cho nhà bán hàng online.
+          </footer>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

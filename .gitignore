@@ -1,0 +1,7 @@
+node_modules/
+dist/
+-lock.json
+*.log
+.DS_Store
+.env
+.env.local
