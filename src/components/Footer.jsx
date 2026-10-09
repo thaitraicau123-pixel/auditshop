@@ -20,10 +20,10 @@ export default function Footer() {
             *Lưu ý: SoatDon.vn là công cụ phần mềm độc lập hỗ trợ nhà bán hàng rà soát bảng kê đối soát theo quy chuẩn hợp đồng. Chúng tôi cam kết bảo mật 100% dữ liệu đơn hàng và khách hàng của bạn.
           </p>
           <div className="flex items-center justify-center md:justify-end gap-4 text-slate-400">
-            <span className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer">
+            <a href="https://zalo.me/0986019623" target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer">
               <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Hỗ trợ kỹ thuật Zalo: 0988.xxx.xxx</span>
-            </span>
+              <span>Hỗ trợ Zalo / Hotline: <b>0986019623</b></span>
+            </a>
             <span>•</span>
             <span className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer">
               <Mail className="w-3.5 h-3.5 text-amber-400" />

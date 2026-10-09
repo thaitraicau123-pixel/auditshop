@@ -55,12 +55,11 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
 
   const currentPlan = plans[selectedPlan];
   const transferContent = `SOATDON ${orderCode}`;
-  const bankAccount = "0988888888";
-  const bankName = "MBBank (Ngân hàng Quân Đội)";
-  const accountHolder = "NGUYEN VAN QUAN LY";
+  const bankAccount = "0986019623";
+  const bankName = "MB Bank (Ngân hàng Quân Đội)";
 
-  // VietQR Quicklink generator format
-  const qrUrl = `https://img.vietqr.io/image/MB-${bankAccount}-compact2.png?amount=${currentPlan.price}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(accountHolder)}`;
+  // VietQR Quicklink generator format tự động nhận diện STK MB Bank
+  const qrUrl = `https://img.vietqr.io/image/MB-${bankAccount}-compact2.png?amount=${currentPlan.price}&addInfo=${encodeURIComponent(transferContent)}`;
 
   const handleSimulateSuccess = () => {
     confetti({
@@ -163,12 +162,12 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
                 <span className="font-bold text-white">{bankName}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-700/60">
-                <span className="text-slate-400">Số tài khoản:</span>
-                <span className="font-mono font-bold text-amber-400">{bankAccount}</span>
+                <span className="text-slate-400">Số tài khoản / SĐT:</span>
+                <span className="font-mono font-bold text-amber-400 text-sm">{bankAccount}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-700/60">
-                <span className="text-slate-400">Chủ tài khoản:</span>
-                <span className="font-bold text-white uppercase">{accountHolder}</span>
+                <span className="text-slate-400">Hỗ trợ Zalo:</span>
+                <span className="font-mono font-bold text-emerald-400">{bankAccount}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-700/60">
                 <span className="text-slate-400">Số tiền thanh toán:</span>
