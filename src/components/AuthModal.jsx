@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { X, UserPlus, LogIn, Store, Phone, Lock, Sparkles, CheckCircle2, ShieldCheck, KeyRound, ArrowLeft, MessageCircle } from 'lucide-react';
+import { 
+  X, UserPlus, LogIn, Store, Phone, Lock, Sparkles, CheckCircle2, 
+  ShieldCheck, KeyRound, ArrowLeft, MessageCircle, ShieldAlert 
+} from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
@@ -7,6 +10,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
   const [mode, setMode] = useState('register'); // 'register' | 'login' | 'forgot'
   const [shopName, setShopName] = useState('');
+  const [verifyShopName, setVerifyShopName] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -48,7 +52,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
       shopName: cleanShop,
       phone: cleanPhone,
       password: password,
-      balanceScans: 0, // Bỏ tính năng miễn phí lần đầu: Bắt đầu từ 0 lượt
+      balanceScans: 0, // Bắt đầu từ 0 lượt (bỏ tính năng miễn phí lần đầu)
       plan: 'standard',
       registeredAt: new Date().toISOString()
     };
@@ -107,14 +111,21 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     }
   };
 
+  // ĐẶT LẠI MẬT KHẨU BẢO MẬT 2 LỚP: SĐT + TÊN SHOP CHÍNH CHỦ
   const handleResetPassword = (e) => {
     e.preventDefault();
     setError('');
     setSuccessMsg('');
 
     const cleanPhone = phone.trim();
+    const cleanVerifyShop = verifyShopName.trim().toLowerCase();
+
     if (!cleanPhone || cleanPhone.length < 9) {
       setError('Vui lòng nhập Số điện thoại đã đăng ký!');
+      return;
+    }
+    if (!cleanVerifyShop) {
+      setError('Vui lòng nhập Tên Shop đã đăng ký để xác minh chính chủ!');
       return;
     }
     if (!newPassword || newPassword.length < 6) {
@@ -127,27 +138,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     }
 
     const accounts = JSON.parse(localStorage.getItem('soatdon_accounts') || '[]');
-    const idx = accounts.findIndex(a => a.phone === cleanPhone);
+    const targetAccount = accounts.find(a => a.phone === cleanPhone);
 
-    if (idx !== -1) {
-      accounts[idx].password = newPassword;
-      localStorage.setItem('soatdon_accounts', JSON.stringify(accounts));
-
-      // Cập nhật session hiện tại nếu trùng số điện thoại
-      const currentUser = JSON.parse(localStorage.getItem('soatdon_user') || 'null');
-      if (currentUser && currentUser.phone === cleanPhone) {
-        currentUser.password = newPassword;
-        localStorage.setItem('soatdon_user', JSON.stringify(currentUser));
-      }
-
-      setSuccessMsg('🎉 Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay.');
-      setTimeout(() => {
-        setMode('login');
-        setPassword(newPassword);
-        setError('');
-      }, 1200);
-    } else {
-      // Nếu là số admin Bùi Quốc Thái
+    if (!targetAccount) {
       if (cleanPhone === '0986019623') {
         setSuccessMsg('Đã đặt lại mật khẩu Admin thành công! Vui lòng đăng nhập.');
         setTimeout(() => {
@@ -156,9 +149,38 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         }, 1000);
         return;
       }
-      setError('Không tìm thấy tài khoản với số điện thoại này trên hệ thống. Vui lòng kiểm tra lại!');
+      setError('Không tìm thấy tài khoản với số điện thoại này trên hệ thống!');
+      return;
     }
+
+    // BẢO MẬT 2 LỚP: SO KHỚP TÊN SHOP CỦA CHÍNH CHỦ!
+    if (targetAccount.shopName.trim().toLowerCase() !== cleanVerifyShop) {
+      setError('❌ Tên Shop không khớp với số điện thoại này! Để chống kẻ gian tự ý đổi mật khẩu, hệ thống chỉ cho phép chính chủ đặt lại. Nếu cần hỗ trợ, vui lòng bấm nút Zalo bên dưới để gặp Admin.');
+      return;
+    }
+
+    // Khớp 100% -> Cập nhật mật khẩu mới
+    targetAccount.password = newPassword;
+    localStorage.setItem('soatdon_accounts', JSON.stringify(accounts));
+
+    // Cập nhật session nếu đang lưu số điện thoại này
+    const currentUser = JSON.parse(localStorage.getItem('soatdon_user') || 'null');
+    if (currentUser && currentUser.phone === cleanPhone) {
+      currentUser.password = newPassword;
+      localStorage.setItem('soatdon_user', JSON.stringify(currentUser));
+    }
+
+    setSuccessMsg('🎉 Xác minh chính chủ thành công! Mật khẩu mới đã được cập nhật.');
+    setTimeout(() => {
+      setMode('login');
+      setPassword(newPassword);
+      setError('');
+    }, 1200);
   };
+
+  const zaloResetLink = `https://zalo.me/0986019623?text=${encodeURIComponent(
+    `Chào Admin Bùi Quốc Thái, tôi là chủ tài khoản SĐT [${phone || '...'}], Tên Shop [${verifyShopName || shopName || '...'}]. Tôi cần hỗ trợ cấp lại mật khẩu cho tài khoản SoatDon.vn. Nhờ Admin kiểm tra và hỗ trợ giúp tôi!`
+  )}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fadeIn font-sans">
@@ -176,7 +198,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
               <h3 className="font-extrabold text-slate-900 text-base">
                 {mode === 'register' && 'Tạo Tài Khoản Nhà Bán Hàng'}
                 {mode === 'login' && 'Đăng Nhập Tài Khoản'}
-                {mode === 'forgot' && 'Khôi Phục Mật Khẩu'}
+                {mode === 'forgot' && 'Khôi Phục Mật Khẩu (Bảo Mật 2 Lớp)'}
               </h3>
               <p className="text-[11px] text-slate-500 font-medium">Bảo vệ doanh thu & kiểm toán đơn hàng 24/7</p>
             </div>
@@ -223,12 +245,20 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
             </button>
           )}
 
-          {/* Form Quên mật khẩu */}
+          {/* Form Quên mật khẩu với Bảo Mật 2 Lớp */}
           {mode === 'forgot' ? (
-            <form onSubmit={handleResetPassword} className="space-y-3.5">
+            <form onSubmit={handleResetPassword} className="space-y-3">
+              {/* Banner bảo mật */}
+              <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-900 flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                <span className="text-[11px] leading-tight">
+                  <b>Bảo vệ chống chiếm đoạt tài khoản:</b> Bạn cần nhập đúng cả <b>Số điện thoại</b> và <b>Tên Shop</b> đã đăng ký để xác minh danh tính chính chủ.
+                </span>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Số Điện Thoại / Zalo Đã Đăng Ký <span className="text-rose-500">*</span>
+                  1. Số Điện Thoại Đã Đăng Ký <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -236,7 +266,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Nhập số điện thoại cần lấy lại mật khẩu"
+                    placeholder="VD: 0986019623"
                     className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-indigo-600 bg-slate-50/50"
                   />
                 </div>
@@ -244,7 +274,23 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Mật Khẩu Mới <span className="text-rose-500">*</span>
+                  2. Tên Shop Xác Minh Chính Chủ <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <Store className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={verifyShopName}
+                    onChange={(e) => setVerifyShopName(e.target.value)}
+                    placeholder="Nhập đúng Tên Shop bạn đã khai báo"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-indigo-600 bg-slate-50/50"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  3. Mật Khẩu Mới <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -252,7 +298,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
+                    placeholder="Mật khẩu mới (tối thiểu 6 ký tự)"
                     className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-indigo-600 bg-slate-50/50"
                   />
                 </div>
@@ -260,7 +306,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Xác Nhận Mật Khẩu Mới <span className="text-rose-500">*</span>
+                  4. Xác Nhận Mật Khẩu Mới <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -292,19 +338,19 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                 className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-sm shadow-md shadow-blue-500/20 transition-all cursor-pointer flex items-center justify-center gap-2"
               >
                 <KeyRound className="w-4 h-4" />
-                <span>Đặt Lại Mật Khẩu Ngay</span>
+                <span>Xác Minh Chính Chủ & Đổi Mật Khẩu</span>
               </button>
 
               <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-center justify-between">
-                <span>Cần hỗ trợ cấp lại mật khẩu gấp?</span>
+                <span>Quên cả Tên Shop?</span>
                 <a
-                  href="https://zalo.me/0986019623"
+                  href={zaloResetLink}
                   target="_blank"
                   rel="noreferrer"
-                  className="font-bold text-indigo-700 hover:underline flex items-center gap-1"
+                  className="font-bold text-indigo-700 hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <MessageCircle className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Zalo: 0986019623</span>
+                  <span>Xác thực qua Zalo Admin</span>
                 </a>
               </div>
             </form>
