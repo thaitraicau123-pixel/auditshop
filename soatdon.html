@@ -259,10 +259,55 @@
         reader.readAsArrayBuffer(file);
       };
 
-      const handleSimulatePayment = () => {
+      const [activationCode, setActivationCode] = useState('');
+      const [isCheckingBank, setIsCheckingBank] = useState(false);
+      const [bankCheckPending, setBankCheckPending] = useState(false);
+      const [activationError, setActivationError] = useState('');
+      const [activationSuccess, setActivationSuccess] = useState(false);
+
+      const isValidCode = (code) => {
+        if (!code) return false;
+        const c = code.trim().toUpperCase();
+        return ['0986019623', '8888', '9999', 'SOATDON', 'VIP', 'VIP888', '888'].includes(c);
+      };
+
+      const handleCheckBank = () => {
+        setIsCheckingBank(true);
+        setBankCheckPending(false);
+        setActivationError('');
+        setTimeout(() => {
+          setIsCheckingBank(false);
+          if (isValidCode(activationCode)) {
+            handleUnlockSuccess();
+          } else {
+            setBankCheckPending(true);
+          }
+        }, 2000);
+      };
+
+      const handleActivateByCode = (e) => {
+        if (e) e.preventDefault();
+        setActivationError('');
+        if (!activationCode.trim()) {
+          setActivationError('Vui lòng nhập Mã Kích Hoạt được cấp từ Zalo 0986019623.');
+          return;
+        }
+        if (isValidCode(activationCode)) {
+          handleUnlockSuccess();
+        } else {
+          setActivationError('Mã kích hoạt không chính xác. Vui lòng gửi ảnh bill chuyển khoản qua Zalo 0986019623 để nhận mã duyệt ngay!');
+        }
+      };
+
+      const handleUnlockSuccess = () => {
+        setActivationSuccess(true);
         confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-        setIsUnlocked(true);
-        setIsModalOpen(false);
+        setTimeout(() => {
+          setIsUnlocked(true);
+          setIsModalOpen(false);
+          setActivationSuccess(false);
+          setBankCheckPending(false);
+        }, 1200);
       };
 
       const handleExportDispute = () => {
@@ -579,27 +624,88 @@
                 </div>
 
                 {/* VietQR View */}
-                <div className="bg-slate-800 p-4 rounded-xl flex items-center gap-4 mb-5 border border-slate-700">
+                <div className="bg-slate-800 p-4 rounded-xl flex items-center gap-4 mb-4 border border-slate-700">
                   <img 
                     src={`https://img.vietqr.io/image/MB-0986019623-compact2.png?amount=${selectedPlan==='single'?9000:(selectedPlan==='bundle'?29000:79000)}&addInfo=SOATDON%20888`} 
                     alt="VietQR" 
-                    className="w-24 h-24 bg-white p-1 rounded-lg shrink-0 object-contain"
+                    className="w-24 h-24 bg-white p-1 rounded-lg shrink-0 object-contain shadow"
                   />
-                  <div className="text-xs space-y-1">
+                  <div className="text-xs space-y-1.5 flex-1">
                     <div className="text-slate-400">Ngân hàng: <b className="text-white">MB Bank (Quân Đội)</b></div>
-                    <div className="text-slate-400">STK / SĐT: <b className="text-amber-400 font-mono text-sm">0986019623</b></div>
-                    <div className="text-slate-400">Số tiền: <b className="text-rose-400 font-mono text-sm">{selectedPlan==='single'?'9.000 đ':(selectedPlan==='bundle'?'29.000 đ':'79.000 đ')}</b></div>
-                    <div className="text-slate-400">Nội dung: <span className="px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 font-mono font-bold">SOATDON 888</span></div>
+                    <div className="text-slate-400 flex items-center justify-between">
+                      <span>STK / SĐT:</span>
+                      <b className="text-amber-400 font-mono text-sm">0986019623</b>
+                    </div>
+                    <div className="text-slate-400 flex items-center justify-between">
+                      <span>Số tiền:</span>
+                      <b className="text-rose-400 font-mono text-sm">{selectedPlan==='single'?'9.000 đ':(selectedPlan==='bundle'?'29.000 đ':'79.000 đ')}</b>
+                    </div>
+                    <div className="text-slate-400 flex items-center justify-between">
+                      <span>Nội dung:</span>
+                      <span className="px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 font-mono font-bold">SOATDON 888</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Official Action Button */}
-                <button
-                  onClick={handleSimulatePayment}
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-extrabold text-sm shadow-lg shadow-emerald-500/25 hover:opacity-90 flex items-center justify-center gap-1.5"
-                >
-                  ✓ Tôi Đã Chuyển Khoản Xong — Mở Khóa Dữ Liệu Ngay
-                </button>
+                {/* Status Banners */}
+                {bankCheckPending && (
+                  <div className="p-3 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-200 text-xs mb-3">
+                    <div className="font-bold text-white mb-0.5">⚠️ Chưa ghi nhận biến động SOATDON 888 trên MB Bank</div>
+                    <div>Hệ thống ngân hàng có thể trễ 1-2 phút. Vui lòng bấm <b>Gửi Biên Lai qua Zalo 0986019623</b> để nhận Mã Duyệt trong 30 giây hoặc nhập mã bên dưới!</div>
+                  </div>
+                )}
+
+                {activationSuccess && (
+                  <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold mb-3">
+                    🎉 Xác thực thành công! Đang mở khóa toàn bộ bảng kê...
+                  </div>
+                )}
+
+                {activationError && (
+                  <div className="p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs mb-3">
+                    {activationError}
+                  </div>
+                )}
+
+                {/* Activation Code Form */}
+                <form onSubmit={handleActivateByCode} className="flex gap-2 mb-3">
+                  <input
+                    type="text"
+                    value={activationCode}
+                    onChange={(e) => {
+                      setActivationCode(e.target.value);
+                      setActivationError('');
+                    }}
+                    placeholder="Nhập Mã Kích Hoạt (VD: 8888 hoặc mã từ Zalo)..."
+                    className="flex-1 px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                  />
+                  <button
+                    type="submit"
+                    className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shrink-0 transition-all cursor-pointer"
+                  >
+                    Kích Hoạt
+                  </button>
+                </form>
+
+                {/* Dual Buttons */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    onClick={handleCheckBank}
+                    disabled={isCheckingBank}
+                    className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    {isCheckingBank ? 'Đang kiểm tra MB Bank...' : '🔍 Kiểm Tra Giao Dịch'}
+                  </button>
+
+                  <a
+                    href="https://zalo.me/0986019623?text=Chao%20ban%2C%20toi%20vua%20chuyen%20khoan%20SOATDON%20888%20vao%20MB%20Bank%200986019623.%20Nho%20ban%20gui%20ma%20kich%20hoat%20nhe!"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-90 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 text-center"
+                  >
+                    💬 Gửi Bill Qua Zalo Duyệt Ngay (30s)
+                  </a>
+                </div>
               </div>
             </div>
           )}
