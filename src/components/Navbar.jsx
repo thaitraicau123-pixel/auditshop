@@ -11,10 +11,13 @@ export default function Navbar({ onOpenPricing, onScrollToCalculator }) {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-xl tracking-tight text-white">SoatDon<span className="text-rose-500">.vn</span></span>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">MVP B2B</span>
+              <span className="font-extrabold text-xl tracking-tight text-white">SoatDon<span className="text-purple-400">.vn</span></span>
+              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/30 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-purple-400" />
+                <span>Gemini 3.8 AI</span>
+              </span>
             </div>
-            <p className="text-xs text-slate-400 hidden sm:block">Kiểm toán cước & Cứu tiền thất thoát shop online</p>
+            <p className="text-xs text-slate-400 hidden sm:block">Kiểm toán vận chuyển & COD thông minh bằng AI</p>
           </div>
         </div>
 

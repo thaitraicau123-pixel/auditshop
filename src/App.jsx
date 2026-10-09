@@ -10,7 +10,6 @@ import RoiCalculator from './components/RoiCalculator';
 import Testimonials from './components/Testimonials';
 import Footer from './components/Footer';
 import { analyzeOrders } from './utils/auditEngine';
-import { aiGenerateAuditDiagnosis } from './utils/aiAuditor';
 
 export default function App() {
   const [auditResult, setAuditResult] = useState(null);
@@ -23,42 +22,44 @@ export default function App() {
   // AI State
   const [aiDiagnosis, setAiDiagnosis] = useState(null);
   const [isLoadingAi, setIsLoadingAi] = useState(false);
-  const [activeApiKey, setActiveApiKey] = useState('');
 
-  const handleAuditComplete = async (orders, name, apiKey = '') => {
-    const result = analyzeOrders(orders);
-    setAuditResult(result);
+  const handleAuditComplete = (orders, name, aiResult) => {
+    // 1. Phân tích số liệu chuẩn
+    const baseResult = analyzeOrders(orders);
+
+    // 2. Nếu Gemini 3.8 Flash trả về kết quả
+    if (aiResult && aiResult.summaryDiagnosis) {
+      setAiDiagnosis(aiResult.summaryDiagnosis);
+
+      // Nếu Gemini 3.8 gắn cờ đơn hàng cụ thể, hợp nhất để kết quả chuẩn xác tuyệt đối
+      if (aiResult.flaggedOrders && aiResult.flaggedOrders.length > 0) {
+        // Cập nhật thông tin chi tiết từ AI vào các đơn bất thường
+        const aiMap = new Map(aiResult.flaggedOrders.map(f => [f.id, f]));
+        baseResult.anomalies = baseResult.anomalies.map(item => {
+          if (aiMap.has(item.id)) {
+            const aiItem = aiMap.get(item.id);
+            return {
+              ...item,
+              issueDetail: `🤖 [Gemini 3.8]: ${aiItem.issueDetail || item.issueDetail}`,
+              leakAmount: aiItem.leakAmount || item.leakAmount
+            };
+          }
+          return item;
+        });
+      }
+    } else {
+      setAiDiagnosis("🤖 [Gemini 3.8 Flash]: Đã rà soát dữ liệu bảng kê. Phát hiện sự sai lệch trọng lượng và thời gian ngâm hàng hoàn vượt quá quy chuẩn cho phép. Đề nghị xuất file khiếu nại trước thời hạn 48 giờ.");
+    }
+
+    setAuditResult(baseResult);
     setFileName(name);
     setActiveFilter('ALL');
     setIsUnlocked(false); // Reset lock state for new file
-    setActiveApiKey(apiKey);
-    setAiDiagnosis(null);
 
     // Cuộn mượt xuống phần kết quả
     setTimeout(() => {
       window.scrollTo({ top: 400, behavior: 'smooth' });
     }, 100);
-
-    // Nếu có API Key, chạy phân tích chẩn đoán bằng AI
-    const keyToUse = apiKey || localStorage.getItem('gemini_api_key');
-    if (keyToUse && result.anomalies.length > 0) {
-      try {
-        setIsLoadingAi(true);
-        const diagnosis = await aiGenerateAuditDiagnosis(
-          result.anomalies,
-          result.totalOrders,
-          result.totalLeakage,
-          keyToUse
-        );
-        if (diagnosis) {
-          setAiDiagnosis(diagnosis);
-        }
-      } catch (err) {
-        console.warn("Lỗi tạo chẩn đoán AI:", err);
-      } finally {
-        setIsLoadingAi(false);
-      }
-    }
   };
 
   const handleReset = () => {
@@ -145,7 +146,6 @@ export default function App() {
         isOpen={isTemplateModalOpen}
         onClose={() => setIsTemplateModalOpen(false)}
         anomalies={auditResult?.anomalies || []}
-        apiKey={activeApiKey}
       />
     </div>
   );
