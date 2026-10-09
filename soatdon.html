@@ -259,12 +259,10 @@
         reader.readAsArrayBuffer(file);
       };
 
+      const [orderId] = useState(() => 'SD' + Math.floor(100000 + Math.random() * 900000));
       const [activationCode, setActivationCode] = useState('');
-      const [isAutoChecking, setIsAutoChecking] = useState(false);
-      const [countdown, setCountdown] = useState(90);
-      const [checkStatus, setCheckStatus] = useState('idle'); // 'idle' | 'checking' | 'success' | 'not_found'
-      const [checkLog, setCheckLog] = useState('');
-      const [retryCount, setRetryCount] = useState(0);
+      const [isVerifying, setIsVerifying] = useState(false);
+      const [verifyError, setVerifyError] = useState('');
       const [showManualPin, setShowManualPin] = useState(false);
       const [activationError, setActivationError] = useState('');
 
@@ -274,61 +272,78 @@
         return ['0986019623', '8888', '9999', 'SOATDON', 'VIP', 'VIP888', '888', 'SOATDON888'].includes(c);
       };
 
-      useEffect(() => {
-        let t;
-        if (isAutoChecking && countdown > 0) {
-          t = setInterval(() => setCountdown(c => c - 1), 1000);
-        } else if (countdown === 0 && isAutoChecking) {
-          setIsAutoChecking(false);
-          setCheckStatus('not_found');
-        }
-        return () => clearInterval(t);
-      }, [isAutoChecking, countdown]);
-
-      useEffect(() => {
-        if (!isAutoChecking) return;
-        const elapsed = 90 - countdown;
-        if (elapsed < 15) setCheckLog("Đang kết nối cổng sao kê MB Bank 0986019623...");
-        else if (elapsed < 40) setCheckLog("Đang rà soát biến động số dư theo nội dung SOATDON 888...");
-        else if (elapsed < 65) setCheckLog("Đang đối soát số tiền nhận...");
-        else setCheckLog("Đang chờ ngân hàng cập nhật bản ghi mới...");
-      }, [countdown, isAutoChecking]);
-
-      const handleStartAutoCheck = () => {
-        setIsAutoChecking(true);
-        setCheckStatus('checking');
-        setCountdown(90);
-        setRetryCount(r => r + 1);
-
-        // Check if code was already entered
-        if (isValidCode(activationCode)) {
-          setTimeout(() => handleUnlockSuccess(), 1000);
-        }
-      };
-
-      const handleActivateByCode = (e) => {
-        if (e) e.preventDefault();
-        setActivationError('');
-        if (!activationCode.trim()) {
-          setActivationError('Vui lòng nhập Mã Kích Hoạt được cấp từ Zalo 0986019623.');
-          return;
-        }
-        if (isValidCode(activationCode)) {
-          handleUnlockSuccess();
-        } else {
-          setActivationError('Mã kích hoạt không chính xác. Vui lòng gửi ảnh bill chuyển khoản qua Zalo 0986019623 để nhận mã duyệt ngay!');
-        }
-      };
-
       const handleUnlockSuccess = () => {
-        setIsAutoChecking(false);
-        setCheckStatus('success');
-        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+        setIsVerifying(false);
+        setVerifyError('');
+        setActivationError('');
+        confetti({ particleCount: 160, spread: 90, origin: { y: 0.6 } });
+        localStorage.setItem('soatdon_unlocked', 'true');
         setTimeout(() => {
           setIsUnlocked(true);
           setIsModalOpen(false);
-          setCheckStatus('idle');
         }, 1500);
+      };
+
+      // Tự động kiểm tra ngầm mỗi 4s khi mở modal
+      useEffect(() => {
+        if (!isModalOpen || isUnlocked) return;
+        const amount = selectedPlan === 'single' ? 9000 : (selectedPlan === 'bundle' ? 29000 : 79000);
+        const timer = setInterval(async () => {
+          try {
+            const res = await fetch(`/api/check-payment?orderId=${orderId}&code=${orderId}&amount=${amount}`);
+            const data = await res.json().catch(() => ({}));
+            if (data && data.verified === true) {
+              clearInterval(timer);
+              handleUnlockSuccess();
+            }
+          } catch (e) {}
+        }, 3500);
+        return () => clearInterval(timer);
+      }, [isModalOpen, isUnlocked, orderId, selectedPlan]);
+
+      const handleConfirmPayment = async () => {
+        setIsVerifying(true);
+        setVerifyError('');
+        const amount = selectedPlan === 'single' ? 9000 : (selectedPlan === 'bundle' ? 29000 : 79000);
+        try {
+          const res = await fetch(`/api/check-payment?orderId=${orderId}&code=${orderId}&amount=${amount}`);
+          const data = await res.json().catch(() => ({}));
+          if (data && data.verified === true) {
+            handleUnlockSuccess();
+          } else {
+            setIsVerifying(false);
+            setVerifyError(
+              data.message || 
+              `Hệ thống chưa tìm thấy giao dịch chuyển ${amount.toLocaleString('vi-VN')} đ với nội dung "${orderId}" vào MB Bank 0986019623. Vui lòng chuyển khoản rồi bấm lại sau giây lát!`
+            );
+          }
+        } catch (err) {
+          setIsVerifying(false);
+          setVerifyError('Lỗi kết nối kiểm tra: ' + err.message);
+        }
+      };
+
+      const handleActivateByCode = async (e) => {
+        if (e) e.preventDefault();
+        setActivationError('');
+        setVerifyError('');
+        const clean = activationCode.trim().toUpperCase();
+        if (!clean) return;
+
+        setIsVerifying(true);
+        try {
+          const res = await fetch(`/api/check-payment?code=${encodeURIComponent(clean)}&orderId=${orderId}`);
+          const data = await res.json().catch(() => ({}));
+          if (data && data.verified === true) {
+            handleUnlockSuccess();
+          } else {
+            setIsVerifying(false);
+            setActivationError('Mã kích hoạt không đúng hoặc chưa hợp lệ. Vui lòng liên hệ Zalo 0986019623!');
+          }
+        } catch (err) {
+          setIsVerifying(false);
+          setActivationError('Lỗi kiểm tra mã: ' + err.message);
+        }
       };
 
       const handleExportDispute = () => {
@@ -660,7 +675,7 @@
                     <div className="flex flex-col sm:flex-row items-center gap-4">
                       <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-xs shrink-0 text-center">
                         <img 
-                          src={`https://img.vietqr.io/image/MB-0986019623-compact2.png?amount=${selectedPlan==='single'?9000:(selectedPlan==='bundle'?29000:79000)}&addInfo=SOATDON%20888`} 
+                          src={`https://img.vietqr.io/image/MB-0986019623-compact2.png?amount=${selectedPlan==='single'?9000:(selectedPlan==='bundle'?29000:79000)}&addInfo=${orderId}&accountName=NGUYEN%20VAN%20THAI`} 
                           alt="VietQR" 
                           className="w-32 h-32 object-contain rounded"
                         />
@@ -686,7 +701,7 @@
                         </div>
                         <div className="flex justify-between py-1">
                           <span className="text-slate-500">Nội dung CK:</span>
-                          <span className="font-mono font-extrabold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">SOATDON 888</span>
+                          <span className="font-mono font-extrabold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">{orderId}</span>
                         </div>
                       </div>
                     </div>
@@ -696,22 +711,51 @@
                   <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-900">
                     <p className="leading-relaxed">
                       1. Quét mã QR chuyển khoản đúng số tiền.<br />
-                      2. Tiền đã trừ xong, bấm nút <b>"TÔI ĐÃ CHUYỂN KHOẢN — MỞ KHÓA NGAY"</b> bên dưới để mở khóa bảng kê ngay lập tức!
+                      2. Tiền đã trừ xong, bấm nút <b>"TÔI ĐÃ CHUYỂN KHOẢN — KIỂM TRA NGAY"</b> bên dưới để đối soát tự động!
                     </p>
                   </div>
 
-                  {/* Nút Xác Nhận Thanh Toán */}
+                  {/* Báo lỗi nếu bấm mà chưa chuyển tiền */}
+                  {verifyError && (
+                    <div className="p-3 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs">
+                      <div className="font-bold">⚠️ Chưa nhận được giao dịch:</div>
+                      <div className="mt-0.5">{verifyError}</div>
+                    </div>
+                  )}
+
+                  {/* Form kích hoạt PIN nếu có */}
+                  {showManualPin && (
+                    <form onSubmit={handleActivateByCode} className="flex gap-2">
+                      <input 
+                        type="text" 
+                        value={activationCode} 
+                        onChange={(e) => setActivationCode(e.target.value)} 
+                        placeholder="Nhập mã kích hoạt (Zalo)..." 
+                        className="flex-1 px-3 py-2 text-xs border border-slate-300 rounded-xl bg-slate-50"
+                      />
+                      <button type="submit" disabled={isVerifying} className="px-3 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold cursor-pointer">
+                        Duyệt
+                      </button>
+                    </form>
+                  )}
+                  {activationError && <p className="text-xs text-rose-600">{activationError}</p>}
+
+                  {/* Nút Xác Nhận Thanh Toán (Kiểm Tra Thật) */}
                   <button
-                    onClick={handleUnlockSuccess}
-                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-sm uppercase tracking-wide shadow-lg shadow-emerald-600/25 transition-all cursor-pointer"
+                    onClick={handleConfirmPayment}
+                    disabled={isVerifying}
+                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-sm uppercase tracking-wide shadow-lg shadow-emerald-600/25 transition-all cursor-pointer disabled:opacity-60"
                   >
-                    ✓ TÔI ĐÃ CHUYỂN KHOẢN — MỞ KHÓA NGAY
+                    {isVerifying ? '⏳ Đang kiểm tra giao dịch MB Bank...' : '⚡ TÔI ĐÃ CHUYỂN KHOẢN — KIỂM TRA NGAY'}
                   </button>
 
-                  <div className="text-center pt-1">
-                    <a href="https://zalo.me/0986019623" target="_blank" rel="noreferrer" className="text-emerald-700 hover:underline text-xs font-semibold">
+                  <div className="flex justify-between items-center text-xs text-slate-500 pt-1">
+                    <a href="https://zalo.me/0986019623" target="_blank" rel="noreferrer" className="text-emerald-700 hover:underline font-semibold">
                       💬 Hỗ trợ Zalo: 0986019623 (24/7)
                     </a>
+                    <button onClick={() => setShowManualPin(!showManualPin)} className="text-slate-400 hover:text-slate-600 underline cursor-pointer">
+                      {showManualPin ? 'Đóng mã PIN' : 'Nhập mã kích hoạt'}
+                    </button>
                   </div>
                 </div>
               </div>

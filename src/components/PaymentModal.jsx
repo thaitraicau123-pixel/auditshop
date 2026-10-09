@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, Check, ShieldCheck, QrCode, Clock, MessageCircle, 
-  CheckCircle2, Loader2, Copy, AlertCircle, Sparkles, KeyRound 
+  CheckCircle2, Loader2, Copy, AlertCircle, Sparkles, KeyRound, RefreshCw 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -9,13 +9,16 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
   if (!isOpen) return null;
 
   const [selectedPlan, setSelectedPlan] = useState('single');
-  const [orderCode] = useState(() => Math.floor(100000 + Math.random() * 900000));
+  // Mã đơn hàng chuẩn VietQR: Tối đa 13 ký tự (Ví dụ: SD839102)
+  const [orderId] = useState(() => 'SD' + Math.floor(100000 + Math.random() * 900000));
   const [copiedField, setCopiedField] = useState(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [verifyError, setVerifyError] = useState('');
   const [showPinInput, setShowPinInput] = useState(false);
   const [pinCode, setPinCode] = useState('');
   const [pinError, setPinError] = useState('');
+  const [dynamicQrUrl, setDynamicQrUrl] = useState(null);
 
   const plans = {
     single: {
@@ -44,17 +47,75 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
   };
 
   const currentPlan = plans[selectedPlan];
-  const transferContent = `SOATDON${orderCode}`;
+  const transferContent = orderId; // Chuẩn VietQR không dấu, <= 23 ký tự
   const bankAccount = "0986019623";
   const bankName = "MB Bank (Quân Đội)";
   const accountHolder = "NGUYEN VAN THAI";
 
-  // VietQR Quicklink generator chuẩn Napas
-  const qrUrl = `https://img.vietqr.io/image/MB-${bankAccount}-compact2.png?amount=${currentPlan.price}&addInfo=${encodeURIComponent(transferContent)}`;
+  // Fallback URL theo chuẩn VietQR Napas Quicklink
+  const fallbackQrUrl = `https://img.vietqr.io/image/MB-${bankAccount}-compact2.png?amount=${currentPlan.price}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(accountHolder)}`;
+  const qrUrl = dynamicQrUrl || fallbackQrUrl;
 
   const zaloLink = `https://zalo.me/0986019623?text=${encodeURIComponent(
-    `Chào bạn, tôi vừa chuyển khoản gói "${currentPlan.name}" (${currentPlan.price.toLocaleString('vi-VN')} đ) vào STK MB Bank 0986019623. Nội dung: ${transferContent}. Nhờ bạn hỗ trợ mở khóa giúp tôi nhé!`
+    `Chào bạn, tôi vừa chuyển khoản gói "${currentPlan.name}" (${currentPlan.price.toLocaleString('vi-VN')} đ) vào STK MB Bank 0986019623. Nội dung: ${transferContent}. Nhờ bạn hỗ trợ kiểm tra giúp tôi nhé!`
   )}`;
+
+  // Tự động gọi API khởi tạo VietQR động khi chọn gói
+  useEffect(() => {
+    let isMounted = true;
+    fetch(`/api/vietqr-generate?amount=${currentPlan.price}&orderId=${orderId}&content=${transferContent}`)
+      .then(res => res.json())
+      .then(data => {
+        if (isMounted && data && data.qrUrl) {
+          setDynamicQrUrl(data.qrUrl);
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, [currentPlan.price, orderId, transferContent]);
+
+  // Tự động kiểm tra ngầm mỗi 3.5s: Nếu khách vừa chuyển tiền vào MB Bank xong thì tự mở khóa ngay
+  useEffect(() => {
+    if (!isOpen || isSuccess) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/check-payment?orderId=${orderId}&code=${orderId}&amount=${currentPlan.price}`);
+        const data = await res.json().catch(() => ({}));
+        if (data && data.verified === true) {
+          clearInterval(interval);
+          triggerUnlockSuccess(data.message);
+        }
+      } catch (e) {
+        // Lỗi mạng kiểm tra ngầm thì bỏ qua
+      }
+    }, 3500);
+
+    return () => clearInterval(interval);
+  }, [isOpen, isSuccess, orderId, currentPlan.price]);
+
+  const triggerUnlockSuccess = (msg) => {
+    setIsVerifying(false);
+    setIsSuccess(true);
+    setVerifyError('');
+    setPinError('');
+
+    // Bắn pháo hoa ăn mừng
+    confetti({
+      particleCount: 160,
+      spread: 90,
+      origin: { y: 0.6 }
+    });
+
+    // Lưu trạng thái mở khóa vào máy khách
+    localStorage.setItem('soatdon_unlocked', 'true');
+
+    // Mở khóa dữ liệu sau 1.5 giây
+    setTimeout(() => {
+      onSimulatePaymentSuccess();
+      onClose();
+    }, 1500);
+  };
 
   const handleCopy = (text, fieldName) => {
     navigator.clipboard.writeText(text);
@@ -62,45 +123,55 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  // Xử lý xác nhận thanh toán & mở khóa ngay lập tức
-  const handleConfirmPayment = () => {
+  // KIỂM TRA CHUYỂN KHOẢN THẬT QUA VIETQR & MB BANK (KHÔNG FAKE)
+  const handleConfirmPayment = async () => {
     setIsVerifying(true);
+    setVerifyError('');
     setPinError('');
 
-    // Giả lập kiểm tra giao dịch MB Bank 2.5s rồi mở khóa ngay
-    setTimeout(() => {
+    try {
+      const res = await fetch(`/api/check-payment?orderId=${orderId}&code=${orderId}&amount=${currentPlan.price}`);
+      const data = await res.json().catch(() => ({}));
+
+      if (data && data.verified === true) {
+        triggerUnlockSuccess(data.message);
+      } else {
+        // CHƯA NHẬN ĐƯỢC TIỀN -> BÁO LỖI RÕ RÀNG, KHÔNG MỞ KHÓA
+        setIsVerifying(false);
+        setIsSuccess(false);
+        setVerifyError(
+          data.message || 
+          `Hệ thống chưa tìm thấy giao dịch chuyển ${currentPlan.price.toLocaleString('vi-VN')} đ với nội dung "${transferContent}" vào MB Bank 0986019623. Nếu vừa chuyển khoản, vui lòng đợi 15-30 giây để ngân hàng đồng bộ rồi bấm kiểm tra lại!`
+        );
+      }
+    } catch (err) {
       setIsVerifying(false);
-      setIsSuccess(true);
-
-      // Pháo hoa ăn mừng
-      confetti({
-        particleCount: 160,
-        spread: 90,
-        origin: { y: 0.6 }
-      });
-
-      // Lưu trạng thái mở khóa vào localStorage
-      localStorage.setItem('soatdon_unlocked', 'true');
-
-      // Tự động đóng modal và mở khóa dữ liệu sau 1.5s
-      setTimeout(() => {
-        onSimulatePaymentSuccess();
-        onClose();
-      }, 1500);
-    }, 2200);
+      setVerifyError(`Lỗi kết nối kiểm tra thanh toán: ${err.message}. Vui lòng thử lại!`);
+    }
   };
 
-  // Xử lý nhập mã PIN thủ công
-  const handlePinSubmit = (e) => {
+  // Xử lý nhập mã PIN / Mã Quản Trị
+  const handlePinSubmit = async (e) => {
     e.preventDefault();
     setPinError('');
+    setVerifyError('');
     const clean = pinCode.trim().toUpperCase();
-    const validCodes = ['0986019623', '8888', '9999', 'SOATDON', 'VIP', 'VIP888', String(orderCode), `SD${orderCode}`];
+    if (!clean) return;
 
-    if (validCodes.includes(clean)) {
-      handleConfirmPayment();
-    } else {
-      setPinError('Mã kích hoạt không đúng. Vui lòng bấm Xác nhận thanh toán bên trên hoặc gửi Zalo 0986019623!');
+    setIsVerifying(true);
+    try {
+      const res = await fetch(`/api/check-payment?code=${encodeURIComponent(clean)}&orderId=${orderId}&amount=${currentPlan.price}`);
+      const data = await res.json().catch(() => ({}));
+
+      if (data && data.verified === true) {
+        triggerUnlockSuccess(data.message);
+      } else {
+        setIsVerifying(false);
+        setPinError('Mã kích hoạt không đúng hoặc chưa hợp lệ. Vui lòng liên hệ Zalo 0986019623!');
+      }
+    } catch (err) {
+      setIsVerifying(false);
+      setPinError('Lỗi kiểm tra mã: ' + err.message);
     }
   };
 
@@ -116,8 +187,8 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
               <ShieldCheck className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
-              <h3 className="font-extrabold text-slate-900 text-base leading-tight">Thanh Toán & Mở Khóa Dữ Liệu</h3>
-              <p className="text-[11px] text-slate-500 font-medium">VietQR Napas • MB Bank 0986019623</p>
+              <h3 className="font-extrabold text-slate-900 text-base leading-tight">Thanh Toán VietQR MB Bank</h3>
+              <p className="text-[11px] text-slate-500 font-medium">Đối soát tự động • STK 0986019623</p>
             </div>
           </div>
 
@@ -141,7 +212,10 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
               return (
                 <div
                   key={plan.id}
-                  onClick={() => setSelectedPlan(plan.id)}
+                  onClick={() => {
+                    setSelectedPlan(plan.id);
+                    setVerifyError('');
+                  }}
                   className={`p-2.5 sm:p-3 rounded-xl border text-center cursor-pointer transition-all relative ${
                     isSelected
                       ? 'bg-emerald-50/70 border-emerald-500 shadow-sm ring-1 ring-emerald-500'
@@ -243,13 +317,26 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
           <div className="bg-emerald-50/60 border border-emerald-200/80 rounded-xl p-3 text-xs text-emerald-900 space-y-1">
             <div className="font-bold flex items-center gap-1.5 text-emerald-800">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Quy trình kích hoạt tự động:</span>
+              <span>Quy trình kích hoạt tự động qua VietQR:</span>
             </div>
             <p className="text-[11px] text-emerald-800/90 leading-relaxed pl-5">
-              1. Quét mã QR bằng app ngân hàng & chuyển khoản đúng số tiền.<br />
-              2. Sau khi tiền đã trừ trong tài khoản, bấm nút <b>"XÁC NHẬN ĐÃ CHUYỂN KHOẢN"</b> bên dưới để mở khóa toàn bộ bảng kê ngay!
+              1. Quét mã QR bằng ứng dụng ngân hàng và chuyển đúng số tiền.<br />
+              2. Hệ thống tự động kiểm tra mỗi 3 giây. Sau khi chuyển, bạn cũng có thể bấm <b>"XÁC NHẬN ĐÃ CHUYỂN KHOẢN"</b> để kiểm tra ngay!
             </p>
           </div>
+
+          {/* CẢNH BÁO CHƯA NHẬN ĐƯỢC TIỀN (NẾU BẤM MÀ CHƯA CHUYỂN) */}
+          {verifyError && (
+            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-start gap-2.5 animate-fadeIn">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <div className="font-extrabold text-amber-950">Chưa ghi nhận biến động số dư!</div>
+                <div className="text-[11px] leading-relaxed text-amber-800">
+                  {verifyError}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* THÔNG BÁO XÁC NHẬN THÀNH CÔNG */}
           {isSuccess && (
@@ -277,7 +364,8 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
               />
               <button
                 type="submit"
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
+                disabled={isVerifying}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-60"
               >
                 Kích Hoạt
               </button>
@@ -285,7 +373,7 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
           )}
           {pinError && <p className="text-xs text-rose-600">{pinError}</p>}
 
-          {/* NÚT XÁC NHẬN THANH TOÁN (To, Xanh lá uy tín, Bấm là xác nhận mở khóa) */}
+          {/* NÚT XÁC NHẬN THANH TOÁN (KIỂM TRA THẬT) */}
           <div className="pt-1 space-y-2">
             <button
               onClick={handleConfirmPayment}
@@ -304,8 +392,8 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
                 </>
               ) : (
                 <>
-                  <Check className="w-5 h-5 stroke-[3]" />
-                  <span>TÔI ĐÃ CHUYỂN KHOẢN — MỞ KHÓA NGAY</span>
+                  <RefreshCw className="w-5 h-5 stroke-[2.5]" />
+                  <span>TÔI ĐÃ CHUYỂN KHOẢN — KIỂM TRA NGAY</span>
                 </>
               )}
             </button>

@@ -1,4 +1,7 @@
-// Vercel Serverless Function: Tự động kiểm tra giao dịch chuyển khoản MB Bank qua SePay API
+// Vercel Serverless Function: Kiểm tra giao dịch thanh toán thực tế qua VietQR API & MB Bank
+import fs from 'fs';
+import path from 'path';
+
 export default async function handler(req, res) {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -19,17 +22,26 @@ export default async function handler(req, res) {
     const body = req.body || {};
 
     const code = String(query.code || body.code || '').trim().toUpperCase();
+    const orderId = String(query.orderId || body.orderId || query.orderCode || body.orderCode || '').trim().toUpperCase();
     const amount = Number(query.amount || body.amount || 0);
-    const orderCode = String(query.orderCode || body.orderCode || '').trim();
-    const token = String(
+    const bankAccount = "0986019623";
+
+    const vietqrToken = String(
+      query.vietqrToken || 
+      body.vietqrToken || 
+      process.env.VIETQR_TOKEN || 
+      process.env.VITE_VIETQR_TOKEN || 
+      ''
+    ).trim();
+
+    const sepayToken = String(
       query.token || 
       body.token || 
-      req.headers.authorization?.replace('Bearer ', '') || 
       process.env.SEPAY_API_TOKEN || 
       ''
     ).trim();
 
-    // 1. Kiểm tra mã quản trị / Master PIN
+    // 1. Kiểm tra Mã Kích Hoạt Quản Trị / Master PIN (dành cho chủ shop hoặc test admin)
     const masterCodes = ['0986019623', '8888', '9999', 'SOATDON', 'VIP', 'VIP888'];
     if (code && masterCodes.includes(code)) {
       return res.status(200).json({
@@ -40,14 +52,105 @@ export default async function handler(req, res) {
       });
     }
 
-    // 2. Nếu có SePay Token: Truy vấn giao dịch ngân hàng thực tế từ MB Bank
-    if (token) {
+    // 2. Kiểm tra bộ nhớ cache Webhook Callback từ VietQR
+    const checkKey = orderId || code;
+    if (global.__PAID_TRANSACTIONS__ && checkKey) {
+      for (const [key, tx] of global.__PAID_TRANSACTIONS__.entries()) {
+        const keyUpper = String(key).toUpperCase();
+        if (keyUpper.includes(checkKey) || (orderId && keyUpper.includes(orderId))) {
+          if (amount <= 0 || tx.amount >= (amount - 1000)) {
+            return res.status(200).json({
+              success: true,
+              verified: true,
+              method: 'vietqr_callback',
+              transaction: tx,
+              message: 'Tự động phát hiện thanh toán VietQR thành công qua Webhook!'
+            });
+          }
+        }
+      }
+    }
+
+    // Kiểm tra file cache local nếu có
+    try {
+      const cacheFile = path.join(process.cwd(), '.paid_cache.json');
+      if (fs.existsSync(cacheFile)) {
+        const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8') || '{}');
+        for (const [k, tx] of Object.entries(cached)) {
+          const kUpper = String(k).toUpperCase();
+          if (checkKey && (kUpper.includes(checkKey) || (orderId && kUpper.includes(orderId)))) {
+            if (amount <= 0 || tx.amount >= (amount - 1000)) {
+              return res.status(200).json({
+                success: true,
+                verified: true,
+                method: 'vietqr_cache',
+                transaction: tx,
+                message: 'Phát hiện giao dịch VietQR đã ghi nhận thành công!'
+              });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // Ignored
+    }
+
+    // 3. Gọi trực tiếp API Tra Cứu Giao Dịch của VietQR (check-order)
+    if (vietqrToken && (orderId || code)) {
+      const endpoints = [
+        'https://api.vietqr.org/vqr/api/transactions/check-order',
+        'https://api.vietqr.org/vqr/api/ecommerce-transactions/check-order',
+        'https://dev.vietqr.org/vqr/api/transactions/check-order'
+      ];
+
+      for (const endpoint of endpoints) {
+        try {
+          const vqrCheckRes = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${vietqrToken}`
+            },
+            body: JSON.stringify({
+              bankAccount,
+              type: 0, // 0: tra cứu theo orderId
+              value: orderId || code
+            })
+          });
+
+          if (vqrCheckRes.ok) {
+            const vqrData = await vqrCheckRes.json();
+            // Trạng thái: 1 = Đã thanh toán, hoặc status = 'PAID' / 'SUCCESS'
+            const isPaid = vqrData.status === 1 || 
+                           vqrData.status === '1' || 
+                           vqrData.status === 'PAID' || 
+                           vqrData.status === 'SUCCESS' ||
+                           (vqrData.data && (vqrData.data.status === 1 || vqrData.data.status === 'PAID'));
+
+            if (isPaid) {
+              return res.status(200).json({
+                success: true,
+                verified: true,
+                method: 'vietqr_api_direct',
+                data: vqrData,
+                message: 'VietQR API xác nhận đơn hàng đã thanh toán thành công!'
+              });
+            }
+          }
+        } catch (apiErr) {
+          console.warn(`VietQR check-order failed on ${endpoint}:`, apiErr.message);
+        }
+      }
+    }
+
+    // 4. Nếu có SePay Token: Truy vấn sao kê tài khoản ngân hàng MB Bank
+    if (sepayToken) {
       try {
         const sepayUrl = 'https://my.sepay.vn/userapi/transactions/list';
         const response = await fetch(sepayUrl, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            'Authorization': `Bearer ${sepayToken}`,
             'Content-Type': 'application/json'
           }
         });
@@ -56,15 +159,13 @@ export default async function handler(req, res) {
           const data = await response.json();
           const transactions = data.transactions || data.data || [];
 
-          // Tìm giao dịch trùng khớp
           const matchedTx = transactions.find(tx => {
             const content = String(tx.transaction_content || tx.description || '').toUpperCase();
             const txAmount = parseFloat(tx.amount_in || tx.amount || 0);
 
-            // Kiểm tra nội dung chứa mã đơn hoặc mã chuyển khoản
             const matchCode = (code && content.includes(code)) || 
-                              (orderCode && content.includes(orderCode));
-            const matchAmount = amount <= 0 || txAmount >= (amount - 1000); // Cho phép sai số nhỏ nếu có phí
+                              (orderId && content.includes(orderId));
+            const matchAmount = amount <= 0 || txAmount >= (amount - 1000);
 
             return matchCode && matchAmount;
           });
@@ -79,23 +180,25 @@ export default async function handler(req, res) {
             });
           }
         }
-      } catch (apiErr) {
-        console.error('SePay API lookup error:', apiErr);
+      } catch (sepayErr) {
+        console.error('SePay lookup error:', sepayErr);
       }
     }
 
-    // 3. Nếu chưa tìm thấy giao dịch
+    // 5. NẾU CHƯA CÓ GIAO DỊCH: TRẢ VỀ VERIFIED: FALSE (KHÔNG MỞ KHÓA!)
     return res.status(200).json({
       success: false,
       verified: false,
-      code,
-      message: 'Chưa phát hiện giao dịch khớp trên hệ thống MB Bank 0986019623. Ngân hàng có thể trễ 1-3 phút.'
+      orderId: orderId || code,
+      amount,
+      message: 'Chưa phát hiện giao dịch khớp trên hệ thống MB Bank 0986019623. Vui lòng chuyển khoản đúng số tiền và nội dung, rồi thử lại sau giây lát!'
     });
 
   } catch (error) {
     console.error('Check payment error:', error);
     return res.status(500).json({
       success: false,
+      verified: false,
       error: error.message
     });
   }
