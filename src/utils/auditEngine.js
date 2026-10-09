@@ -155,29 +155,45 @@ export async function parseExcelFile(file, aiSchema = null) {
         }
 
         // 1. THUẬT TOÁN TÌM HÀNG TIÊU ĐỀ THỰC SỰ (Header Row Detection)
-        // Quét 15 hàng đầu tiên để tìm hàng có nhiều từ khóa logistics nhất
+        // Chuyển đổi an toàn mọi hàng thành mảng chuỗi đặc (dense array) tránh lỗi mảng thưa (sparse array)
+        const getSafeRowStrings = (row) => {
+          if (!row) return [];
+          const len = row.length || 0;
+          const result = [];
+          for (let i = 0; i < len; i++) {
+            result.push(row[i] !== null && row[i] !== undefined ? String(row[i]).trim().toLowerCase() : '');
+          }
+          return result;
+        };
+
         let headerRowIdx = 0;
         let maxMatchScore = -1;
         const keywords = ['mã', 'tracking', 'đơn', 'code', 'vận đơn', 'hãng', 'cước', 'khối lượng', 'cân nặng', 'thu hộ', 'cod', 'trạng thái', 'người nhận'];
 
         const maxScanRows = Math.min(json.length, 15);
         for (let r = 0; r < maxScanRows; r++) {
-          const rowCells = (json[r] || []).map(c => String(c || '').trim().toLowerCase());
+          const rowCells = getSafeRowStrings(json[r]);
           let score = 0;
-          rowCells.forEach(cell => {
-            if (keywords.some(k => cell.includes(k))) score++;
-          });
+          for (let c = 0; c < rowCells.length; c++) {
+            const cellVal = rowCells[c];
+            if (cellVal && keywords.some(k => k && cellVal.includes(k))) {
+              score++;
+            }
+          }
           if (score > maxMatchScore) {
             maxMatchScore = score;
             headerRowIdx = r;
           }
         }
 
-        const headers = (json[headerRowIdx] || []).map(h => String(h || '').trim().toLowerCase());
+        const headers = getSafeRowStrings(json[headerRowIdx]);
 
-        // Helper tìm index của cột
+        // Helper tìm index của cột với an toàn tuyệt đối chống lỗi undefined .includes()
         const findCol = (kwList) => {
-          return headers.findIndex(h => kwList.some(k => h.includes(k)));
+          return headers.findIndex(h => {
+            if (!h || typeof h !== 'string') return false;
+            return kwList.some(k => k && typeof k === 'string' && h.includes(k.toLowerCase()));
+          });
         };
 
         const idIdx = findCol(['mã vận đơn', 'mã đơn', 'tracking', 'mã kiện', 'order id', 'mã bưu gửi', 'mã tra cứu', 'mã']);

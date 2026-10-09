@@ -214,8 +214,14 @@
 
             if (json.length < 2) return alert("File không có dữ liệu!");
 
-            const headers = json[0].map(h => String(h||'').toLowerCase());
-            const findCol = (keys) => headers.findIndex(h => keys.some(k => h.includes(k)));
+            const getSafeRow = (row) => {
+              if (!row) return [];
+              const res = [];
+              for (let i = 0; i < (row.length || 0); i++) res.push(row[i] ? String(row[i]).trim().toLowerCase() : '');
+              return res;
+            };
+            const headers = getSafeRow(json[0]);
+            const findCol = (keys) => headers.findIndex(h => h && typeof h === 'string' && keys.some(k => k && h.includes(String(k).toLowerCase())));
 
             const idIdx = findCol(['mã', 'tracking', 'đơn', 'code']);
             const carrierIdx = findCol(['đối tác', 'hãng', 'đvvc', 'carrier']);

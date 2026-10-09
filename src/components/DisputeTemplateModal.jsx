@@ -11,8 +11,12 @@ export default function DisputeTemplateModal({ isOpen, onClose, anomalies, apiKe
   const [customText, setCustomText] = useState(null);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
 
-  // Lọc các mã theo hãng được chọn
-  const filteredAnomalies = anomalies.filter(a => a.carrier.toLowerCase().includes(carrier.toLowerCase()) || carrier === 'Tất cả');
+  // Lọc các mã theo hãng được chọn an toàn chống undefined
+  const filteredAnomalies = anomalies.filter(a => {
+    const c = a && a.carrier ? String(a.carrier).toLowerCase() : '';
+    const target = carrier ? String(carrier).toLowerCase() : '';
+    return c.includes(target) || carrier === 'Tất cả';
+  });
   const totalAmount = filteredAnomalies.reduce((sum, a) => sum + a.leakAmount, 0);
   const topTrackingCodes = filteredAnomalies.slice(0, 5).map(a => a.id);
 
