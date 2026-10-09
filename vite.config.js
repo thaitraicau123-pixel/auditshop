@@ -14,8 +14,32 @@ export default defineConfig({
     {
       name: 'api-vietqr-middlewares',
       configureServer(server) {
-        // 1. Endpoint Tiếp Nhận Webhook Callback Từ VietQR
-        server.middlewares.use('/api/vietqr-callback', async (req, res) => {
+        // Handler Get Token dùng chung
+        const handleGetToken = (req, res) => {
+          res.setHeader('Content-Type', 'application/json');
+          if (req.method === 'OPTIONS') { res.statusCode = 200; res.end(); return; }
+          const authHeader = req.headers.authorization || '';
+          let username = '';
+          if (authHeader.startsWith('Basic ')) {
+            const decoded = Buffer.from(authHeader.substring(6).trim(), 'base64').toString('utf8');
+            username = decoded.split(':')[0] || '';
+          }
+          const accessToken = `vqr_token_${Math.random().toString(36).substring(2)}${Date.now().toString(36)}`;
+          res.end(JSON.stringify({
+            access_token: accessToken,
+            token_type: 'Bearer',
+            expires_in: 300,
+            scope: 'read write',
+            username: username || 'soatdon_admin',
+            message: 'Get Token thành công'
+          }));
+        };
+
+        server.middlewares.use('/vqr/api/token_generate', handleGetToken);
+        server.middlewares.use('/api/token_generate', handleGetToken);
+
+        // Handler Transaction Callback dùng chung
+        const handleTransactionCallback = (req, res) => {
           res.setHeader('Content-Type', 'application/json');
           if (req.method === 'GET') {
             res.end(JSON.stringify({ status: 'ONLINE', service: 'VietQR Callback Local Middleware' }));
@@ -27,9 +51,9 @@ export default defineConfig({
           req.on('end', () => {
             try {
               const payload = JSON.parse(bodyStr || '{}');
-              const orderId = String(payload.orderId || payload.order_id || '').toUpperCase().trim();
+              const orderId = String(payload.orderId || payload.order_id || payload.orderCode || '').toUpperCase().trim();
               const amount = Number(payload.amount || payload.transferAmount || 0);
-              const content = String(payload.content || '').toUpperCase().trim();
+              const content = String(payload.content || payload.transaction_content || '').toUpperCase().trim();
 
               const tx = { orderId, amount, content, receivedAt: new Date().toISOString() };
               if (orderId) global.__PAID_TRANSACTIONS__.set(orderId, tx);
@@ -41,7 +65,15 @@ export default defineConfig({
               res.end(JSON.stringify({ error: err.message }));
             }
           });
-        });
+        };
+
+        server.middlewares.use('/vqr/bank/aod/test/transaction-callback', handleTransactionCallback);
+        server.middlewares.use('/vqr/bank/aod/transaction-callback', handleTransactionCallback);
+        server.middlewares.use('/vqr/bank/aod/prod/transaction-callback', handleTransactionCallback);
+        server.middlewares.use('/bank/aod/test/transaction-callback', handleTransactionCallback);
+        server.middlewares.use('/bank/aod/transaction-callback', handleTransactionCallback);
+        server.middlewares.use('/api/vietqr-callback', handleTransactionCallback);
+
 
         // 2. Endpoint Tạo Mã VietQR Động
         server.middlewares.use('/api/vietqr-generate', async (req, res) => {
