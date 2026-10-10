@@ -52,6 +52,20 @@ export function normalizeWeightToGram(val, defaultVal = 250) {
 }
 
 /**
+ * Chuyển đổi chỉ số cột (0-indexed) thành chữ cái cột Excel (0 -> A, 1 -> B, 25 -> Z, 26 -> AA)
+ */
+export function colIndexToLetter(colIdx) {
+  if (colIdx === null || colIdx === undefined || colIdx < 0) return '';
+  let temp = colIdx;
+  let letter = '';
+  while (temp >= 0) {
+    letter = String.fromCharCode((temp % 26) + 65) + letter;
+    temp = Math.floor(temp / 26) - 1;
+  }
+  return letter;
+}
+
+/**
  * Phân tích chuyên sâu dữ liệu đơn hàng với khả năng nhận diện các cột chênh lệch đã tính trước
  */
 export function analyzeOrders(ordersData) {
@@ -127,9 +141,11 @@ export function analyzeOrders(ordersData) {
     if (rawSubtotal > 0 && price > 0 && qty > 0 && rawSubtotal !== correctSubtotal) {
       const diff = Math.abs(correctSubtotal - rawSubtotal);
       totalCodLeakage += diff;
+      const targetCell = (order.cellLetters?.subtotal || 'I') + (order.excelRow || (index + 2));
       issue = {
         issueType: "COD_DISCREPANCY",
         leakAmount: diff,
+        excelCell: targetCell,
         issueDetail: `Lỗi tính toán: Số lượng (${qty}) * Đơn giá (${price.toLocaleString('vi-VN')} đ) = ${correctSubtotal.toLocaleString('vi-VN')} đ, nhưng ô thành tiền gõ nhầm ${rawSubtotal.toLocaleString('vi-VN')} đ (Thất thoát trực tiếp ${diff.toLocaleString('vi-VN')} đ).`
       };
     }
@@ -142,9 +158,11 @@ export function analyzeOrders(ordersData) {
       const shipReturn = carrierFee > 0 ? carrierFee : 15000;
       const loss = orderVal + shipReturn;
       totalReturnLeakage += loss;
+      const targetCell = (order.cellLetters?.status || 'N') + (order.excelRow || (index + 2));
       issue = {
         issueType: "RETURN_STALLED",
         leakAmount: loss,
+        excelCell: targetCell,
         issueDetail: `Hàng Bom / Chuyển hoàn nhưng vẫn ghi nhận doanh thu: Thực tế không thu được tiền khách (0 đ) và mất thêm ${shipReturn.toLocaleString('vi-VN')} đ cước ship hoàn. Ghi ảo doanh thu ${orderVal.toLocaleString('vi-VN')} đ.`
       };
     }
@@ -152,20 +170,24 @@ export function analyzeOrders(ordersData) {
     else if (order.codFeeActual > order.codFeeExpected && order.codFeeActual > 0) {
       const diff = order.codFeeActual - order.codFeeExpected;
       totalFeeLeakage += diff;
+      const targetCell = (order.cellLetters?.codFeeActual || 'Q') + (order.excelRow || (index + 2));
       issue = {
         issueType: "FEE_ANOMALY",
         leakAmount: diff,
+        excelCell: targetCell,
         issueDetail: `Thu phí COD khống: Đơn có phí COD quy định ${order.codFeeExpected.toLocaleString('vi-VN')} đ nhưng bị trừ ${order.codFeeActual.toLocaleString('vi-VN')} đ (Thất thoát +${diff.toLocaleString('vi-VN')} đ).`
       };
     }
     // 1.4. Lệch cước vận chuyển (đội cước quá cân hoặc lạm thu cước hoàn từ các cột đối soát)
     else if (rawFeeDiff > 0) {
+      const targetCell = (order.cellLetters?.billedFee || order.cellLetters?.feeDiff || 'S') + (order.excelRow || (index + 2));
       if (rawWeightDiff > 100 || billedWeight > shopWeight + 150) {
         const weightChênh = rawWeightDiff > 0 ? rawWeightDiff : (billedWeight - shopWeight);
         totalWeightLeakage += rawFeeDiff;
         issue = {
           issueType: "WEIGHT_INFLATION",
           leakAmount: rawFeeDiff,
+          excelCell: targetCell,
           issueDetail: `Đội cước do sai nấc cân thể tích: Hãng cân ${billedWeight}g so với ${shopWeight}g khai báo (Chênh +${weightChênh}g). Cước đội thêm +${rawFeeDiff.toLocaleString('vi-VN')} đ.`
         };
       } else if (status.toLowerCase().includes('hoàn')) {
@@ -173,6 +195,7 @@ export function analyzeOrders(ordersData) {
         issue = {
           issueType: "FEE_ANOMALY",
           leakAmount: rawFeeDiff,
+          excelCell: targetCell,
           issueDetail: `Lạm thu cước chuyển hoàn: Hợp đồng quy định phí hoàn ${expectedFee.toLocaleString('vi-VN')} đ nhưng bị trừ ${billedFee.toLocaleString('vi-VN')} đ (Chênh +${rawFeeDiff.toLocaleString('vi-VN')} đ).`
         };
       } else {
@@ -180,6 +203,7 @@ export function analyzeOrders(ordersData) {
         issue = {
           issueType: "FEE_ANOMALY",
           leakAmount: rawFeeDiff,
+          excelCell: targetCell,
           issueDetail: `Lệch cước vận chuyển: Cước thực thu ${billedFee.toLocaleString('vi-VN')} đ cao hơn dự kiến ${expectedFee.toLocaleString('vi-VN')} đ (Chênh +${rawFeeDiff.toLocaleString('vi-VN')} đ).`
         };
       }
@@ -188,9 +212,11 @@ export function analyzeOrders(ordersData) {
     else if (customerShip > 0 && carrierFee > customerShip + 10000) {
       const diff = carrierFee - customerShip;
       totalWeightLeakage += diff;
+      const targetCell = (order.cellLetters?.carrierFee || order.cellLetters?.billedFee || 'P') + (order.excelRow || (index + 2));
       issue = {
         issueType: "WEIGHT_INFLATION",
         leakAmount: diff,
+        excelCell: targetCell,
         issueDetail: `Lệch cước vận chuyển: Báo khách ship ${customerShip.toLocaleString('vi-VN')} đ nhưng ĐVVC trừ cước thực tế ${carrierFee.toLocaleString('vi-VN')} đ (+${diff.toLocaleString('vi-VN')} đ do đội cước quá cân hoặc tính sai cước).`
       };
     }
@@ -199,9 +225,11 @@ export function analyzeOrders(ordersData) {
       const normalFee = Math.round(calculatedTotalDue * 0.10);
       const diff = platformFee - normalFee;
       totalFeeLeakage += diff;
+      const targetCell = (order.cellLetters?.platformFee || 'Q') + (order.excelRow || (index + 2));
       issue = {
         issueType: "FEE_ANOMALY",
         leakAmount: diff,
+        excelCell: targetCell,
         issueDetail: `Sàn TMĐT trừ phí hoa hồng/dịch vụ quá mức: Phí sàn bị trừ ${platformFee.toLocaleString('vi-VN')} đ (${((platformFee / calculatedTotalDue) * 100).toFixed(1)}%), dự kiến chuẩn 10% (${normalFee.toLocaleString('vi-VN')} đ). Nghi ngờ tính trùng phí voucher/dịch vụ (+${diff.toLocaleString('vi-VN')} đ).`
       };
     }
@@ -210,16 +238,19 @@ export function analyzeOrders(ordersData) {
       const diff = rawCodDiff > 0 ? rawCodDiff : (calculatedTotalDue - actualReceived);
       const dueVal = calculatedTotalDue > 0 ? calculatedTotalDue : (actualReceived + diff);
       totalCodLeakage += diff;
+      const targetCell = (order.cellLetters?.cod || 'O') + (order.excelRow || (index + 2));
       if (paymentMethod.toLowerCase().includes('chuyển khoản')) {
         issue = {
           issueType: "COD_DISCREPANCY",
           leakAmount: diff,
+          excelCell: targetCell,
           issueDetail: `Khách chuyển khoản thiếu: Tổng đơn cần thu ${dueVal.toLocaleString('vi-VN')} đ nhưng sao kê thực tế chỉ nhận ${actualReceived.toLocaleString('vi-VN')} đ (Shop bị thiếu ${diff.toLocaleString('vi-VN')} đ).`
         };
       } else {
         issue = {
           issueType: "COD_DISCREPANCY",
           leakAmount: diff,
+          excelCell: targetCell,
           issueDetail: `Thu thiếu tiền COD: Cần thu ${dueVal.toLocaleString('vi-VN')} đ nhưng ĐVVC chỉ trả ${actualReceived.toLocaleString('vi-VN')} đ (Shop bị thất thoát ${diff.toLocaleString('vi-VN')} đ).`
         };
       }
@@ -318,9 +349,20 @@ export function analyzeOrders(ordersData) {
     }
 
     if (issue) {
+      const defaultTargetCell = order.cellLetters?.id ? `${order.cellLetters.id}${order.excelRow || (index + 2)}` : (order.excelRow ? `Dòng ${order.excelRow}` : `#${index + 1}`);
+      const finalExcelCell = issue.excelCell || defaultTargetCell;
+      const finalExcelRow = order.excelRow || (index + 2);
+      const finalSheetName = order.sheetName || 'Sheet1';
+      const finalLocation = `${finalSheetName}!${finalExcelCell}`;
+      const finalAddress = order.customerAddress || order.address || 'Toàn quốc';
+
       anomalies.push({
         ...order,
         ...issue,
+        excelRow: finalExcelRow,
+        excelCell: finalExcelCell,
+        excelLocation: finalLocation,
+        customerAddress: finalAddress,
         shopWeight,
         billedWeight,
         expectedFee,
@@ -471,6 +513,28 @@ export async function parseExcelFile(file, aiSchema = null) {
         const widthIdx = findCol(['rộng', 'width']);
         const heightIdx = findCol(['cao', 'height']);
 
+        // Địa chỉ giao hàng / Tỉnh thành nhận
+        const addressIdx = findCol(['tỉnh/thành nhận', 'tỉnh thành', 'địa chỉ nhận', 'địa chỉ giao', 'địa chỉ', 'nơi nhận', 'khu vực', 'tỉnh/thành', 'thành phố']);
+
+        // Ký hiệu chữ cái cột Excel tương ứng
+        const cellLetters = {
+          id: colIndexToLetter(idIdx),
+          carrier: colIndexToLetter(carrierIdx),
+          shopWeight: colIndexToLetter(shopWeightIdx),
+          billedWeight: colIndexToLetter(billedWeightIdx),
+          expectedFee: colIndexToLetter(expectedFeeIdx),
+          billedFee: colIndexToLetter(billedFeeIdx),
+          carrierFee: colIndexToLetter(billedFeeIdx),
+          cod: colIndexToLetter(codIdx),
+          status: colIndexToLetter(statusIdx),
+          subtotal: colIndexToLetter(subtotalIdx),
+          totalDue: colIndexToLetter(totalDueIdx),
+          platformFee: colIndexToLetter(platformFeeIdx),
+          codFeeActual: colIndexToLetter(codFeeActualIdx),
+          feeDiff: colIndexToLetter(feeDiffIdx),
+          codDiff: colIndexToLetter(codDiffIdx)
+        };
+
         const hasWeightCol = shopWeightIdx >= 0 || billedWeightIdx >= 0;
         const hasExpectedFeeCol = expectedFeeIdx >= 0;
 
@@ -490,6 +554,9 @@ export async function parseExcelFile(file, aiSchema = null) {
           // Lấy mã vận đơn
           const rawId = idIdx >= 0 ? row[idIdx] : (row[0] || row[1]);
           if (!rawId || String(rawId).trim() === '' || String(rawId).toLowerCase().includes('tổng cộng')) continue;
+
+          const excelRow = r + 1; // Số thứ tự dòng thực tế trên Excel (1-indexed)
+          const customerAddress = addressIdx >= 0 && row[addressIdx] ? String(row[addressIdx]).trim() : 'Toàn quốc';
 
           // Đọc các trường kế toán bán hàng
           const qty = qtyIdx >= 0 ? parseVnNumber(row[qtyIdx], 1) : 1;
@@ -556,6 +623,10 @@ export async function parseExcelFile(file, aiSchema = null) {
             id: String(rawId).trim(),
             carrier: carrierIdx >= 0 && row[carrierIdx] ? String(row[carrierIdx]).trim() : 'Giao hàng',
             customer: customerIdx >= 0 && row[customerIdx] ? String(row[customerIdx]).trim() : 'Khách hàng',
+            customerAddress,
+            excelRow,
+            sheetName: firstSheetName,
+            cellLetters,
             phone: '09******',
             date: new Date().toISOString().split('T')[0],
             shopWeight: shopW,

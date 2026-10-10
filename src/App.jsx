@@ -11,6 +11,7 @@ import VictoryCelebrationModal from './components/VictoryCelebrationModal';
 import AuthModal from './components/AuthModal';
 import UserProfileModal from './components/UserProfileModal';
 import ScanHistoryModal from './components/ScanHistoryModal';
+import AdminModal from './components/AdminModal';
 import RoiCalculator from './components/RoiCalculator';
 import Testimonials from './components/Testimonials';
 import Footer from './components/Footer';
@@ -23,6 +24,7 @@ export default function App() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   
   // User Authentication & Balance State
   const [user, setUser] = useState(() => {
@@ -211,6 +213,7 @@ export default function App() {
         onOpenProfileModal={() => setIsProfileModalOpen(true)}
         onOpenHistory={() => setIsHistoryModalOpen(true)}
         historyCount={scanHistory.length}
+        onOpenAdminModal={() => setIsAdminModalOpen(true)}
       />
 
       <main className="flex-1">
@@ -343,6 +346,22 @@ export default function App() {
         onSelectScan={handleSelectHistoryScan}
         onDeleteScan={handleDeleteHistoryScan}
         onClearAll={handleClearAllHistory}
+      />
+
+      {/* Trung Tâm Quản Trị Admin */}
+      <AdminModal 
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
+        onManualUnlockCurrentFile={() => {
+          setIsUnlocked(true);
+          if (fileName) {
+            setScanHistory(prev => {
+              const next = prev.map(item => item.fileName === fileName ? { ...item, isUnlocked: true } : item);
+              localStorage.setItem('soatdon_scan_history', JSON.stringify(next));
+              return next;
+            });
+          }
+        }}
       />
     </div>
   );

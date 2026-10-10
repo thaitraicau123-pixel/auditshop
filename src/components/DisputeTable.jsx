@@ -96,25 +96,48 @@ export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onO
                       #{index + 1}
                     </td>
 
-                    {/* Mã vận đơn */}
+                    {/* Mã vận đơn & Tọa độ ô Excel */}
                     <td className="py-3.5 px-4 font-mono font-bold">
                       {isItemLocked ? (
-                        <div className="flex items-center gap-2">
-                          <span className="blur-xs text-slate-400 filter select-none tracking-widest">
-                            {item.carrier.slice(0, 3)}-99******
-                          </span>
-                          <Lock className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="blur-xs text-slate-400 filter select-none tracking-widest">
+                              {item.carrier.slice(0, 3)}-99******
+                            </span>
+                            <Lock className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                          </div>
+                          {item.excelRow && (
+                            <span className="text-[10px] text-slate-400 font-sans mt-0.5 inline-block">
+                              📍 Dòng {item.excelRow}
+                            </span>
+                          )}
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1.5 text-indigo-700">
-                          <span>{item.id}</span>
-                          <button 
-                            onClick={() => handleCopy(item.id)}
-                            className="p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-700 transition-colors"
-                            title="Sao chép mã đơn"
-                          >
-                            {copiedId === item.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                          </button>
+                        <div>
+                          <div className="flex items-center gap-1.5 text-indigo-700">
+                            <span>{item.id}</span>
+                            <button 
+                              onClick={() => handleCopy(item.id)}
+                              className="p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-700 transition-colors"
+                              title="Sao chép mã đơn"
+                            >
+                              {copiedId === item.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                            </button>
+                          </div>
+                          {item.excelCell && (
+                            <div className="mt-1 flex items-center gap-1">
+                              <span 
+                                onClick={() => handleCopy(item.excelCell)}
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-[10px] font-mono cursor-pointer transition-colors"
+                                title="Bấm để sao chép ô Excel (Mở Excel bấm Ctrl+G để nhảy tới ô này)"
+                              >
+                                📍 Ô: {item.excelCell}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-sans">
+                                (Dòng {item.excelRow})
+                              </span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </td>
@@ -126,24 +149,31 @@ export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onO
                       </span>
                     </td>
 
-                    {/* Trọng lượng / Khách hàng */}
-                    <td className="py-3.5 px-4 font-mono">
+                    {/* Trọng lượng / Khách hàng & Địa chỉ */}
+                    <td className="py-3.5 px-4">
                       {isItemLocked ? (
                         <span className="blur-xs filter text-slate-400">•••g / •••g</span>
                       ) : (
-                        item.hasWeightCol ? (
-                          <div className="text-xs">
-                            <span className="text-slate-500">{item.shopWeight}g</span>
-                            <span className="text-slate-400 mx-1">→</span>
-                            <span className={`font-bold ${item.billedWeight > item.shopWeight ? 'text-amber-600' : 'text-slate-700'}`}>
-                              {item.billedWeight}g
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="text-xs text-slate-700 font-sans font-medium">
+                        <div>
+                          <div className="text-xs text-slate-800 font-medium">
                             {item.customer || 'Khách lẻ'}
                           </div>
-                        )
+                          {item.customerAddress && item.customerAddress !== 'Toàn quốc' && (
+                            <div className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
+                              <span>📍</span>
+                              <span className="truncate max-w-[130px]">{item.customerAddress}</span>
+                            </div>
+                          )}
+                          {item.hasWeightCol && (
+                            <div className="text-[11px] font-mono text-slate-500 mt-0.5">
+                              <span>{item.shopWeight}g</span>
+                              <span className="text-slate-400 mx-1">→</span>
+                              <span className={`font-bold ${item.billedWeight > item.shopWeight ? 'text-amber-600' : 'text-slate-700'}`}>
+                                {item.billedWeight}g
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </td>
 
@@ -152,7 +182,7 @@ export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onO
                       +{item.leakAmount.toLocaleString('vi-VN')} đ
                     </td>
 
-                    {/* Lý do chi tiết */}
+                    {/* Lý do chi tiết & Vị trí kiểm tra */}
                     <td className="py-3.5 px-4 max-w-xs sm:max-w-md">
                       {isItemLocked ? (
                         <div className="flex items-center gap-2">
@@ -161,9 +191,19 @@ export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onO
                           </span>
                         </div>
                       ) : (
-                        <p className="text-xs text-slate-600 leading-snug">
-                          {item.issueDetail}
-                        </p>
+                        <div>
+                          <p className="text-xs text-slate-700 leading-snug">
+                            {item.issueDetail}
+                          </p>
+                          {item.excelCell && (
+                            <p className="text-[11px] text-indigo-600 font-medium mt-1 flex items-center gap-1">
+                              <span>🔍 Kiểm tra trên Excel:</span>
+                              <code className="bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-200 text-indigo-700 text-[10px]">
+                                {item.excelLocation || `Ô ${item.excelCell}`}
+                              </code>
+                            </p>
+                          )}
+                        </div>
                       )}
                     </td>
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Sparkles, TrendingUp, User, UserPlus, Zap, Clock } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Sparkles, TrendingUp, User, UserPlus, Zap, Clock } from 'lucide-react';
 
 export default function Navbar({ 
   onOpenPricing, 
@@ -8,7 +8,8 @@ export default function Navbar({
   onOpenAuthModal, 
   onOpenProfileModal,
   onOpenHistory,
-  historyCount = 0
+  historyCount = 0,
+  onOpenAdminModal
 }) {
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
@@ -86,6 +87,16 @@ export default function Navbar({
               <span>Đăng Ký / Đăng Nhập</span>
             </button>
           )}
+
+          {/* Admin Control Portal Button */}
+          <button 
+            onClick={onOpenAdminModal}
+            className="text-xs sm:text-sm font-bold px-2.5 sm:px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border border-slate-700 hover:border-slate-600"
+            title="Trung tâm Quản trị Admin - Giám sát hoạt động & Tọa độ ô Excel"
+          >
+            <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Admin</span>
+          </button>
         </nav>
       </div>
     </header>
