@@ -402,21 +402,27 @@ export async function parseExcelFile(file, aiSchema = null) {
 
         const headers = getSafeRowStrings(json[headerRowIdx]);
 
-        // Helper tìm index của cột
-        const findCol = (kwList) => {
-          return headers.findIndex(h => {
-            if (!h || typeof h !== 'string') return false;
-            return kwList.some(k => k && typeof k === 'string' && h.includes(k.toLowerCase()));
-          });
+        // Helper tìm index của cột: Quét theo thứ tự ưu tiên danh sách từ khóa (từ cụ thể nhất đến tổng quát)
+        const findCol = (kwList, excludeKwList = []) => {
+          for (const kw of kwList) {
+            const k = kw.toLowerCase();
+            const idx = headers.findIndex(h => {
+              if (!h || typeof h !== 'string') return false;
+              if (excludeKwList.some(ex => h.includes(ex.toLowerCase()))) return false;
+              return h.includes(k);
+            });
+            if (idx >= 0) return idx;
+          }
+          return -1;
         };
 
         const idIdx = findCol(['mã vận đơn bưu cục', 'mã vận đơn', 'mã bưu gửi', 'tracking', 'mã kiện', 'mã tra cứu', 'mã đơn hàng', 'mã đơn', 'order id', 'mã']);
         const carrierIdx = findCol(['kênh bán', 'đơn vị vận chuyển', 'hãng vận chuyển', 'đvvc', 'carrier', 'vận chuyển', 'đối tác', 'đơn vị', 'kênh']);
         const shopWeightIdx = findCol(['khai báo', 'shop cân', 'trọng lượng shop', 'cân nặng shop', 'khối lượng shop', 'trọng lượng ban đầu', 'kg khai báo']);
         const billedWeightIdx = findCol(['bưu cục cân', 'bưu cục', 'hãng cân', 'thực tế', 'tính cước', 'trọng lượng tính cước', 'cân nặng thực tế', 'khối lượng tính cước', 'trọng lượng qđ', 'quy đổi', 'trọng lượng bưu cục']);
-        const expectedFeeIdx = findCol(['cước dự kiến', 'phí ban đầu', 'tạm tính', 'cước gốc', 'phí chuẩn', 'thỏa thuận']);
-        const billedFeeIdx = findCol(['phí ship đvvc báo', 'cước vận chuyển thực thu', 'cước thực thu', 'thực tính', 'phí giao', 'tổng cước', 'cước thực', 'phí ship', 'thực thu', 'tổng phí', 'chi phí']);
-        const codIdx = findCol(['tiền thực thu về tk/cod', 'tiền thực thu', 'thực thu về tk', 'tiền thu hộ cod', 'tiền cod', 'thu hộ', 'cod', 'giá trị thu hộ', 'tiền thu hộ']);
+        const expectedFeeIdx = findCol(['cước dự kiến', 'phí ban đầu', 'tạm tính', 'cước gốc', 'phí chuẩn', 'thỏa thuận'], ['khách']);
+        const billedFeeIdx = findCol(['phí ship đvvc báo', 'cước vận chuyển thực thu', 'cước thực thu', 'phí vận chuyển', 'cước thực', 'tổng cước', 'phí ship', 'cước bưu cục', 'phí giao'], ['khách', 'thực thu về tk', 'tiền thực thu']);
+        const codIdx = findCol(['tiền thực thu về tk/cod', 'tiền thực thu', 'thực thu về tk', 'tiền thu hộ cod', 'tiền cod', 'thu hộ', 'cod', 'giá trị thu hộ', 'tiền thu hộ', 'thực thu'], ['phí ship', 'phí đvvc', 'cước']);
         const statusIdx = findCol(['trạng thái đơn', 'trạng thái', 'tình trạng', 'status', 'kết quả giao', 'tiến trình']);
         const customerIdx = findCol(['người nhận', 'khách hàng', 'tên khách', 'họ tên']);
         
@@ -426,15 +432,15 @@ export async function parseExcelFile(file, aiSchema = null) {
         const priceIdx = findCol(['đơn giá', 'giá bán']);
         const subtotalIdx = findCol(['tiền hàng', 'thành tiền']);
         const discountIdx = findCol(['voucher/giảm', 'giảm giá', 'voucher', 'chiết khấu']);
-        const customerShipIdx = findCol(['ship khách trả', 'cước khách trả', 'tiền ship']);
+        const customerShipIdx = findCol(['ship khách trả', 'cước khách trả', 'tiền ship khách', 'khách trả ship']);
         const totalDueIdx = findCol(['tổng cần thu', 'cần thu', 'tổng thu']);
         const paymentMethodIdx = findCol(['hình thức tt', 'phương thức thanh toán', 'hình thức']);
         const platformFeeIdx = findCol(['phí sàn', 'hoa hồng sàn']);
 
         // Nhận diện các cột chênh lệch đã tính trước (Pre-calculated columns)
-        const feeDiffIdx = findCol(['chênh lệch cần thu vs thực thu', 'chênh lệch cước', 'cước chênh lệch', 'cước chênh', 'phí chênh lệch', 'tiền chênh lệch', 'chênh lệch phí', 'cước phát sinh', 'phụ phí phát sinh', 'tiền lệch', 'lệch cước', 'phí vượt', 'phụ phí']);
+        const feeDiffIdx = findCol(['chênh lệch cước', 'cước chênh lệch', 'cước chênh', 'phí chênh lệch', 'tiền chênh lệch', 'chênh lệch phí', 'cước phát sinh', 'phụ phí phát sinh', 'tiền lệch', 'lệch cước', 'phí vượt', 'phụ phí']);
+        const codDiffIdx = findCol(['chênh lệch cần thu vs thực thu', 'chênh lệch cần thu', 'chênh lệch cod', 'lệch cod', 'chênh lệch tiền thu hộ', 'lệch tiền thu hộ']);
         const weightDiffIdx = findCol(['chênh lệch trọng lượng', 'chênh lệch cân nặng', 'chênh lệch khối lượng', 'lệch cân', 'trọng lượng lệch', 'cân lệch', 'khối lượng lệch', 'chênh cân', 'vượt cân']);
-        const codDiffIdx = findCol(['chênh lệch cod', 'lệch cod', 'chênh lệch tiền thu hộ', 'lệch tiền thu hộ']);
         const auditNoteIdx = findCol(['kết quả đối soát', 'cảnh báo đối soát', 'trạng thái đối soát', 'kết quả kiểm tra', 'tình trạng đối soát', 'kết luận', 'khiếu nại', 'ghi chú đối soát', 'cảnh báo lệch', 'đánh giá', 'ghi chú']);
         const carrierCompensatedIdx = findCol(['hãng đền bù', 'bồi thường', 'tiền bồi thường', 'đã đền bù', 'đã hoàn tiền', 'đã giải quyết']);
 

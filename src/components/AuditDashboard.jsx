@@ -334,6 +334,16 @@ export default function AuditDashboard({
         >
           Phụ phí ảo
         </button>
+        <button
+          onClick={() => onFilterChange('COD_DISCREPANCY')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+            activeFilter === 'COD_DISCREPANCY'
+              ? 'bg-emerald-600 text-white shadow-xs'
+              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          Lệch COD / Chuyển khoản
+        </button>
       </div>
     </div>
   );
