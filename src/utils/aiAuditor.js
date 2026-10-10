@@ -52,34 +52,53 @@ export async function askGemini38({ prompt, apiKey = DEFAULT_GEMINI_API_KEY, sys
  * Tìm ra chính xác từng đơn bị tính lố cước, kê cân, giam đơn hoàn
  */
 export async function aiDeepAuditOrders(orders, apiKey = DEFAULT_GEMINI_API_KEY) {
-  // Chuẩn bị mẫu 25-40 đơn tiêu biểu hoặc toàn bộ đơn nếu file nhỏ để gửi cho AI
-  const sampleList = orders.slice(0, 35).map((o, idx) => ({
+  // Lọc thông minh: Ưu tiên gom các đơn có dấu hiệu bất thường, đơn có sẵn cột chênh lệch
+  const suspiciousOrders = orders.filter(o => 
+    (o.feeDiff && o.feeDiff > 0) || 
+    (o.weightDiff && o.weightDiff > 0) || 
+    (o.billedWeight > o.shopWeight + 100) ||
+    (o.billedFee > o.expectedFee + 3000) ||
+    String(o.status || '').toLowerCase().includes('hoàn') ||
+    String(o.auditNote || '').trim() !== ''
+  );
+
+  const normalSample = orders.filter(o => !suspiciousOrders.includes(o)).slice(0, 15);
+  const combinedSample = [...suspiciousOrders.slice(0, 30), ...normalSample].slice(0, 45);
+
+  const sampleList = combinedSample.map((o, idx) => ({
     stt: idx + 1,
     ma_don: o.id,
     hang: o.carrier,
     khach: o.customer,
     shop_can: o.shopWeight,
     hang_can: o.billedWeight,
+    chenh_lech_can_co_san: o.weightDiff || 0,
     cuoc_tam_tinh: o.expectedFee,
     cuoc_thuc_thu: o.billedFee,
+    chenh_lech_cuoc_co_san: o.feeDiff || 0,
     cod: o.cod,
-    trang_thai: o.status
+    trang_thai: o.status,
+    ghi_chu_doi_soat: o.auditNote || ''
   }));
 
-  const prompt = `Bạn là Giám Đốc Kiểm Toán Logistics TMĐT Việt Nam của Hệ thống SoatDon.vn.
-Dưới đây là danh sách các đơn hàng từ bảng kê đối soát của một shop online:
+  const prompt = `Bạn là Giám Đốc Kiểm Toán Logistics TMĐT Việt Nam của Hệ thống AI SoatDon.vn.
+Dưới đây là danh sách mẫu các đơn hàng từ bảng kê đối soát của một shop online (lưu ý: nhiều file Excel có cột đã tính sẵn chênh lệch cước hoặc chênh lệch cân nặng):
 ${JSON.stringify(sampleList, null, 2)}
 
-Hãy rà soát kỹ từng đơn hàng theo các quy tắc nghiệp vụ sau:
-1. LỆCH CÂN NẶNG: Nếu hãng cân nặng hơn shop khai báo > 150g và cước thực thu cao hơn cước tạm tính -> Gắn lỗi "WEIGHT_INFLATION". Số tiền mất = cước thực thu - cước tạm tính.
-2. ĐƠN HOÀN NGÂM KHO: Nếu trạng thái là chuyển hoàn và thời gian ngâm lâu hoặc không trả hàng -> Gắn lỗi "RETURN_STALLED". Số tiền mất = tiền COD/giá trị hàng.
-3. PHỤ PHÍ BẤT THƯỜNG: Nếu cước thực thu cao hơn cước tạm tính vô lý -> Gắn lỗi "FEE_ANOMALY". Số tiền mất = chênh lệch cước.
+HƯỚNG DẪN KIỂM TOÁN CHUYÊN SÂU:
+1. NẾU CÓ CỘT "chenh_lech_cuoc_co_san" > 0 HOẶC "chenh_lech_can_co_san" > 0:
+   - Đây là số liệu chênh lệch đã được ghi nhận trong bảng kê. Hãy ưu tiên công nhận số tiền mất này!
+   - Nếu lệch do cân nặng -> Gắn lỗi "WEIGHT_INFLATION". Số tiền mất = chênh lệch cước đó.
+   - Nếu lệch do phụ phí khác -> Gắn lỗi "FEE_ANOMALY". Số tiền mất = chênh lệch cước đó.
+2. TỰ ĐỘNG PHÁT HIỆN KÊ LỐ CÂN NẶNG: Nếu hãng_cân > shop_cân > 150g và cuoc_thuc_thu > cuoc_tam_tinh -> Gắn "WEIGHT_INFLATION".
+3. ĐƠN HOÀN GIAM KHO / THẤT THOÁT: Nếu trạng thái là chuyển hoàn, ngâm lâu bưu cục -> Gắn "RETURN_STALLED". Số tiền mất = tiền COD.
+4. PHỤ PHÍ VÔ LÝ: Nếu cuoc_thuc_thu > cuoc_tam_tinh vô lý -> Gắn "FEE_ANOMALY".
 
 Trả về kết quả DUY NHẤT dưới dạng JSON theo định dạng chuẩn này (không dùng markdown code blocks ngoài JSON):
 {
-  "carrierDetected": "Tên đơn vị vận chuyển chính (GHTK/GHN/Shopee/TikTok/Viettel)",
-  "totalAnalyzed": ${sampleList.length},
-  "summaryDiagnosis": "Đoạn văn ngắn 3-4 câu nhận định của Hệ thống AI Soát Đơn về tình trạng thất thoát của shop, lỗi do đâu (băng chuyền cân lố hay giam đơn hoàn) và lời khuyên xử lý",
+  "carrierDetected": "Tên các đơn vị vận chuyển phát hiện được (GHTK/GHN/Shopee Xpress/TikTok/Viettel Post)",
+  "totalAnalyzed": ${orders.length},
+  "summaryDiagnosis": "Đoạn văn sắc sảo 3-4 câu nhận định của AI Kiểm Toán Soát Đơn về tình trạng thất thoát của shop, phát hiện các cột chênh lệch thực tế, phân tích lỗi do đâu (băng chuyền cân lố hay giam đơn hoàn) và lời khuyên xử lý",
   "flaggedOrders": [
     {
       "id": "Mã đơn",
