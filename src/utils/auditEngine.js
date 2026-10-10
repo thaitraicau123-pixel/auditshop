@@ -133,10 +133,10 @@ export function analyzeOrders(ordersData) {
         issueDetail: `Lỗi tính toán: Số lượng (${qty}) * Đơn giá (${price.toLocaleString('vi-VN')} đ) = ${correctSubtotal.toLocaleString('vi-VN')} đ, nhưng ô thành tiền gõ nhầm ${rawSubtotal.toLocaleString('vi-VN')} đ (Thất thoát trực tiếp ${diff.toLocaleString('vi-VN')} đ).`
       };
     }
-    // 1.2. Hàng Bom / Chuyển hoàn nhưng kế toán vẫn hạch toán thu tiền về
+    // 1.2. Hàng Bom / Chuyển hoàn nhưng kế toán vẫn hạch toán ảo thu tiền về (chỉ áp dụng khi có tiền thực thu bất thường >= 100k ghi nhận về tài khoản)
     else if (
-      status.toLowerCase().includes('bom') || 
-      (status.toLowerCase().includes('hoàn') && (status.toLowerCase().includes('chuyển') || status.toLowerCase().includes('không nhận') || status.toLowerCase().includes('boom')))
+      (status.toLowerCase().includes('bom') || (status.toLowerCase().includes('hoàn') && (status.toLowerCase().includes('chuyển') || status.toLowerCase().includes('không nhận') || status.toLowerCase().includes('boom')))) &&
+      actualReceived >= 100000
     ) {
       const orderVal = (calculatedTotalDue > 0 ? calculatedTotalDue : actualReceived) || 480000;
       const shipReturn = carrierFee > 0 ? carrierFee : 15000;
@@ -148,7 +148,43 @@ export function analyzeOrders(ordersData) {
         issueDetail: `Hàng Bom / Chuyển hoàn nhưng vẫn ghi nhận doanh thu: Thực tế không thu được tiền khách (0 đ) và mất thêm ${shipReturn.toLocaleString('vi-VN')} đ cước ship hoàn. Ghi ảo doanh thu ${orderVal.toLocaleString('vi-VN')} đ.`
       };
     }
-    // 1.3. Lệch cước vận chuyển (ĐVVC đội cước vượt xa mức thỏa thuận / ship báo khách)
+    // 1.3. Thu phí COD khống (Đơn khách đã thanh toán trước COD=0 nhưng bị tính phí thu hộ)
+    else if (order.codFeeActual > order.codFeeExpected && order.codFeeActual > 0) {
+      const diff = order.codFeeActual - order.codFeeExpected;
+      totalFeeLeakage += diff;
+      issue = {
+        issueType: "FEE_ANOMALY",
+        leakAmount: diff,
+        issueDetail: `Thu phí COD khống: Đơn có phí COD quy định ${order.codFeeExpected.toLocaleString('vi-VN')} đ nhưng bị trừ ${order.codFeeActual.toLocaleString('vi-VN')} đ (Thất thoát +${diff.toLocaleString('vi-VN')} đ).`
+      };
+    }
+    // 1.4. Lệch cước vận chuyển (đội cước quá cân hoặc lạm thu cước hoàn từ các cột đối soát)
+    else if (rawFeeDiff > 0) {
+      if (rawWeightDiff > 100 || billedWeight > shopWeight + 150) {
+        const weightChênh = rawWeightDiff > 0 ? rawWeightDiff : (billedWeight - shopWeight);
+        totalWeightLeakage += rawFeeDiff;
+        issue = {
+          issueType: "WEIGHT_INFLATION",
+          leakAmount: rawFeeDiff,
+          issueDetail: `Đội cước do sai nấc cân thể tích: Hãng cân ${billedWeight}g so với ${shopWeight}g khai báo (Chênh +${weightChênh}g). Cước đội thêm +${rawFeeDiff.toLocaleString('vi-VN')} đ.`
+        };
+      } else if (status.toLowerCase().includes('hoàn')) {
+        totalFeeLeakage += rawFeeDiff;
+        issue = {
+          issueType: "FEE_ANOMALY",
+          leakAmount: rawFeeDiff,
+          issueDetail: `Lạm thu cước chuyển hoàn: Hợp đồng quy định phí hoàn ${expectedFee.toLocaleString('vi-VN')} đ nhưng bị trừ ${billedFee.toLocaleString('vi-VN')} đ (Chênh +${rawFeeDiff.toLocaleString('vi-VN')} đ).`
+        };
+      } else {
+        totalFeeLeakage += rawFeeDiff;
+        issue = {
+          issueType: "FEE_ANOMALY",
+          leakAmount: rawFeeDiff,
+          issueDetail: `Lệch cước vận chuyển: Cước thực thu ${billedFee.toLocaleString('vi-VN')} đ cao hơn dự kiến ${expectedFee.toLocaleString('vi-VN')} đ (Chênh +${rawFeeDiff.toLocaleString('vi-VN')} đ).`
+        };
+      }
+    }
+    // 1.5. Lệch cước vận chuyển kiểu bảng bán hàng (ĐVVC đội cước vượt xa mức thỏa thuận / ship báo khách)
     else if (customerShip > 0 && carrierFee > customerShip + 10000) {
       const diff = carrierFee - customerShip;
       totalWeightLeakage += diff;
@@ -158,7 +194,7 @@ export function analyzeOrders(ordersData) {
         issueDetail: `Lệch cước vận chuyển: Báo khách ship ${customerShip.toLocaleString('vi-VN')} đ nhưng ĐVVC trừ cước thực tế ${carrierFee.toLocaleString('vi-VN')} đ (+${diff.toLocaleString('vi-VN')} đ do đội cước quá cân hoặc tính sai cước).`
       };
     }
-    // 1.4. Sàn TMĐT trừ phí hoa hồng/dịch vụ quá mức (> 16% giá trị đơn)
+    // 1.6. Sàn TMĐT trừ phí hoa hồng/dịch vụ quá mức (> 16% giá trị đơn)
     else if (platformFee > 0 && calculatedTotalDue > 0 && (platformFee / calculatedTotalDue > 0.16)) {
       const normalFee = Math.round(calculatedTotalDue * 0.10);
       const diff = platformFee - normalFee;
@@ -169,44 +205,27 @@ export function analyzeOrders(ordersData) {
         issueDetail: `Sàn TMĐT trừ phí hoa hồng/dịch vụ quá mức: Phí sàn bị trừ ${platformFee.toLocaleString('vi-VN')} đ (${((platformFee / calculatedTotalDue) * 100).toFixed(1)}%), dự kiến chuẩn 10% (${normalFee.toLocaleString('vi-VN')} đ). Nghi ngờ tính trùng phí voucher/dịch vụ (+${diff.toLocaleString('vi-VN')} đ).`
       };
     }
-    // 1.5. Lệch COD (ĐVVC thu thiếu tiền) hoặc Khách chuyển khoản thiếu (so với Tổng Cần Thu)
-    else if (calculatedTotalDue > 0 && actualReceived > 0 && actualReceived < calculatedTotalDue - 2000) {
-      const diff = calculatedTotalDue - actualReceived;
+    // 1.7. Lệch COD (ĐVVC thu thiếu tiền) hoặc Khách chuyển khoản thiếu (so với Tổng Cần Thu)
+    else if (rawCodDiff > 0 || (calculatedTotalDue > 0 && actualReceived > 0 && actualReceived < calculatedTotalDue - 2000)) {
+      const diff = rawCodDiff > 0 ? rawCodDiff : (calculatedTotalDue - actualReceived);
+      const dueVal = calculatedTotalDue > 0 ? calculatedTotalDue : (actualReceived + diff);
       totalCodLeakage += diff;
       if (paymentMethod.toLowerCase().includes('chuyển khoản')) {
         issue = {
           issueType: "COD_DISCREPANCY",
           leakAmount: diff,
-          issueDetail: `Khách chuyển khoản thiếu: Tổng đơn cần thu ${calculatedTotalDue.toLocaleString('vi-VN')} đ nhưng sao kê thực tế chỉ nhận ${actualReceived.toLocaleString('vi-VN')} đ (Shop bị thiếu ${diff.toLocaleString('vi-VN')} đ).`
+          issueDetail: `Khách chuyển khoản thiếu: Tổng đơn cần thu ${dueVal.toLocaleString('vi-VN')} đ nhưng sao kê thực tế chỉ nhận ${actualReceived.toLocaleString('vi-VN')} đ (Shop bị thiếu ${diff.toLocaleString('vi-VN')} đ).`
         };
       } else {
         issue = {
           issueType: "COD_DISCREPANCY",
           leakAmount: diff,
-          issueDetail: `Lệch COD (ĐVVC thu thiếu tiền): Cần thu ${calculatedTotalDue.toLocaleString('vi-VN')} đ nhưng ĐVVC chỉ trả ${actualReceived.toLocaleString('vi-VN')} đ (Shop bị thất thoát ${diff.toLocaleString('vi-VN')} đ).`
+          issueDetail: `Thu thiếu tiền COD: Cần thu ${dueVal.toLocaleString('vi-VN')} đ nhưng ĐVVC chỉ trả ${actualReceived.toLocaleString('vi-VN')} đ (Shop bị thất thoát ${diff.toLocaleString('vi-VN')} đ).`
         };
       }
     }
 
     // === NHÓM 2: FILE ĐỐI SOÁT VẬN CHUYỂN NVC TIÊU CHUẨN (GHTK, GHN, Viettel Post, SPX) ===
-    else if (rawFeeDiff > 0) {
-      if (rawWeightDiff > 100 || billedWeight > shopWeight + 150) {
-        const weightChênh = rawWeightDiff > 0 ? rawWeightDiff : (billedWeight - shopWeight);
-        totalWeightLeakage += rawFeeDiff;
-        issue = {
-          issueType: "WEIGHT_INFLATION",
-          leakAmount: rawFeeDiff,
-          issueDetail: `🚨 [Bảng kê xác nhận lệch cước]: Phụ phí chênh lệch +${rawFeeDiff.toLocaleString('vi-VN')} đ do nhảy cân từ ${shopWeight}g lên ${billedWeight}g (+${weightChênh}g).`
-        };
-      } else {
-        totalFeeLeakage += rawFeeDiff;
-        issue = {
-          issueType: "FEE_ANOMALY",
-          leakAmount: rawFeeDiff,
-          issueDetail: `🚨 [Bảng kê xác nhận chênh lệch cước]: Cước thực thu bị đội thêm +${rawFeeDiff.toLocaleString('vi-VN')} đ so với biểu phí thỏa thuận ban đầu.`
-        };
-      }
-    }
     else if (rawWeightDiff > 100) {
       const diffFee = billedFee > expectedFee ? (billedFee - expectedFee) : Math.max(11000, Math.ceil(rawWeightDiff / 500) * 11000);
       totalWeightLeakage += diffFee;
@@ -262,14 +281,13 @@ export function analyzeOrders(ordersData) {
         issueDetail: `Hãng nhảy cân: ${billedWeight}g so với ${shopWeight}g khai báo (Chênh +${billedWeight - shopWeight}g). Cước bị đội thêm ${diff.toLocaleString('vi-VN')} đ.`
       };
     } 
-    // 2.2. Check đơn hoàn ngâm kho / giam hàng
+    // 2.2. Check đơn hoàn ngâm kho / giam hàng (CHỈ KHI CÓ DẤU HIỆU NGÂM / GIAM / MẤT HÀNG)
     else if (
-      status.toLowerCase().includes("hoàn") || 
-      status.toLowerCase().includes("return") || 
       status.toLowerCase().includes("giam") ||
       status.toLowerCase().includes("lưu kho") ||
       status.toLowerCase().includes("thất lạc") ||
-      status.toLowerCase().includes("mất hàng")
+      status.toLowerCase().includes("mất hàng") ||
+      (status.toLowerCase().includes("hoàn") && (auditNote.includes('ngâm') || auditNote.includes('chưa trả') || auditNote.includes('thất lạc')))
     ) {
       const loss = cod > 0 ? cod : 250000;
       totalReturnLeakage += loss;
@@ -416,13 +434,13 @@ export async function parseExcelFile(file, aiSchema = null) {
           return -1;
         };
 
-        const idIdx = findCol(['mã vận đơn bưu cục', 'mã vận đơn', 'mã bưu gửi', 'tracking', 'mã kiện', 'mã tra cứu', 'mã đơn hàng', 'mã đơn', 'order id', 'mã']);
-        const carrierIdx = findCol(['kênh bán', 'đơn vị vận chuyển', 'hãng vận chuyển', 'đvvc', 'carrier', 'vận chuyển', 'đối tác', 'đơn vị', 'kênh']);
-        const shopWeightIdx = findCol(['khai báo', 'shop cân', 'trọng lượng shop', 'cân nặng shop', 'khối lượng shop', 'trọng lượng ban đầu', 'kg khai báo']);
-        const billedWeightIdx = findCol(['bưu cục cân', 'bưu cục', 'hãng cân', 'thực tế', 'tính cước', 'trọng lượng tính cước', 'cân nặng thực tế', 'khối lượng tính cước', 'trọng lượng qđ', 'quy đổi', 'trọng lượng bưu cục']);
+        const idIdx = findCol(['mã vận đơn bưu cục', 'mã đơn hàng', 'mã đơn', 'mã bưu gửi', 'tracking', 'mã kiện', 'mã tra cứu', 'order id', 'mã']);
+        const carrierIdx = findCol(['đơn vị vc', 'đơn vị vận chuyển', 'hãng vận chuyển', 'đvvc', 'carrier', 'kênh bán', 'đối tác', 'đơn vị', 'kênh']);
+        const shopWeightIdx = findCol(['tl khai báo', 'khai báo', 'shop cân', 'trọng lượng shop', 'cân nặng shop', 'khối lượng shop', 'trọng lượng ban đầu', 'kg khai báo']);
+        const billedWeightIdx = findCol(['tl hãng cân', 'bưu cục cân', 'bưu cục', 'hãng cân', 'thực tế', 'tính cước', 'trọng lượng tính cước', 'cân nặng thực tế', 'khối lượng tính cước', 'trọng lượng qđ', 'quy đổi', 'trọng lượng bưu cục']);
         const expectedFeeIdx = findCol(['cước dự kiến', 'phí ban đầu', 'tạm tính', 'cước gốc', 'phí chuẩn', 'thỏa thuận'], ['khách']);
-        const billedFeeIdx = findCol(['phí ship đvvc báo', 'cước vận chuyển thực thu', 'cước thực thu', 'phí vận chuyển', 'cước thực', 'tổng cước', 'phí ship', 'cước bưu cục', 'phí giao'], ['khách', 'thực thu về tk', 'tiền thực thu']);
-        const codIdx = findCol(['tiền thực thu về tk/cod', 'tiền thực thu', 'thực thu về tk', 'tiền thu hộ cod', 'tiền cod', 'thu hộ', 'cod', 'giá trị thu hộ', 'tiền thu hộ', 'thực thu'], ['phí ship', 'phí đvvc', 'cước']);
+        const billedFeeIdx = findCol(['cước thực thu', 'phí ship đvvc báo', 'cước vận chuyển thực thu', 'phí vận chuyển', 'cước thực', 'tổng cước', 'phí ship', 'cước bưu cục', 'phí giao'], ['khách', 'thực thu về tk', 'tiền thực thu']);
+        const codIdx = findCol(['tiền thực thu về tk/cod', 'cod hãng báo nhận', 'tiền thực thu', 'thực thu về tk', 'tiền thu hộ cod', 'tiền cod', 'thu hộ', 'cod', 'giá trị thu hộ', 'tiền thu hộ', 'thực thu'], ['phí ship', 'phí đvvc', 'cước']);
         const statusIdx = findCol(['trạng thái đơn', 'trạng thái', 'tình trạng', 'status', 'kết quả giao', 'tiến trình']);
         const customerIdx = findCol(['người nhận', 'khách hàng', 'tên khách', 'họ tên']);
         
@@ -433,14 +451,18 @@ export async function parseExcelFile(file, aiSchema = null) {
         const subtotalIdx = findCol(['tiền hàng', 'thành tiền']);
         const discountIdx = findCol(['voucher/giảm', 'giảm giá', 'voucher', 'chiết khấu']);
         const customerShipIdx = findCol(['ship khách trả', 'cước khách trả', 'tiền ship khách', 'khách trả ship']);
-        const totalDueIdx = findCol(['tổng cần thu', 'cần thu', 'tổng thu']);
+        const totalDueIdx = findCol(['tiền cod phải thu', 'cod phải thu', 'tổng cần thu', 'cần thu', 'tổng thu']);
         const paymentMethodIdx = findCol(['hình thức tt', 'phương thức thanh toán', 'hình thức']);
         const platformFeeIdx = findCol(['phí sàn', 'hoa hồng sàn']);
 
+        // Phí COD quy định vs thực tính (để phát hiện thu phí COD khống)
+        const codFeeExpectedIdx = findCol(['phí cod quy định', 'phí cod định mức']);
+        const codFeeActualIdx = findCol(['phí cod thực tính', 'phí cod thực tế']);
+
         // Nhận diện các cột chênh lệch đã tính trước (Pre-calculated columns)
-        const feeDiffIdx = findCol(['chênh lệch cước', 'cước chênh lệch', 'cước chênh', 'phí chênh lệch', 'tiền chênh lệch', 'chênh lệch phí', 'cước phát sinh', 'phụ phí phát sinh', 'tiền lệch', 'lệch cước', 'phí vượt', 'phụ phí']);
-        const codDiffIdx = findCol(['chênh lệch cần thu vs thực thu', 'chênh lệch cần thu', 'chênh lệch cod', 'lệch cod', 'chênh lệch tiền thu hộ', 'lệch tiền thu hộ']);
-        const weightDiffIdx = findCol(['chênh lệch trọng lượng', 'chênh lệch cân nặng', 'chênh lệch khối lượng', 'lệch cân', 'trọng lượng lệch', 'cân lệch', 'khối lượng lệch', 'chênh cân', 'vượt cân']);
+        const feeDiffIdx = findCol(['lệch cước', 'chênh lệch cước', 'cước chênh lệch', 'cước chênh', 'phí chênh lệch', 'tiền chênh lệch', 'chênh lệch phí', 'cước phát sinh', 'phụ phí phát sinh', 'tiền lệch', 'phí vượt', 'phụ phí']);
+        const codDiffIdx = findCol(['lệch thu cod', 'chênh lệch thu cod', 'chênh lệch cần thu vs thực thu', 'chênh lệch cần thu', 'chênh lệch cod', 'lệch cod', 'chênh lệch tiền thu hộ', 'lệch tiền thu hộ']);
+        const weightDiffIdx = findCol(['lệch tl', 'chênh lệch tl', 'chênh lệch trọng lượng', 'chênh lệch cân nặng', 'chênh lệch khối lượng', 'lệch cân', 'trọng lượng lệch', 'cân lệch', 'khối lượng lệch', 'chênh cân', 'vượt cân']);
         const auditNoteIdx = findCol(['kết quả đối soát', 'cảnh báo đối soát', 'trạng thái đối soát', 'kết quả kiểm tra', 'tình trạng đối soát', 'kết luận', 'khiếu nại', 'ghi chú đối soát', 'cảnh báo lệch', 'đánh giá', 'ghi chú']);
         const carrierCompensatedIdx = findCol(['hãng đền bù', 'bồi thường', 'tiền bồi thường', 'đã đền bù', 'đã hoàn tiền', 'đã giải quyết']);
 
@@ -510,9 +532,20 @@ export async function parseExcelFile(file, aiSchema = null) {
 
           const expFee = expectedFeeIdx >= 0 ? parseVnNumber(row[expectedFeeIdx], customerShip || 22000) : (customerShip || 22000);
           const billedFee = billedFeeIdx >= 0 ? parseVnNumber(row[billedFeeIdx], expFee) : expFee;
-          const feeDiff = feeDiffIdx >= 0 ? parseVnNumber(row[feeDiffIdx], 0) : 0;
-          const codDiff = codDiffIdx >= 0 ? parseVnNumber(row[codDiffIdx], 0) : 0;
+          let feeDiff = feeDiffIdx >= 0 ? parseVnNumber(row[feeDiffIdx], 0) : 0;
+          if (feeDiff === 0 && expectedFeeIdx >= 0 && billedFee > expFee) {
+            feeDiff = billedFee - expFee;
+          }
+
           const codVal = codIdx >= 0 ? parseVnNumber(row[codIdx], 0) : (calculatedTotalDue || 0);
+          let codDiff = codDiffIdx >= 0 ? parseVnNumber(row[codDiffIdx], 0) : 0;
+          if (codDiff === 0 && calculatedTotalDue > 0 && codVal > 0 && calculatedTotalDue > codVal + 2000) {
+            codDiff = calculatedTotalDue - codVal;
+          }
+
+          const codFeeExpected = codFeeExpectedIdx >= 0 ? parseVnNumber(row[codFeeExpectedIdx], 0) : 0;
+          const codFeeActual = codFeeActualIdx >= 0 ? parseVnNumber(row[codFeeActualIdx], 0) : 0;
+
           const st = statusIdx >= 0 ? String(row[statusIdx] || '') : 'Giao thành công';
           const auditNote = auditNoteIdx >= 0 ? String(row[auditNoteIdx] || '').trim() : '';
           const isCompensated = carrierCompensatedIdx >= 0 
@@ -533,6 +566,8 @@ export async function parseExcelFile(file, aiSchema = null) {
             feeDiff,
             codDiff,
             cod: codVal,
+            codFeeExpected,
+            codFeeActual,
             status: st,
             auditNote,
             isCompensated,
