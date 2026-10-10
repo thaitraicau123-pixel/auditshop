@@ -10,11 +10,23 @@
       "destination": "/api/token_generate"
     },
     {
+      "source": "/vqr/bank/api/transaction-sync",
+      "destination": "/api/vietqr-callback"
+    },
+    {
+      "source": "/bank/api/transaction-sync",
+      "destination": "/api/vietqr-callback"
+    },
+    {
       "source": "/vqr/bank/aod/:path*",
       "destination": "/api/vietqr-callback"
     },
     {
       "source": "/bank/aod/:path*",
+      "destination": "/api/vietqr-callback"
+    },
+    {
+      "source": "/vqr/:path*",
       "destination": "/api/vietqr-callback"
     },
     {

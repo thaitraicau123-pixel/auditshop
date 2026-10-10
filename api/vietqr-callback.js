@@ -72,8 +72,14 @@ export default async function handler(req, res) {
       // Ignored in read-only serverless environment
     }
 
-    // Trả về response theo chuẩn VietQR yêu cầu
+    // Trả về response đúng chuẩn cấu trúc VietQR API Transaction Sync yêu cầu
     return res.status(200).json({
+      error: false,
+      errorReason: null,
+      toastMessage: 'Success',
+      object: {
+        reftransactionid: ref || orderId || 'VQR_' + Date.now()
+      },
       code: '00',
       status: 'SUCCESS',
       message: 'Transaction received and recorded successfully',
@@ -83,6 +89,9 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('VietQR Callback Error:', error);
     return res.status(500).json({
+      error: true,
+      errorReason: 'SERVER_ERROR',
+      toastMessage: error.message,
       code: '99',
       status: 'FAILED',
       message: error.message
