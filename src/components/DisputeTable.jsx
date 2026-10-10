@@ -72,8 +72,8 @@ export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onO
               <tr className="border-b border-slate-200 bg-slate-100/70 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
                 <th className="py-3.5 px-4">STT</th>
                 <th className="py-3.5 px-4">Mã Vận Đơn</th>
-                <th className="py-3.5 px-4">Đơn Vị VC</th>
-                <th className="py-3.5 px-4">Trọng Lượng (Shop / Hãng)</th>
+                <th className="py-3.5 px-4">Kênh Bán / ĐVVC</th>
+                <th className="py-3.5 px-4">Trọng Lượng / Khách</th>
                 <th className="py-3.5 px-4">Tiền Thất Thoát</th>
                 <th className="py-3.5 px-4">Lý Do / Chi Tiết Bất Thường</th>
                 <th className="py-3.5 px-4 text-center">Trạng Thái</th>
@@ -126,18 +126,24 @@ export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onO
                       </span>
                     </td>
 
-                    {/* Trọng lượng */}
+                    {/* Trọng lượng / Khách hàng */}
                     <td className="py-3.5 px-4 font-mono">
                       {isItemLocked ? (
                         <span className="blur-xs filter text-slate-400">•••g / •••g</span>
                       ) : (
-                        <div className="text-xs">
-                          <span className="text-slate-500">{item.shopWeight}g</span>
-                          <span className="text-slate-400 mx-1">→</span>
-                          <span className={`font-bold ${item.billedWeight > item.shopWeight ? 'text-amber-600' : 'text-slate-700'}`}>
-                            {item.billedWeight}g
-                          </span>
-                        </div>
+                        item.hasWeightCol ? (
+                          <div className="text-xs">
+                            <span className="text-slate-500">{item.shopWeight}g</span>
+                            <span className="text-slate-400 mx-1">→</span>
+                            <span className={`font-bold ${item.billedWeight > item.shopWeight ? 'text-amber-600' : 'text-slate-700'}`}>
+                              {item.billedWeight}g
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-slate-700 font-sans font-medium">
+                            {item.customer || 'Khách lẻ'}
+                          </div>
+                        )
                       )}
                     </td>
 
