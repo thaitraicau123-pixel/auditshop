@@ -40,6 +40,14 @@ export function getFirebaseConfig() {
   };
 }
 
+let firebaseAppInstance = null;
+let firestoreInstance = null;
+
+export function resetFirebaseApp() {
+  firebaseAppInstance = null;
+  firestoreInstance = null;
+}
+
 /**
  * Lưu cấu hình Firebase mới vào bộ nhớ
  */
@@ -48,6 +56,7 @@ export function saveFirebaseConfig(config) {
   try {
     localStorage.setItem('soatdon_firebase_config', JSON.stringify(config));
     // Reset instance cũ để khởi tạo lại
+    resetFirebaseApp();
     return true;
   } catch (e) {
     console.error('Không thể lưu cấu hình Firebase:', e);
@@ -62,12 +71,6 @@ export function isFirebaseConfigured() {
   const config = getFirebaseConfig();
   return Boolean(config && config.projectId && config.apiKey && config.apiKey.length > 5);
 }
-
-/**
- * Khởi tạo Firebase App an toàn
- */
-let firebaseAppInstance = null;
-let firestoreInstance = null;
 
 export function getFirebaseApp() {
   const config = getFirebaseConfig();

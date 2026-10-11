@@ -5,6 +5,7 @@ import {
   firebaseUpdateUserBalance, 
   firebaseFetchAllUsers 
 } from '../services/firebaseAuth';
+import { saveFirebaseConfig } from '../config/firebase';
 
 const MASTER_BIN_ID = 'acbecad';
 const DIRECT_CLOUD_URL = `https://extendsclass.com/api/json-storage/bin/${MASTER_BIN_ID}`;
@@ -18,6 +19,47 @@ const NO_CACHE_HEADERS = {
   'Pragma': 'no-cache',
   'Expires': '0'
 };
+
+/**
+ * Đẩy cấu hình Firebase lên Cloud Serverless để tất cả các máy khác tự động dùng chung
+ */
+export async function syncFirebaseConfigToCloud(config) {
+  if (!config || !config.projectId) return false;
+  try {
+    const getRes = await fetch(getFreshCloudUrl(), { headers: NO_CACHE_HEADERS });
+    const db = await getRes.json();
+    db.firebaseConfig = config;
+    db.updatedAt = new Date().toISOString();
+    await fetch(DIRECT_CLOUD_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(db)
+    });
+    return true;
+  } catch (e) {
+    console.warn('Lỗi đẩy Firebase config lên Cloud:', e);
+    return false;
+  }
+}
+
+/**
+ * Tải cấu hình Firebase từ Cloud về cho các thiết bị mới mở web lần đầu
+ */
+export async function fetchFirebaseConfigFromCloud() {
+  try {
+    const res = await fetch(getFreshCloudUrl(), { headers: NO_CACHE_HEADERS });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.firebaseConfig && data.firebaseConfig.projectId && data.firebaseConfig.apiKey) {
+        saveFirebaseConfig(data.firebaseConfig);
+        return data.firebaseConfig;
+      }
+    }
+  } catch (e) {
+    console.warn('Lỗi đọc Firebase config từ Cloud:', e);
+  }
+  return null;
+}
 
 // Helper gọi API đám mây (Ưu tiên /api/auth của Vercel, fallback sang Direct Cloud URL)
 async function requestCloud(endpoint, options = {}) {
@@ -52,6 +94,13 @@ async function requestCloud(endpoint, options = {}) {
  * Lấy tất cả tài khoản từ Cloud Database hoặc Google Firebase về máy
  */
 export async function fetchCloudAccounts() {
+  // Nếu máy này chưa có cấu hình Firebase, thử kéo cấu hình từ Cloud về trước
+  if (!isFirebaseConfigured()) {
+    try {
+      await fetchFirebaseConfigFromCloud();
+    } catch (e) {}
+  }
+
   // Ưu tiên đọc từ Google Firebase Firestore nếu đã cấu hình
   if (isFirebaseConfigured()) {
     try {

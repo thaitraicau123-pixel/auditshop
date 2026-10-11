@@ -6,7 +6,7 @@ import {
   Play, Square, Cpu, Award, Sparkles, AlertTriangle, Flame, Cloud, ExternalLink
 } from 'lucide-react';
 import { generateTestDataset, evaluateSingleBatch, downloadDatasetAsExcel } from '../utils/aiSelfTester';
-import { fetchCloudAccounts, cloudUpdateUserBalance } from '../utils/cloudDatabase';
+import { fetchCloudAccounts, cloudUpdateUserBalance, syncFirebaseConfigToCloud } from '../utils/cloudDatabase';
 import { getFirebaseConfig, saveFirebaseConfig, isFirebaseConfigured } from '../config/firebase';
 import { testFirebaseConnection } from '../services/firebaseAuth';
 
@@ -249,18 +249,52 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
     }
   };
 
-  const handleSaveFirebaseConfig = () => {
+  const handleSaveFirebaseConfig = async () => {
     if (!fbConfig.projectId || !fbConfig.apiKey) {
       setFbTestStatus({ type: 'error', message: 'Vui lòng nhập tối thiểu Project ID và API Key!' });
       return;
     }
     const success = saveFirebaseConfig(fbConfig);
     if (success) {
-      setFbSaveMessage('Đã lưu cấu hình Firebase thành công vào trình duyệt!');
-      setFbTestStatus({ type: 'success', message: 'Cấu hình đã được lưu! Hãy bấm "Kiểm Tra Kết Nối" để thử nghiệm kết nối.' });
+      setIsTestingFb(true);
+      try {
+        await syncFirebaseConfigToCloud(fbConfig);
+        setFbSaveMessage('Đã lưu & phát tán cấu hình tới TẤT CẢ các thiết bị!');
+        setFbTestStatus({ 
+          type: 'success', 
+          message: 'Thành công! Cấu hình đã được lưu và phát tán lên Đám Mây. Từ giờ mọi máy tính và điện thoại khác mở website sẽ tự động kết nối Firebase này mà không cần nhập lại!' 
+        });
+      } catch (err) {
+        setFbTestStatus({ type: 'success', message: 'Đã lưu trên máy này! Lỗi đồng bộ đám mây: ' + err.message });
+      } finally {
+        setIsTestingFb(false);
+      }
       loadAdminData();
     } else {
       setFbTestStatus({ type: 'error', message: 'Không thể lưu cấu hình Firebase.' });
+    }
+  };
+
+  const handleBroadcastFirebaseToAllDevices = async () => {
+    if (!fbConfig.projectId || !fbConfig.apiKey) {
+      setFbTestStatus({ type: 'error', message: 'Vui lòng điền và lưu cấu hình Firebase trước khi phát tán!' });
+      return;
+    }
+    setIsTestingFb(true);
+    try {
+      const ok = await syncFirebaseConfigToCloud(fbConfig);
+      if (ok) {
+        setFbTestStatus({ 
+          type: 'success', 
+          message: '✅ ĐÃ PHÁT TÁN THÀNH CÔNG! Mọi máy tính và điện thoại khác khi mở website sẽ tự động kết nối Google Firebase của bạn.' 
+        });
+      } else {
+        setFbTestStatus({ type: 'error', message: 'Không thể đồng bộ lên đám mây. Vui lòng kiểm tra lại mạng.' });
+      }
+    } catch (e) {
+      setFbTestStatus({ type: 'error', message: 'Lỗi: ' + e.message });
+    } finally {
+      setIsTestingFb(false);
     }
   };
 
@@ -1283,14 +1317,25 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
 
                   {/* Nút thao tác */}
                   <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"
                         onClick={handleSaveFirebaseConfig}
                         className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5"
                       >
                         <Check className="w-4 h-4" />
-                        <span>Lưu Cấu Hình & Kích Hoạt Ngay</span>
+                        <span>Lưu & Kích Hoạt Ngay</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleBroadcastFirebaseToAllDevices}
+                        disabled={isTestingFb || !fbConfig.projectId}
+                        className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                        title="Đẩy cấu hình này lên máy chủ để tất cả các thiết bị khác tự động kết nối"
+                      >
+                        <Cloud className="w-4 h-4" />
+                        <span>🌐 Phát Tán Tới Mọi Thiết Bị</span>
                       </button>
 
                       <button
