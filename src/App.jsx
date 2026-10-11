@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import UploadZone from './components/UploadZone';
@@ -16,6 +16,7 @@ import RoiCalculator from './components/RoiCalculator';
 import Testimonials from './components/Testimonials';
 import Footer from './components/Footer';
 import { analyzeOrders } from './utils/auditEngine';
+import { syncLocalAccountsToCloud, fetchCloudAccounts } from './utils/cloudDatabase';
 
 export default function App() {
   const [auditResult, setAuditResult] = useState(null);
@@ -34,6 +35,22 @@ export default function App() {
       return null;
     }
   });
+
+  // Tự động đồng bộ tài khoản từ Cloud Database khi tải trang (Đa thiết bị / Mọi máy tính)
+  useEffect(() => {
+    syncLocalAccountsToCloud().then(() => {
+      fetchCloudAccounts().then(accounts => {
+        if (user && accounts && Array.isArray(accounts)) {
+          const latest = accounts.find(a => a.phone === user.phone);
+          if (latest) {
+            setUser(latest);
+            localStorage.setItem('soatdon_user', JSON.stringify(latest));
+          }
+        }
+      });
+    });
+  }, []);
+
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 

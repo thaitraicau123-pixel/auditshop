@@ -4,6 +4,7 @@ import {
   ShieldCheck, KeyRound, ArrowLeft, MessageCircle, ShieldAlert 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { cloudRegister, cloudLogin } from '../utils/cloudDatabase';
 
 export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   if (!isOpen) return null;
@@ -17,8 +18,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
     setSuccessMsg('');
@@ -39,38 +41,28 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
       return;
     }
 
-    // Kiểm tra tài khoản đã tồn tại chưa
-    const accounts = JSON.parse(localStorage.getItem('soatdon_accounts') || '[]');
-    const existing = accounts.find(a => a.phone === cleanPhone);
-    if (existing) {
-      setError('Số điện thoại này đã được đăng ký. Vui lòng chuyển sang tab Đăng Nhập!');
-      return;
+    setIsLoading(true);
+    try {
+      const res = await cloudRegister({ shopName: cleanShop, phone: cleanPhone, password });
+      if (res.success && res.user) {
+        setSuccessMsg('🎉 Bạn đã tạo tài khoản thành công! Dữ liệu đã lưu lên Cloud để đăng nhập trên mọi thiết bị.');
+        confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
+
+        setTimeout(() => {
+          onAuthSuccess(res.user);
+          onClose();
+        }, 1000);
+      } else {
+        setError(res.message || 'Số điện thoại này đã được đăng ký. Vui lòng chuyển sang tab Đăng Nhập!');
+      }
+    } catch (err) {
+      setError('Lỗi kết nối máy chủ: ' + err.message);
+    } finally {
+      setIsLoading(false);
     }
-
-    const newUser = {
-      id: 'USR_' + Math.floor(100000 + Math.random() * 900000),
-      shopName: cleanShop,
-      phone: cleanPhone,
-      password: password,
-      balanceScans: 0, // Bắt đầu từ 0 lượt (bỏ tính năng miễn phí lần đầu)
-      plan: 'standard',
-      registeredAt: new Date().toISOString()
-    };
-
-    accounts.push(newUser);
-    localStorage.setItem('soatdon_accounts', JSON.stringify(accounts));
-    localStorage.setItem('soatdon_user', JSON.stringify(newUser));
-
-    setSuccessMsg('🎉 Bạn đã tạo tài khoản thành công! Đang chuyển hướng...');
-    confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-
-    setTimeout(() => {
-      onAuthSuccess(newUser);
-      onClose();
-    }, 1000);
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setSuccessMsg('');
@@ -81,33 +73,22 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
       return;
     }
 
-    const accounts = JSON.parse(localStorage.getItem('soatdon_accounts') || '[]');
-    const user = accounts.find(a => a.phone === cleanPhone && a.password === password);
-
-    if (user) {
-      localStorage.setItem('soatdon_user', JSON.stringify(user));
-      setSuccessMsg('Đăng nhập thành công! Đang chuyển hướng...');
-      setTimeout(() => {
-        onAuthSuccess(user);
-        onClose();
-      }, 700);
-    } else {
-      // Tài khoản admin hệ thống
-      if (cleanPhone === '0986019623' || password === '8888') {
-        const adminUser = {
-          id: 'ADMIN',
-          shopName: 'Bùi Quốc Thái (Admin)',
-          phone: '0986019623',
-          balanceScans: 9999,
-          plan: 'monthly',
-          registeredAt: new Date().toISOString()
-        };
-        localStorage.setItem('soatdon_user', JSON.stringify(adminUser));
-        onAuthSuccess(adminUser);
-        onClose();
-        return;
+    setIsLoading(true);
+    try {
+      const res = await cloudLogin(cleanPhone, password);
+      if (res.success && res.user) {
+        setSuccessMsg('Đăng nhập thành công! Đang đồng bộ tài khoản...');
+        setTimeout(() => {
+          onAuthSuccess(res.user);
+          onClose();
+        }, 700);
+      } else {
+        setError(res.message || 'Số điện thoại hoặc mật khẩu không chính xác!');
       }
-      setError('Số điện thoại hoặc Mật khẩu không chính xác!');
+    } catch (err) {
+      setError('Lỗi kết nối máy chủ: ' + err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 

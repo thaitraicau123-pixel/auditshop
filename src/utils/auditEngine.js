@@ -66,6 +66,20 @@ export function colIndexToLetter(colIdx) {
 }
 
 /**
+ * Xóa dấu tiếng Việt để đối chiếu cột linh hoạt (hỗ trợ file không dấu, ERP, tiếng Anh)
+ */
+export function removeVietnameseTones(str) {
+  if (!str || typeof str !== 'string') return '';
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase()
+    .trim();
+}
+
+/**
  * Phân tích chuyên sâu dữ liệu đơn hàng với khả năng nhận diện các cột chênh lệch đã tính trước
  */
 export function analyzeOrders(ordersData) {
@@ -284,7 +298,7 @@ export function analyzeOrders(ordersData) {
       auditNote.includes('quá 10 ngày')
     ) {
       if (auditNote.includes('hoàn') || auditNote.includes('ngâm') || auditNote.includes('chưa trả') || auditNote.includes('chưa hoàn trả') || auditNote.includes('lưu kho') || auditNote.includes('quá')) {
-        const loss = cod > 0 ? cod : billedFee;
+        const loss = cod > 0 ? cod : (calculatedTotalDue > 0 ? calculatedTotalDue : (rawSubtotal > 0 ? rawSubtotal : billedFee));
         totalReturnLeakage += loss;
         issue = {
           issueType: "RETURN_STALLED",
@@ -330,7 +344,7 @@ export function analyzeOrders(ordersData) {
       status.toLowerCase().includes("> 10 ngày") ||
       (status.toLowerCase().includes("hoàn") && (auditNote.includes('ngâm') || auditNote.includes('chưa trả') || auditNote.includes('chưa hoàn trả') || auditNote.includes('lưu kho') || auditNote.includes('thất lạc') || auditNote.includes('quá')))
     ) {
-      const loss = cod > 0 ? cod : 250000;
+      const loss = cod > 0 ? cod : (calculatedTotalDue > 0 ? calculatedTotalDue : (rawSubtotal > 0 ? rawSubtotal : 250000));
       totalReturnLeakage += loss;
       issue = {
         issueType: "RETURN_STALLED",
@@ -441,23 +455,38 @@ export function parseExcelWorkbook(workbook) {
           return result;
         };
 
-        // Thuật toán dò tìm hàng tiêu đề thông minh trong 25 dòng đầu tiên
+        // Thuật toán dò tìm hàng tiêu đề thông minh trong 35 dòng đầu tiên
         let headerRowIdx = 0;
         let maxMatchScore = -1;
-        const keywords = [
-          'mã', 'tracking', 'đơn', 'code', 'vận đơn', 'hãng', 'cước', 
-          'khối lượng', 'cân nặng', 'thu hộ', 'cod', 'trạng thái', 'người nhận',
-          'chênh lệch', 'lệch', 'phụ phí', 'bồi thường', 'bưu cục'
+        const rawKeywords = [
+          'mã', 'tracking', 'đơn', 'order', 'code', 'vận đơn', 'hãng', 'carrier', 'cước', 'fee', 
+          'khối lượng', 'cân nặng', 'weight', 'thu hộ', 'cod', 'trạng thái', 'status', 'người nhận', 'customer',
+          'chênh lệch', 'lệch', 'phụ phí', 'bồi thường', 'compensation', 'bưu cục', 'destination', 'amount'
         ];
+        // Danh sách từ khóa gồm cả có dấu và không dấu để quét trúng 100% file không dấu (ERP/ASCII)
+        const keywords = [];
+        rawKeywords.forEach(k => {
+          keywords.push(k.toLowerCase());
+          const noTone = removeVietnameseTones(k);
+          if (noTone && !keywords.includes(noTone)) {
+            keywords.push(noTone);
+          }
+        });
 
-        const maxScanRows = Math.min(json.length, 25);
+        const maxScanRows = Math.min(json.length, 35);
         for (let r = 0; r < maxScanRows; r++) {
           const rowCells = getSafeRowStrings(json[r]);
+          // Dòng tiêu đề thực sự phải có từ 3 cột trở lên có dữ liệu
+          if (rowCells.filter(c => c && c.length > 0).length < 3) continue;
+
           let score = 0;
           for (let c = 0; c < rowCells.length; c++) {
             const cellVal = rowCells[c];
-            if (cellVal && keywords.some(k => k && cellVal.includes(k))) {
-              score++;
+            if (cellVal) {
+              const cellNoTone = removeVietnameseTones(cellVal);
+              if (keywords.some(k => cellVal.includes(k) || cellNoTone.includes(k))) {
+                score++;
+              }
             }
           }
           if (score > maxMatchScore) {
@@ -468,51 +497,62 @@ export function parseExcelWorkbook(workbook) {
 
         const headers = getSafeRowStrings(json[headerRowIdx]);
 
-        // Helper tìm index của cột: Quét theo thứ tự ưu tiên danh sách từ khóa (từ cụ thể nhất đến tổng quát)
+        // Helper tìm index của cột: Quét đối chiếu cả có dấu, không dấu (ERP/POS), và tiếng Anh
         const findCol = (kwList, excludeKwList = []) => {
           for (const kw of kwList) {
-            const k = kw.toLowerCase();
+            const k = kw.toLowerCase().trim();
+            const kNoTone = removeVietnameseTones(k);
+
             const idx = headers.findIndex(h => {
               if (!h || typeof h !== 'string') return false;
-              if (excludeKwList.some(ex => h.includes(ex.toLowerCase()))) return false;
-              return h.includes(k);
+              const hLower = h.toLowerCase().trim();
+              const hNoTone = removeVietnameseTones(hLower);
+
+              if (excludeKwList.some(ex => {
+                const exLower = ex.toLowerCase().trim();
+                return hLower.includes(exLower) || hNoTone.includes(removeVietnameseTones(exLower));
+              })) {
+                return false;
+              }
+
+              return hLower.includes(k) || hNoTone.includes(kNoTone);
             });
             if (idx >= 0) return idx;
           }
           return -1;
         };
 
-        const idIdx = findCol(['mã vận đơn bưu cục', 'mã đơn hàng', 'mã đơn', 'mã bưu gửi', 'tracking', 'mã kiện', 'mã tra cứu', 'order id', 'mã']);
-        const carrierIdx = findCol(['đơn vị vc', 'đơn vị vận chuyển', 'hãng vận chuyển', 'đvvc', 'carrier', 'kênh bán', 'đối tác', 'đơn vị', 'kênh']);
-        const shopWeightIdx = findCol(['tl khai báo', 'khai báo', 'shop cân', 'trọng lượng shop', 'cân nặng shop', 'khối lượng shop', 'trọng lượng ban đầu', 'kg khai báo']);
-        const billedWeightIdx = findCol(['tl hãng cân', 'bưu cục cân', 'bưu cục', 'hãng cân', 'thực tế', 'tính cước', 'trọng lượng tính cước', 'cân nặng thực tế', 'khối lượng tính cước', 'trọng lượng qđ', 'quy đổi', 'trọng lượng bưu cục']);
-        const expectedFeeIdx = findCol(['cước dự kiến', 'phí ban đầu', 'tạm tính', 'cước gốc', 'phí chuẩn', 'thỏa thuận'], ['khách']);
-        const billedFeeIdx = findCol(['cước thực thu', 'phí ship đvvc báo', 'cước vận chuyển thực thu', 'phí vận chuyển', 'cước thực', 'tổng cước', 'phí ship', 'cước bưu cục', 'phí giao'], ['khách', 'thực thu về tk', 'tiền thực thu']);
-        const codIdx = findCol(['tiền thực thu về tk/cod', 'cod hãng báo nhận', 'tiền thực thu', 'thực thu về tk', 'tiền thu hộ cod', 'tiền cod', 'thu hộ', 'cod', 'giá trị thu hộ', 'tiền thu hộ', 'thực thu'], ['phí ship', 'phí đvvc', 'cước']);
-        const statusIdx = findCol(['trạng thái đơn', 'trạng thái', 'tình trạng', 'status', 'kết quả giao', 'tiến trình']);
-        const customerIdx = findCol(['người nhận', 'khách hàng', 'tên khách', 'họ tên']);
+        const idIdx = findCol(['mã vận đơn bưu cục', 'mã bưu gửi', 'mã vận đơn', 'tracking number', 'tracking no', 'tracking_no', 'tracking', 'mã tra cứu', 'mã kiện', 'mã đơn hàng', 'mã đơn', 'order id', 'order_id', 'số phiếu gửi', 'mã']);
+        const carrierIdx = findCol(['đơn vị vc', 'đơn vị vận chuyển', 'hãng vận chuyển', 'đvvc', 'carrier name', 'carrier', 'kênh bán', 'đối tác', 'đơn vị giao hàng', 'đơn vị', 'kênh']);
+        const shopWeightIdx = findCol(['tl khai báo', 'khai báo', 'shop cân', 'trọng lượng shop', 'cân nặng shop', 'khối lượng shop', 'trọng lượng ban đầu', 'kg khai báo', 'declared weight', 'shop weight', 'khối lượng gói hàng', 'cân nặng gói hàng', 'khối lượng (g)', 'trọng lượng (g)'], ['bưu cục', 'hãng', 'thực tế', 'tính cước', 'chargeable', 'tổng cước']);
+        const billedWeightIdx = findCol(['tl hãng cân', 'bưu cục cân', 'bưu cục', 'hãng cân', 'thực tế', 'tính cước', 'trọng lượng tính cước', 'cân nặng thực tế', 'khối lượng tính cước', 'trọng lượng qđ', 'quy đổi', 'trọng lượng bưu cục', 'actual weight', 'billed weight', 'chargeable weight', 'trọng lượng (kg)', 'khối lượng (kg)', 'trọng lượng', 'khối lượng'], ['khai báo', 'shop', 'ban đầu', 'declared']);
+        const expectedFeeIdx = findCol(['cước chính', 'cước dự kiến', 'phí ban đầu', 'tạm tính', 'cước gốc', 'phí chuẩn', 'thỏa thuận', 'cước thỏa thuận', 'cước khai báo', 'initial shipping fee', 'estimated fee'], ['khách']);
+        const billedFeeIdx = findCol(['cước thực thu', 'phí ship đvvc báo', 'cước vận chuyển thực thu', 'phí vận chuyển', 'cước thực', 'tổng cước dv', 'tổng cước', 'phí ship', 'cước bưu cục', 'phí giao', 'actual shipping fee', 'shipping fee', 'cước bưu cục trừ', 'phí dịch vụ'], ['khách', 'thực thu về tk', 'tiền thực thu']);
+        const codIdx = findCol(['tiền thực thu về tk/cod', 'cod hãng báo nhận', 'tiền thực thu', 'thực thu về tk', 'tiền thu hộ cod', 'tiền cod', 'thu hộ cod', 'thu hộ', 'cod amount', 'cod', 'giá trị thu hộ', 'tiền thu hộ', 'doanh thu cod', 'thực thu'], ['phí ship', 'phí đvvc', 'cước']);
+        const statusIdx = findCol(['trạng thái đơn', 'trạng thái bưu kiện', 'trạng thái giao hàng', 'trạng thái', 'tình trạng đơn', 'tình trạng', 'delivery status', 'order status', 'status', 'kết quả giao', 'tiến trình']);
+        const customerIdx = findCol(['người nhận', 'khách hàng', 'tên khách', 'họ tên', 'buyer name', 'receiver', 'recipient', 'khách mua', 'người mua', 'tên người nhận']);
         
         // Các cột sổ sách bán hàng / đối soát doanh thu
         const productIdx = findCol(['sản phẩm', 'tên hàng']);
         const qtyIdx = findCol(['sl', 'số lượng']);
         const priceIdx = findCol(['đơn giá', 'giá bán']);
         const subtotalIdx = findCol(['tiền hàng', 'thành tiền']);
-        const discountIdx = findCol(['voucher/giảm', 'giảm giá', 'voucher', 'chiết khấu']);
+        const discountIdx = findCol(['voucher/giảm', 'voucher giảm', 'giảm giá voucher', 'giảm giá', 'voucher', 'chiết khấu', 'mã giảm giá']);
         const customerShipIdx = findCol(['ship khách trả', 'cước khách trả', 'tiền ship khách', 'khách trả ship']);
         const totalDueIdx = findCol(['tiền cod phải thu', 'cod phải thu', 'tổng cần thu', 'cần thu', 'tổng thu']);
         const paymentMethodIdx = findCol(['hình thức tt', 'phương thức thanh toán', 'hình thức']);
-        const platformFeeIdx = findCol(['phí sàn', 'hoa hồng sàn']);
+        const platformFeeIdx = findCol(['phí sàn', 'hoa hồng sàn', 'platform fee', 'commission fee', 'phí nền tảng', 'chiết khấu sàn']);
 
         // Phí COD quy định vs thực tính (để phát hiện thu phí COD khống)
         const codFeeExpectedIdx = findCol(['phí cod quy định', 'phí cod định mức']);
         const codFeeActualIdx = findCol(['phí cod thực tính', 'phí cod thực tế']);
 
         // Nhận diện các cột chênh lệch đã tính trước (Pre-calculated columns)
-        const feeDiffIdx = findCol(['lệch cước', 'chênh lệch cước', 'cước chênh lệch', 'cước chênh', 'phí chênh lệch', 'tiền chênh lệch', 'chênh lệch phí', 'cước phát sinh', 'phụ phí phát sinh', 'tiền lệch', 'phí vượt', 'phụ phí']);
-        const codDiffIdx = findCol(['lệch thu cod', 'chênh lệch thu cod', 'chênh lệch cần thu vs thực thu', 'chênh lệch cần thu', 'chênh lệch cod', 'lệch cod', 'chênh lệch tiền thu hộ', 'lệch tiền thu hộ']);
-        const weightDiffIdx = findCol(['lệch tl', 'chênh lệch tl', 'chênh lệch trọng lượng', 'chênh lệch cân nặng', 'chênh lệch khối lượng', 'lệch cân', 'trọng lượng lệch', 'cân lệch', 'khối lượng lệch', 'chênh cân', 'vượt cân']);
-        const auditNoteIdx = findCol(['kết quả đối soát', 'cảnh báo đối soát', 'trạng thái đối soát', 'kết quả kiểm tra', 'tình trạng đối soát', 'kết luận', 'khiếu nại', 'ghi chú đối soát', 'cảnh báo lệch', 'đánh giá', 'ghi chú']);
-        const carrierCompensatedIdx = findCol(['hãng đền bù', 'bồi thường', 'tiền bồi thường', 'đã đền bù', 'đã hoàn tiền', 'đã giải quyết']);
+        const feeDiffIdx = findCol(['lệch cước', 'chênh lệch cước', 'cước chênh lệch', 'cước chênh', 'phí chênh lệch', 'tiền chênh lệch', 'chênh lệch phí', 'cước phát sinh', 'phụ phí phát sinh', 'tiền lệch', 'phí vượt', 'phụ phí', 'fee diff', 'shipping diff', 'fee difference', 'extra fee']);
+        const codDiffIdx = findCol(['lệch thu cod', 'chênh lệch thu cod', 'chênh lệch cần thu vs thực thu', 'chênh lệch cần thu', 'chênh lệch cod', 'lệch cod', 'chênh lệch tiền thu hộ', 'lệch tiền thu hộ', 'cod discrepancy', 'cod diff', 'cod difference', 'cod variance']);
+        const weightDiffIdx = findCol(['lệch tl', 'chênh lệch tl', 'chênh lệch trọng lượng', 'chênh lệch cân nặng', 'chênh lệch khối lượng', 'lệch cân', 'trọng lượng lệch', 'cân lệch', 'khối lượng lệch', 'chênh cân', 'vượt cân', 'weight diff', 'weight difference']);
+        const auditNoteIdx = findCol(['kết quả đối soát', 'cảnh báo đối soát', 'trạng thái đối soát', 'kết quả kiểm tra', 'tình trạng đối soát', 'kết luận', 'khiếu nại', 'ghi chú đối soát', 'cảnh báo lệch', 'đánh giá', 'ghi chú', 'remarks', 'note', 'audit note']);
+        const carrierCompensatedIdx = findCol(['hãng đền bù', 'bồi thường', 'tiền bồi thường', 'đã đền bù', 'đã hoàn tiền', 'đã giải quyết', 'compensation', 'compensated']);
 
         // Kích thước thể tích (nếu có)
         const lengthIdx = findCol(['dài', 'length']);
@@ -520,7 +560,7 @@ export function parseExcelWorkbook(workbook) {
         const heightIdx = findCol(['cao', 'height']);
 
         // Địa chỉ giao hàng / Tỉnh thành nhận
-        const addressIdx = findCol(['tỉnh/thành nhận', 'tỉnh thành', 'địa chỉ nhận', 'địa chỉ giao', 'địa chỉ', 'nơi nhận', 'khu vực', 'tỉnh/thành', 'thành phố']);
+        const addressIdx = findCol(['tỉnh/thành nhận', 'tỉnh thành', 'địa chỉ nhận', 'địa chỉ giao hàng', 'địa chỉ giao', 'địa chỉ', 'nơi nhận', 'destination', 'province', 'city', 'khu vực', 'tỉnh/thành', 'thành phố']);
 
         // Ký hiệu chữ cái cột Excel tương ứng
         const cellLetters = {
@@ -621,8 +661,9 @@ export function parseExcelWorkbook(workbook) {
 
           const st = statusIdx >= 0 ? String(row[statusIdx] || '') : 'Giao thành công';
           const auditNote = auditNoteIdx >= 0 ? String(row[auditNoteIdx] || '').trim() : '';
+          const compStr = carrierCompensatedIdx >= 0 ? String(row[carrierCompensatedIdx] || '').toLowerCase() : '';
           const isCompensated = carrierCompensatedIdx >= 0 
-            ? (parseVnNumber(row[carrierCompensatedIdx], 0) > 0 || String(row[carrierCompensatedIdx] || '').toLowerCase().includes('đã'))
+            ? (parseVnNumber(row[carrierCompensatedIdx], 0) > 0 || compStr.includes('đã') || compStr.includes('compensated') || compStr.includes('resolved') || compStr.includes('yes') || compStr.includes('xử lý'))
             : false;
 
           rows.push({

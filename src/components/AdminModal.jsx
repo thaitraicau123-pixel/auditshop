@@ -6,6 +6,7 @@ import {
   Play, Square, Cpu, Award, Sparkles, AlertTriangle
 } from 'lucide-react';
 import { generateTestDataset, evaluateSingleBatch, downloadDatasetAsExcel } from '../utils/aiSelfTester';
+import { fetchCloudAccounts, cloudUpdateUserBalance } from '../utils/cloudDatabase';
 
 export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile }) {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
@@ -40,12 +41,13 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
   const [userAccounts, setUserAccounts] = useState([]);
   const [transactions, setTransactions] = useState([]);
 
-  const loadAdminData = () => {
+  const loadAdminData = async () => {
     try {
       const scans = JSON.parse(localStorage.getItem('soatdon_scan_history') || '[]');
       setScanHistory(scans);
 
-      const accounts = JSON.parse(localStorage.getItem('soatdon_accounts') || '[]');
+      // Đọc tài khoản đồng bộ từ Cloud Database
+      const accounts = await fetchCloudAccounts();
       setUserAccounts(accounts);
 
       const txs = JSON.parse(localStorage.getItem('soatdon_transactions') || '[]');
@@ -92,52 +94,25 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
     loadAdminData();
   };
 
-  // Các thao tác quản trị
-  const handleAddBalanceToUser = (phone, scansToAdd) => {
+  // Các thao tác quản trị đồng bộ lên Cloud
+  const handleAddBalanceToUser = async (phone, scansToAdd) => {
     try {
-      const accounts = JSON.parse(localStorage.getItem('soatdon_accounts') || '[]');
-      const updated = accounts.map(acc => {
-        if (acc.phone === phone) {
-          return {
-            ...acc,
-            balanceScans: (acc.balanceScans || 0) + scansToAdd
-          };
-        }
-        return acc;
-      });
-      localStorage.setItem('soatdon_accounts', JSON.stringify(updated));
+      await cloudUpdateUserBalance(phone, scansToAdd);
+      const updated = await fetchCloudAccounts();
       setUserAccounts(updated);
-
-      // Cập nhật người dùng hiện tại nếu trùng số điện thoại
-      const currentUser = JSON.parse(localStorage.getItem('soatdon_user') || 'null');
-      if (currentUser && currentUser.phone === phone) {
-        const nextCur = { ...currentUser, balanceScans: (currentUser.balanceScans || 0) + scansToAdd };
-        localStorage.setItem('soatdon_user', JSON.stringify(nextCur));
-      }
-    } catch (e) {}
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const handleSetUserPlan = (phone, plan) => {
+  const handleSetUserPlan = async (phone, plan) => {
     try {
-      const accounts = JSON.parse(localStorage.getItem('soatdon_accounts') || '[]');
-      const updated = accounts.map(acc => {
-        if (acc.phone === phone) {
-          return {
-            ...acc,
-            plan: plan
-          };
-        }
-        return acc;
-      });
-      localStorage.setItem('soatdon_accounts', JSON.stringify(updated));
+      await cloudUpdateUserBalance(phone, null, plan);
+      const updated = await fetchCloudAccounts();
       setUserAccounts(updated);
-
-      const currentUser = JSON.parse(localStorage.getItem('soatdon_user') || 'null');
-      if (currentUser && currentUser.phone === phone) {
-        const nextCur = { ...currentUser, plan: plan };
-        localStorage.setItem('soatdon_user', JSON.stringify(nextCur));
-      }
-    } catch (e) {}
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleDeleteScan = (id) => {
@@ -195,6 +170,9 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
 
       const logItem = {
         round,
+        template: dataset.template,
+        isDirty: dataset.isDirtyFormatting,
+        isNoAccents: dataset.isNoAccents,
         scenario,
         orders: evalRes.totalOrders,
         anomalies: evalRes.detectedAnomalies,
@@ -923,12 +901,13 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
                         <thead className="sticky top-0 bg-slate-50 text-slate-600 font-bold border-b border-slate-200 uppercase text-[11px]">
                           <tr>
                             <th className="py-2 px-3">Vòng</th>
-                            <th className="py-2 px-3">Kịch Bản</th>
+                            <th className="py-2 px-3">Mẫu Bảng Kê</th>
+                            <th className="py-2 px-3">Định Dạng</th>
                             <th className="py-2 px-3">Số Đơn</th>
                             <th className="py-2 px-3">Lỗi Phát Hiện</th>
                             <th className="py-2 px-3">Thất Thoát</th>
                             <th className="py-2 px-3">Thời Gian</th>
-                            <th className="py-2 px-3 text-center">Kết Quả</th>
+                            <th className="py-2 px-3 text-center">Độ Chính Xác</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 font-mono">
@@ -936,12 +915,29 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
                             <tr key={log.round} className="hover:bg-slate-50">
                               <td className="py-2 px-3 font-bold text-slate-800">#{log.round}</td>
                               <td className="py-2 px-3 font-sans">
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                  log.scenario === 'CLEAN' ? 'bg-slate-100 text-slate-700' :
-                                  log.scenario === 'HEAVY' ? 'bg-rose-100 text-rose-700' : 'bg-indigo-100 text-indigo-700'
-                                }`}>
-                                  {log.scenario === 'CLEAN' ? '100% Sạch' : log.scenario === 'HEAVY' ? 'Lỗi Nặng' : 'Hỗn Hợp'}
+                                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-800 font-bold text-[11px] border border-slate-200">
+                                  {log.template || 'GHTK'}
                                 </span>
+                              </td>
+                              <td className="py-2 px-3 font-sans">
+                                <div className="flex items-center gap-1">
+                                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                    log.scenario === 'CLEAN' ? 'bg-slate-100 text-slate-700' :
+                                    log.scenario === 'HEAVY' ? 'bg-rose-100 text-rose-700' : 'bg-indigo-100 text-indigo-700'
+                                  }`}>
+                                    {log.scenario === 'CLEAN' ? 'Sạch' : log.scenario === 'HEAVY' ? 'Nặng' : 'Hỗn hợp'}
+                                  </span>
+                                  {log.isDirty && (
+                                    <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-medium" title="Dữ liệu hỗn tạp: kg/gram, dấu chấm/phẩy, banner header">
+                                      Dirty
+                                    </span>
+                                  )}
+                                  {log.isNoAccents && (
+                                    <span className="px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 text-[10px] font-medium" title="Không dấu (ERP/ASCII)">
+                                      ASCII
+                                    </span>
+                                  )}
+                                </div>
                               </td>
                               <td className="py-2 px-3 text-slate-700">{log.orders} đơn</td>
                               <td className="py-2 px-3 font-bold text-amber-600">{log.anomalies} đơn</td>
@@ -950,7 +946,7 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
                               <td className="py-2 px-3 text-center">
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
                                   <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                  100% ĐẠT
+                                  100.0% ĐẠT
                                 </span>
                               </td>
                             </tr>
