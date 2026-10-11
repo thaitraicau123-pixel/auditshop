@@ -61,8 +61,16 @@ export function generateTestDataset(numOrders = 50, scenarioType = 'MIXED', chos
   const isDirtyFormatting = Math.random() < 0.6; // 60% file có dữ liệu định dạng hỗn tạp
   const isNoAccents = Math.random() < 0.2; // 20% file không dấu (ERP/POS cũ)
 
+  const templateCarrierMap = {
+    GHTK: CARRIERS[0],
+    GHN: CARRIERS[1],
+    VTP: CARRIERS[2],
+    SPX: CARRIERS[3],
+    TIKTOK: CARRIERS[4]
+  };
+
   for (let i = 1; i <= numOrders; i++) {
-    const carrier = randomChoice(CARRIERS);
+    const carrier = templateCarrierMap[template] || randomChoice(CARRIERS);
     const orderId = `${carrier.prefix}-${randomInt(10000000, 99999999)}`;
     const customer = `Khách Hàng ${i}`;
     const address = randomChoice(PROVINCES);
@@ -331,6 +339,7 @@ export function generateTestDataset(numOrders = 50, scenarioType = 'MIXED', chos
     isNoAccents,
     rawRows,
     wb,
+    workbook: wb,
     groundTruthAnomalies,
     expectedAnomalyCount: groundTruthAnomalies.length,
     expectedTotalLeakage: groundTruthAnomalies.reduce((sum, a) => sum + a.leakAmount, 0)

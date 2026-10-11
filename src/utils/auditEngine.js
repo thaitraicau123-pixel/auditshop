@@ -666,9 +666,30 @@ export function parseExcelWorkbook(workbook) {
             ? (parseVnNumber(row[carrierCompensatedIdx], 0) > 0 || compStr.includes('đã') || compStr.includes('compensated') || compStr.includes('resolved') || compStr.includes('yes') || compStr.includes('xử lý'))
             : false;
 
+          let detectedCarrierName = carrierIdx >= 0 && row[carrierIdx] ? String(row[carrierIdx]).trim() : '';
+          if (!detectedCarrierName || detectedCarrierName.toLowerCase() === 'giao hàng') {
+            const rawIdStr = String(rawId || '').toUpperCase();
+            const sheetUpper = String(firstSheetName || '').toUpperCase();
+            if (rawIdStr.startsWith('GHTK') || sheetUpper.includes('GHTK')) {
+              detectedCarrierName = 'Giao Hàng Tiết Kiệm (GHTK)';
+            } else if (rawIdStr.startsWith('GHN') || sheetUpper.includes('GHN')) {
+              detectedCarrierName = 'Giao Hàng Nhanh (GHN)';
+            } else if (rawIdStr.startsWith('VTP') || sheetUpper.includes('VTP') || sheetUpper.includes('VIETTEL')) {
+              detectedCarrierName = 'Viettel Post';
+            } else if (rawIdStr.startsWith('SPX') || sheetUpper.includes('SPX') || sheetUpper.includes('SHOPEE')) {
+              detectedCarrierName = 'Shopee Xpress (SPX)';
+            } else if (rawIdStr.startsWith('TK') || sheetUpper.includes('TIKTOK')) {
+              detectedCarrierName = 'TikTok Shop Express';
+            } else if (rawIdStr.startsWith('J&T') || rawIdStr.startsWith('JT') || sheetUpper.includes('J&T')) {
+              detectedCarrierName = 'J&T Express';
+            } else {
+              detectedCarrierName = 'Đơn vị vận chuyển';
+            }
+          }
+
           rows.push({
             id: String(rawId).trim(),
-            carrier: carrierIdx >= 0 && row[carrierIdx] ? String(row[carrierIdx]).trim() : 'Giao hàng',
+            carrier: detectedCarrierName,
             customer: customerIdx >= 0 && row[customerIdx] ? String(row[customerIdx]).trim() : 'Khách hàng',
             customerAddress,
             excelRow,

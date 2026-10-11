@@ -20,39 +20,31 @@ export default function Navbar({
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 relative">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 shrink-0">
             <ShieldCheck className="w-6 h-6" />
-            <span className="absolute -top-1 -right-1 text-xs animate-pet-wag">🐶</span>
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-xl tracking-tight text-slate-900">
                 SoatDon<span className="text-indigo-600">.vn</span>
               </span>
-              <span className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/80 flex items-center gap-1 shadow-2xs">
-                <span className="animate-pet-wag">🐶</span>
-                <span className="animate-pet-bounce">🐱</span>
-                <span className="hidden sm:inline">Cún & Mèo Soi Đơn</span>
+              <span className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-2xs">
+                AI Đối Soát
               </span>
             </div>
-            <p className="text-xs text-slate-500 hidden sm:block">Kiểm toán vận chuyển & COD thông minh bằng AI</p>
+            <p className="text-xs text-slate-500 hidden md:block">Kiểm toán vận chuyển & COD thông minh bằng AI</p>
           </div>
         </div>
 
-        <nav className="flex items-center gap-2 sm:gap-3">
+        <nav className="flex items-center gap-2 sm:gap-2.5">
           {/* Nút Bảng Thông Báo Cập Nhật */}
           <button 
             onClick={onOpenChangelog}
             className="text-xs font-bold px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
             title="Xem các tính năng vừa cập nhật & thời gian phát hành"
           >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
             <Rocket className="w-3.5 h-3.5 text-emerald-600" />
             <span className="font-black">{CURRENT_SYSTEM_VERSION}</span>
-            <span className="hidden md:inline text-[11px] text-emerald-700 font-medium">Mới</span>
           </button>
 
           <button 
@@ -71,26 +63,15 @@ export default function Navbar({
 
           <button 
             onClick={onScrollToCalculator}
-            className="hidden lg:flex text-xs sm:text-sm font-semibold text-slate-600 hover:text-indigo-600 items-center gap-1.5 transition-colors cursor-pointer"
+            className="hidden xl:flex text-xs sm:text-sm font-semibold text-slate-600 hover:text-indigo-600 items-center gap-1.5 transition-colors cursor-pointer py-1.5 px-2 rounded-xl hover:bg-slate-100"
           >
             <TrendingUp className="w-4 h-4 text-emerald-600" />
             <span>Tính tiền mất</span>
           </button>
-
-          {/* Nút Mời Cà Phê Mèo Thần Tài */}
-          <button 
-            type="button"
-            onClick={() => onOpenCoffeeModal?.("🐱☕ Mèo & Cún mời shop ly cà phê tiếp sức SoatDon.vn!")}
-            className="hidden md:flex text-xs font-bold px-2.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition-all items-center gap-1.5 cursor-pointer shadow-2xs group"
-            title="Mời dev ly cà phê muối tiếp sức duy trì máy chủ"
-          >
-            <span className="text-sm group-hover:animate-pet-bounce">🐱☕</span>
-            <span className="hidden xl:inline">Mời Cà Phê</span>
-          </button>
           
           <button 
             onClick={onOpenPricing}
-            className="text-xs sm:text-sm font-bold px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer border border-slate-200"
+            className="text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer border border-slate-200"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             <span className="hidden sm:inline">Bảng giá</span>
@@ -100,12 +81,12 @@ export default function Navbar({
           {user ? (
             <button
               onClick={onOpenProfileModal}
-              className="text-xs sm:text-sm font-bold px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition-colors flex items-center gap-2 cursor-pointer shadow-xs"
+              className="text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition-colors flex items-center gap-2 cursor-pointer shadow-xs"
             >
               <div className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black">
                 {user.shopName?.charAt(0).toUpperCase() || 'S'}
               </div>
-              <span className="max-w-[120px] truncate">{user.shopName}</span>
+              <span className="max-w-[100px] truncate">{user.shopName}</span>
               <span className="px-1.5 py-0.5 rounded-full bg-indigo-200/60 text-indigo-800 text-[10px] font-black flex items-center gap-0.5">
                 <Zap className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
                 {user.plan === 'monthly' ? 'Vô hạn' : `${user.balanceScans || 0}`}
@@ -114,22 +95,12 @@ export default function Navbar({
           ) : (
             <button
               onClick={onOpenAuthModal}
-              className="text-xs sm:text-sm font-bold px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
+              className="text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <UserPlus className="w-4 h-4" />
-              <span>Đăng Ký / Đăng Nhập</span>
+              <span>Đăng Nhập</span>
             </button>
           )}
-
-          {/* Live Firebase Cloud Status */}
-          <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] font-bold text-amber-900 shadow-2xs">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
-            </span>
-            <Flame className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />
-            <span>Firebase Live</span>
-          </div>
 
           {/* Sound FX Toggle Button */}
           <button 
@@ -140,7 +111,7 @@ export default function Navbar({
                 ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 shadow-2xs' 
                 : 'bg-slate-100 border-slate-200 text-slate-400 hover:text-slate-600'
             }`}
-            title={soundEnabled ? "Âm thanh hiệu ứng: Đang Bật (Bấm để Tắt)" : "Âm thanh hiệu ứng: Đang Tắt (Bấm để Bật)"}
+            title={soundEnabled ? "Âm thanh hiệu ứng: Đang Bật" : "Âm thanh hiệu ứng: Đang Tắt"}
           >
             {soundEnabled ? (
               <Volume2 className="w-4 h-4 text-indigo-600" />
@@ -152,8 +123,8 @@ export default function Navbar({
           {/* Admin Control Portal Button */}
           <button 
             onClick={onOpenAdminModal}
-            className="text-xs sm:text-sm font-bold px-2.5 sm:px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border border-slate-700 hover:border-slate-600"
-            title="Trung tâm Quản trị Admin - Giám sát hoạt động & Tọa độ ô Excel"
+            className="text-xs sm:text-sm font-bold px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border border-slate-700 hover:border-slate-600"
+            title="Trung tâm Quản trị Admin"
           >
             <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden sm:inline">Admin</span>

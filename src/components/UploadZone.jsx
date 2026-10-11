@@ -85,7 +85,7 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
         setIsScanning(true);
         setScanStep("🏆 Đang nạp bảng kê đối soát chuẩn 100% không phát sinh lỗi...");
         const dataset = generateTestDataset(50, 'CLEAN', 'GHTK');
-        const parsedOrders = parseExcelWorkbook(dataset.workbook);
+        const parsedOrders = parseExcelWorkbook(dataset.workbook || dataset.wb);
         await runAiAuditFlow(parsedOrders, "Bang_Ke_Chuan_Doi_Soat_100_Phan_Tram.xlsx");
         return;
       }
@@ -102,7 +102,7 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
       setIsScanning(true);
       setScanStep(`📂 Đang khởi tạo bảng kê ${carrierKey} (${info.count} đơn)...`);
       const dataset = generateTestDataset(info.count, 'MIXED', carrierKey);
-      const parsedOrders = parseExcelWorkbook(dataset.workbook);
+      const parsedOrders = parseExcelWorkbook(dataset.workbook || dataset.wb);
       await runAiAuditFlow(parsedOrders, info.name);
     } catch (err) {
       console.warn("Lỗi load sample carrier:", err);
@@ -384,81 +384,98 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+                {/* 1. GHTK */}
                 <button
                   type="button"
                   onClick={() => handleSelectSampleCarrier('GHTK')}
-                  className="p-2.5 rounded-xl bg-emerald-50/70 hover:bg-emerald-100/80 border border-emerald-200 text-emerald-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs group"
-                  title="Quét thử bảng kê GHTK 50 đơn"
+                  className="p-2.5 rounded-xl bg-emerald-50/80 hover:bg-emerald-100 border border-emerald-200 hover:border-emerald-300 text-emerald-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shadow-2xs group"
+                  title="Quét thử bảng kê Giao Hàng Tiết Kiệm (50 đơn)"
                 >
-                  <span className="text-base group-hover:animate-pet-wag">🐶</span>
-                  <span>GHTK</span>
-                  <span className="text-[10px] text-emerald-700 font-mono font-medium">50 đơn</span>
+                  <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-black">
+                    TK
+                  </span>
+                  <span className="font-extrabold tracking-tight">GHTK</span>
+                  <span className="text-[10px] text-emerald-700 font-mono font-semibold">50 đơn</span>
                 </button>
 
+                {/* 2. GHN */}
                 <button
                   type="button"
                   onClick={() => handleSelectSampleCarrier('GHN')}
-                  className="p-2.5 rounded-xl bg-orange-50/70 hover:bg-orange-100/80 border border-orange-200 text-orange-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs group"
-                  title="Quét thử bảng kê GHN 50 đơn"
+                  className="p-2.5 rounded-xl bg-amber-50/80 hover:bg-amber-100 border border-amber-200 hover:border-amber-300 text-amber-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shadow-2xs group"
+                  title="Quét thử bảng kê Giao Hàng Nhanh (50 đơn)"
                 >
-                  <span className="text-base group-hover:animate-pet-bounce">🐱</span>
-                  <span>GHN</span>
-                  <span className="text-[10px] text-orange-700 font-mono font-medium">50 đơn</span>
+                  <span className="w-5 h-5 rounded-full bg-orange-600 text-white flex items-center justify-center text-[10px] font-black">
+                    GH
+                  </span>
+                  <span className="font-extrabold tracking-tight">GHN</span>
+                  <span className="text-[10px] text-amber-800 font-mono font-semibold">50 đơn</span>
                 </button>
 
+                {/* 3. Viettel Post */}
                 <button
                   type="button"
                   onClick={() => handleSelectSampleCarrier('VTP')}
-                  className="p-2.5 rounded-xl bg-rose-50/70 hover:bg-rose-100/80 border border-rose-200 text-rose-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs group"
-                  title="Quét thử bảng kê Viettel Post 80 đơn"
+                  className="p-2.5 rounded-xl bg-red-50/80 hover:bg-red-100 border border-red-200 hover:border-red-300 text-red-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shadow-2xs group"
+                  title="Quét thử bảng kê Viettel Post (80 đơn)"
                 >
-                  <span className="text-base group-hover:animate-pet-wag">🐶</span>
-                  <span>Viettel Post</span>
-                  <span className="text-[10px] text-rose-700 font-mono font-medium">80 đơn</span>
+                  <span className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px] font-black">
+                    VT
+                  </span>
+                  <span className="font-extrabold tracking-tight">Viettel Post</span>
+                  <span className="text-[10px] text-red-700 font-mono font-semibold">80 đơn</span>
                 </button>
 
+                {/* 4. Shopee SPX */}
                 <button
                   type="button"
                   onClick={() => handleSelectSampleCarrier('SPX')}
-                  className="p-2.5 rounded-xl bg-blue-50/70 hover:bg-blue-100/80 border border-blue-200 text-blue-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs group"
-                  title="Quét thử bảng kê Shopee Xpress 65 đơn"
+                  className="p-2.5 rounded-xl bg-sky-50/80 hover:bg-sky-100 border border-sky-200 hover:border-sky-300 text-sky-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shadow-2xs group"
+                  title="Quét thử bảng kê Shopee Xpress SPX (65 đơn)"
                 >
-                  <span className="text-base group-hover:animate-pet-bounce">🐱</span>
-                  <span>SPX Shopee</span>
-                  <span className="text-[10px] text-blue-700 font-mono font-medium">65 đơn</span>
+                  <span className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-[10px] font-black">
+                    SP
+                  </span>
+                  <span className="font-extrabold tracking-tight">SPX Shopee</span>
+                  <span className="text-[10px] text-sky-700 font-mono font-semibold">65 đơn</span>
                 </button>
 
+                {/* 5. TikTok Shop */}
                 <button
                   type="button"
                   onClick={() => handleSelectSampleCarrier('TIKTOK')}
-                  className="p-2.5 rounded-xl bg-purple-50/70 hover:bg-purple-100/80 border border-purple-200 text-purple-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs group"
-                  title="Quét thử bảng kê TikTok Shop 60 đơn"
+                  className="p-2.5 rounded-xl bg-purple-50/80 hover:bg-purple-100 border border-purple-200 hover:border-purple-300 text-purple-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shadow-2xs group"
+                  title="Quét thử bảng kê TikTok Shop (60 đơn)"
                 >
-                  <span className="text-base group-hover:animate-pet-wag">🐶</span>
-                  <span>TikTok Shop</span>
-                  <span className="text-[10px] text-purple-700 font-mono font-medium">60 đơn</span>
+                  <span className="w-5 h-5 rounded-full bg-purple-700 text-white flex items-center justify-center text-[10px] font-black">
+                    TK
+                  </span>
+                  <span className="font-extrabold tracking-tight">TikTok Shop</span>
+                  <span className="text-[10px] text-purple-700 font-mono font-semibold">60 đơn</span>
                 </button>
 
+                {/* 6. Chuẩn 100% */}
                 <button
                   type="button"
                   onClick={() => handleSelectSampleCarrier('CLEAN_100')}
-                  className="p-2.5 rounded-xl bg-teal-50/70 hover:bg-teal-100/80 border border-teal-200 text-teal-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs group"
-                  title="Quét thử bảng kê chuẩn 100% không lệch đồng nào"
+                  className="p-2.5 rounded-xl bg-teal-50/80 hover:bg-teal-100 border border-teal-200 hover:border-teal-300 text-teal-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shadow-2xs group"
+                  title="Quét thử bảng kê đối soát chuẩn 100% không lệch đồng nào"
                 >
-                  <span className="text-base group-hover:animate-pet-bounce">🐱✨</span>
-                  <span>Chuẩn 100%</span>
-                  <span className="text-[10px] text-teal-700 font-mono font-medium">0 lỗi</span>
+                  <span className="text-base">🏆</span>
+                  <span className="font-extrabold tracking-tight">Chuẩn 100%</span>
+                  <span className="text-[10px] text-teal-700 font-mono font-semibold">0 đơn lỗi</span>
                 </button>
 
+                {/* 7. Full 300 Đơn */}
                 <button
                   type="button"
                   onClick={() => handleSelectSampleCarrier('ALL_300')}
-                  className="col-span-2 sm:col-span-1 p-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-md shadow-indigo-500/20 group"
-                  title="Quét thử bảng kê lớn 300 đơn đa hãng"
+                  className="col-span-2 sm:col-span-1 p-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs flex flex-col items-center gap-1 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shadow-md shadow-indigo-500/20 group"
+                  title="Quét thử bảng kê lớn 300 đơn đa hãng thực tế"
                 >
-                  <span className="text-base group-hover:animate-bounce">🐶⚡🐱</span>
-                  <span>Full 300 Đơn</span>
-                  <span className="text-[10px] text-indigo-100 font-mono font-medium">Thực tế</span>
+                  <span className="text-base">⚡</span>
+                  <span className="font-extrabold tracking-tight">Full 300 Đơn</span>
+                  <span className="text-[10px] text-indigo-100 font-mono font-semibold">Đa hãng</span>
                 </button>
               </div>
             </div>
