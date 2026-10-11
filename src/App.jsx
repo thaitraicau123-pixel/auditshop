@@ -12,11 +12,13 @@ import AuthModal from './components/AuthModal';
 import UserProfileModal from './components/UserProfileModal';
 import ScanHistoryModal from './components/ScanHistoryModal';
 import AdminModal from './components/AdminModal';
+import ChangelogModal from './components/ChangelogModal';
 import RoiCalculator from './components/RoiCalculator';
 import Testimonials from './components/Testimonials';
 import Footer from './components/Footer';
 import { analyzeOrders } from './utils/auditEngine';
 import { syncLocalAccountsToCloud, fetchCloudAccounts } from './utils/cloudDatabase';
+import { CURRENT_SYSTEM_VERSION } from './data/changelog';
 
 export default function App() {
   const [auditResult, setAuditResult] = useState(null);
@@ -53,6 +55,20 @@ export default function App() {
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  // Changelog Modal State (Tự động hiển thị khi website có cập nhật mới)
+  const [isChangelogOpen, setIsChangelogOpen] = useState(false);
+  const [isAutoChangelog, setIsAutoChangelog] = useState(false);
+
+  useEffect(() => {
+    try {
+      const lastSeen = localStorage.getItem('soatdon_last_seen_version');
+      if (lastSeen !== CURRENT_SYSTEM_VERSION) {
+        setIsChangelogOpen(true);
+        setIsAutoChangelog(true);
+      }
+    } catch {}
+  }, []);
 
   // Scan History State
   const [scanHistory, setScanHistory] = useState(() => {
@@ -231,6 +247,10 @@ export default function App() {
         onOpenHistory={() => setIsHistoryModalOpen(true)}
         historyCount={scanHistory.length}
         onOpenAdminModal={() => setIsAdminModalOpen(true)}
+        onOpenChangelog={() => {
+          setIsChangelogOpen(true);
+          setIsAutoChangelog(false);
+        }}
       />
 
       <main className="flex-1">
@@ -373,12 +393,19 @@ export default function App() {
           setIsUnlocked(true);
           if (fileName) {
             setScanHistory(prev => {
-              const next = prev.map(item => item.fileName === fileName ? { ...item, isUnlocked: true } : item);
-              localStorage.setItem('soatdon_scan_history', JSON.stringify(next));
-              return next;
+               const next = prev.map(item => item.fileName === fileName ? { ...item, isUnlocked: true } : item);
+               localStorage.setItem('soatdon_scan_history', JSON.stringify(next));
+               return next;
             });
           }
         }}
+      />
+
+      {/* Bảng Thông Báo Cập Nhật Hệ Thống & Tính Năng Mới */}
+      <ChangelogModal 
+        isOpen={isChangelogOpen}
+        onClose={() => setIsChangelogOpen(false)}
+        isAutoOpen={isAutoChangelog}
       />
     </div>
   );

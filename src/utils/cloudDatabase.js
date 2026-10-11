@@ -6,11 +6,22 @@
 const MASTER_BIN_ID = 'acbecad';
 const DIRECT_CLOUD_URL = `https://extendsclass.com/api/json-storage/bin/${MASTER_BIN_ID}`;
 
+function getFreshCloudUrl() {
+  return `${DIRECT_CLOUD_URL}?_t=${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+}
+
+const NO_CACHE_HEADERS = {
+  'Cache-Control': 'no-cache, no-store, must-revalidate',
+  'Pragma': 'no-cache',
+  'Expires': '0'
+};
+
 // Helper gọi API đám mây (Ưu tiên /api/auth của Vercel, fallback sang Direct Cloud URL)
 async function requestCloud(endpoint, options = {}) {
   // Thử qua Vercel Serverless Function trước
   try {
-    const res = await fetch(`/api/auth${endpoint ? '?' + endpoint : ''}`, options);
+    const freshEndpoint = `${endpoint ? endpoint + '&' : ''}_t=${Date.now()}`;
+    const res = await fetch(`/api/auth?${freshEndpoint}`, options);
     if (res.ok) {
       return await res.json();
     }
@@ -20,8 +31,8 @@ async function requestCloud(endpoint, options = {}) {
 
   // Fallback kết nối trực tiếp đến Cloud Bin
   try {
-    const res = await fetch(DIRECT_CLOUD_URL, {
-      headers: { 'Cache-Control': 'no-cache' }
+    const res = await fetch(getFreshCloudUrl(), {
+      headers: NO_CACHE_HEADERS
     });
     if (res.ok) {
       const data = await res.json();
@@ -89,7 +100,7 @@ export async function cloudRegister({ shopName, phone, password, plan = 'standar
 
   // Fallback trực tiếp
   try {
-    const getRes = await fetch(DIRECT_CLOUD_URL);
+    const getRes = await fetch(getFreshCloudUrl(), { headers: NO_CACHE_HEADERS });
     const db = await getRes.json();
     db.accounts = db.accounts || [];
 
@@ -158,7 +169,7 @@ export async function cloudLogin(phone, password) {
 
   // 2. Fallback trực tiếp đọc từ Cloud Bin
   try {
-    const res = await fetch(DIRECT_CLOUD_URL, { headers: { 'Cache-Control': 'no-cache' } });
+    const res = await fetch(getFreshCloudUrl(), { headers: NO_CACHE_HEADERS });
     if (res.ok) {
       const db = await res.json();
       const accounts = db.accounts || [];
@@ -246,7 +257,7 @@ export async function cloudUpdateUserBalance(phone, addScans, newPlan) {
   } catch (e) {
     // Fallback direct
     try {
-      const getRes = await fetch(DIRECT_CLOUD_URL);
+      const getRes = await fetch(getFreshCloudUrl(), { headers: NO_CACHE_HEADERS });
       const db = await getRes.json();
       const u = (db.accounts || []).find(a => a.phone === cleanPhone);
       if (u) {

@@ -1,5 +1,6 @@
 import React from 'react';
-import { ShieldCheck, ShieldAlert, Sparkles, TrendingUp, User, UserPlus, Zap, Clock } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Sparkles, TrendingUp, User, UserPlus, Zap, Clock, Rocket } from 'lucide-react';
+import { CURRENT_SYSTEM_VERSION } from '../data/changelog';
 
 export default function Navbar({ 
   onOpenPricing, 
@@ -9,7 +10,8 @@ export default function Navbar({
   onOpenProfileModal,
   onOpenHistory,
   historyCount = 0,
-  onOpenAdminModal
+  onOpenAdminModal,
+  onOpenChangelog
 }) {
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
@@ -33,6 +35,21 @@ export default function Navbar({
         </div>
 
         <nav className="flex items-center gap-2 sm:gap-3">
+          {/* Nút Bảng Thông Báo Cập Nhật */}
+          <button 
+            onClick={onOpenChangelog}
+            className="text-xs font-bold px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+            title="Xem các tính năng vừa cập nhật & thời gian phát hành"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <Rocket className="w-3.5 h-3.5 text-emerald-600" />
+            <span className="font-black">{CURRENT_SYSTEM_VERSION}</span>
+            <span className="hidden md:inline text-[11px] text-emerald-700 font-medium">Mới</span>
+          </button>
+
           <button 
             onClick={onOpenHistory}
             className="text-xs sm:text-sm font-semibold text-slate-600 hover:text-indigo-600 flex items-center gap-1.5 transition-colors cursor-pointer py-1.5 px-2.5 rounded-xl hover:bg-slate-100"

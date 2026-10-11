@@ -2,11 +2,16 @@
 const MASTER_BIN_ID = 'acbecad';
 const CLOUD_DB_URL = `https://extendsclass.com/api/json-storage/bin/${MASTER_BIN_ID}`;
 
-// Helper đọc dữ liệu từ Cloud DB
+// Helper đọc dữ liệu từ Cloud DB (Luôn kèm cache-buster để tránh CDN cache của Cloudflare)
 async function getCloudData() {
   try {
-    const res = await fetch(CLOUD_DB_URL, {
-      headers: { 'Cache-Control': 'no-cache' }
+    const freshUrl = `${CLOUD_DB_URL}?_t=${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+    const res = await fetch(freshUrl, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
     if (res.ok) {
       const data = await res.json();
@@ -28,7 +33,7 @@ async function saveCloudData(data) {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache'
+        'Cache-Control': 'no-cache, no-store, must-revalidate'
       },
       body: JSON.stringify(data)
     });
@@ -48,6 +53,7 @@ export default async function handler(req, res) {
     'Access-Control-Allow-Headers',
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
   );
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
