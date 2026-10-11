@@ -3,10 +3,12 @@ import {
   ShieldCheck, ShieldAlert, Lock, Unlock, X, Users, Database, 
   DollarSign, Activity, FileSpreadsheet, Eye, Trash2, CheckCircle2, 
   Search, RefreshCw, Key, Gift, ArrowUpRight, Copy, Check, Download,
-  Play, Square, Cpu, Award, Sparkles, AlertTriangle
+  Play, Square, Cpu, Award, Sparkles, AlertTriangle, Flame, Cloud, ExternalLink
 } from 'lucide-react';
 import { generateTestDataset, evaluateSingleBatch, downloadDatasetAsExcel } from '../utils/aiSelfTester';
 import { fetchCloudAccounts, cloudUpdateUserBalance } from '../utils/cloudDatabase';
+import { getFirebaseConfig, saveFirebaseConfig, isFirebaseConfigured } from '../config/firebase';
+import { testFirebaseConnection } from '../services/firebaseAuth';
 
 export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile }) {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
@@ -36,17 +38,25 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
   const [lastGeneratedDataset, setLastGeneratedDataset] = useState(null);
   const benchmarkAbortRef = useRef(false);
 
-  // Dữ liệu từ hệ thống LocalStorage
+  // Dữ liệu từ hệ thống LocalStorage & Firebase
   const [scanHistory, setScanHistory] = useState([]);
   const [userAccounts, setUserAccounts] = useState([]);
   const [transactions, setTransactions] = useState([]);
 
+  // Cấu hình Google Firebase
+  const [fbConfig, setFbConfig] = useState(() => getFirebaseConfig());
+  const [fbRawSnippet, setFbRawSnippet] = useState('');
+  const [fbTestStatus, setFbTestStatus] = useState(null);
+  const [isTestingFb, setIsTestingFb] = useState(false);
+  const [fbSaveMessage, setFbSaveMessage] = useState('');
+
   const loadAdminData = async () => {
     try {
+      setFbConfig(getFirebaseConfig());
       const scans = JSON.parse(localStorage.getItem('soatdon_scan_history') || '[]');
       setScanHistory(scans);
 
-      // Đọc tài khoản đồng bộ từ Cloud Database
+      // Đọc tài khoản đồng bộ từ Cloud Database / Firebase
       const accounts = await fetchCloudAccounts();
       setUserAccounts(accounts);
 
@@ -202,6 +212,91 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
     if (lastGeneratedDataset) {
       downloadDatasetAsExcel(lastGeneratedDataset, `Bang_Ke_Test_AI_Vong_${benchmarkCurrentRound}.xlsx`);
     }
+  };
+
+  // Các hàm điều khiển cấu hình Google Firebase
+  const handleParseFirebaseSnippet = (snippet) => {
+    if (!snippet) return;
+    try {
+      const apiKeyMatch = snippet.match(/apiKey:\s*["']([^"']+)["']/);
+      const authDomainMatch = snippet.match(/authDomain:\s*["']([^"']+)["']/);
+      const projectIdMatch = snippet.match(/projectId:\s*["']([^"']+)["']/);
+      const storageBucketMatch = snippet.match(/storageBucket:\s*["']([^"']+)["']/);
+      const messagingSenderIdMatch = snippet.match(/messagingSenderId:\s*["']([^"']+)["']/);
+      const appIdMatch = snippet.match(/appId:\s*["']([^"']+)["']/);
+      const databaseURLMatch = snippet.match(/databaseURL:\s*["']([^"']+)["']/);
+
+      let parsedJson = null;
+      try {
+        parsedJson = JSON.parse(snippet.trim());
+      } catch (e) {}
+
+      const newConfig = {
+        apiKey: parsedJson?.apiKey || apiKeyMatch?.[1] || fbConfig.apiKey || '',
+        authDomain: parsedJson?.authDomain || authDomainMatch?.[1] || fbConfig.authDomain || '',
+        projectId: parsedJson?.projectId || projectIdMatch?.[1] || fbConfig.projectId || '',
+        storageBucket: parsedJson?.storageBucket || storageBucketMatch?.[1] || fbConfig.storageBucket || '',
+        messagingSenderId: parsedJson?.messagingSenderId || messagingSenderIdMatch?.[1] || fbConfig.messagingSenderId || '',
+        appId: parsedJson?.appId || appIdMatch?.[1] || fbConfig.appId || '',
+        databaseURL: parsedJson?.databaseURL || databaseURLMatch?.[1] || fbConfig.databaseURL || ''
+      };
+
+      setFbConfig(newConfig);
+      setFbSaveMessage('Đã tự động trích xuất thông số Firebase từ đoạn mã!');
+      setTimeout(() => setFbSaveMessage(''), 3500);
+    } catch (e) {
+      setFbTestStatus({ type: 'error', message: 'Không thể phân tích đoạn mã. Vui lòng nhập từng trường bên dưới.' });
+    }
+  };
+
+  const handleSaveFirebaseConfig = () => {
+    if (!fbConfig.projectId || !fbConfig.apiKey) {
+      setFbTestStatus({ type: 'error', message: 'Vui lòng nhập tối thiểu Project ID và API Key!' });
+      return;
+    }
+    const success = saveFirebaseConfig(fbConfig);
+    if (success) {
+      setFbSaveMessage('Đã lưu cấu hình Firebase thành công vào trình duyệt!');
+      setFbTestStatus({ type: 'success', message: 'Cấu hình đã được lưu! Hãy bấm "Kiểm Tra Kết Nối" để thử nghiệm kết nối.' });
+      loadAdminData();
+    } else {
+      setFbTestStatus({ type: 'error', message: 'Không thể lưu cấu hình Firebase.' });
+    }
+  };
+
+  const handleTestFirebaseConnection = async () => {
+    setIsTestingFb(true);
+    setFbTestStatus(null);
+    try {
+      saveFirebaseConfig(fbConfig);
+      const res = await testFirebaseConnection();
+      if (res.success) {
+        setFbTestStatus({ type: 'success', message: res.message });
+      } else {
+        setFbTestStatus({ type: 'error', message: res.message });
+      }
+    } catch (err) {
+      setFbTestStatus({ type: 'error', message: 'Lỗi kết nối: ' + (err.message || 'Kiểm tra lại cấu hình và rules Firestore') });
+    } finally {
+      setIsTestingFb(false);
+    }
+  };
+
+  const handleClearFirebaseConfig = () => {
+    localStorage.removeItem('soatdon_firebase_config');
+    const emptyConfig = {
+      apiKey: '',
+      authDomain: '',
+      projectId: '',
+      storageBucket: '',
+      messagingSenderId: '',
+      appId: '',
+      databaseURL: ''
+    };
+    setFbConfig(emptyConfig);
+    setFbRawSnippet('');
+    setFbTestStatus({ type: 'success', message: 'Đã xóa cấu hình Firebase. Website sẽ tự động chuyển về máy chủ Cloud DB mặc định.' });
+    setTimeout(() => setFbTestStatus(null), 4000);
   };
 
   // Tổng hợp KPIs
@@ -403,6 +498,23 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
                   <span>🧪 Tự Động Luyện AI & Check File</span>
                   <span className="px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black">
                     100%
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('FIREBASE'); setSelectedScanDetails(null); }}
+                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    activeTab === 'FIREBASE'
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs'
+                      : 'bg-white text-orange-600 hover:bg-orange-50 border border-orange-200'
+                  }`}
+                >
+                  <Flame className="w-3.5 h-3.5 text-orange-500" />
+                  <span>🔥 Kết Nối Firebase</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+                    isFirebaseConfigured() ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'
+                  }`}>
+                    {isFirebaseConfigured() ? 'Đã Bật' : 'Chưa Bật'}
                   </span>
                 </button>
               </div>
@@ -955,6 +1067,302 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
                       </table>
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 5: KẾT NỐI GOOGLE FIREBASE CLOUD DATABASE */}
+            {activeTab === 'FIREBASE' && (
+              <div className="space-y-6">
+                {/* Banner Trạng Thái */}
+                <div className={`p-5 rounded-2xl border shadow-xs ${
+                  isFirebaseConfigured() 
+                    ? 'bg-gradient-to-r from-emerald-900 to-teal-950 border-emerald-700/60 text-white' 
+                    : 'bg-gradient-to-r from-slate-900 to-slate-950 border-slate-800 text-white'
+                }`}>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-start gap-3.5">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-md ${
+                        isFirebaseConfigured() 
+                          ? 'bg-emerald-500/20 border border-emerald-400/30 text-emerald-300' 
+                          : 'bg-amber-500/20 border border-amber-400/30 text-amber-400'
+                      }`}>
+                        <Flame className="w-7 h-7" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-extrabold text-base sm:text-lg">Google Firebase Cloud Infrastructure</h4>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                            isFirebaseConfigured() 
+                              ? 'bg-emerald-400/20 text-emerald-300 border border-emerald-400/40' 
+                              : 'bg-amber-400/20 text-amber-300 border border-amber-400/40'
+                          }`}>
+                            {isFirebaseConfigured() ? 'Đang Hoạt Động' : 'Chưa Kết Nối'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                          Hạ tầng cơ sở dữ liệu thời gian thực (Realtime Firestore) của Google. Khi kích hoạt, tài khoản đăng ký trên một thiết bị sẽ tự động xuất hiện và đăng nhập được ngay lập tức trên máy tính hoặc điện thoại khác.
+                        </p>
+                      </div>
+                    </div>
+
+                    <a
+                      href="https://console.firebase.google.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs shadow-md transition-all self-start sm:self-center shrink-0 cursor-pointer"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span>Mở Google Firebase Console</span>
+                    </a>
+                  </div>
+
+                  {isFirebaseConfigured() && (
+                    <div className="mt-4 pt-4 border-t border-emerald-800/60 flex flex-wrap items-center gap-6 text-xs text-emerald-200 font-mono">
+                      <div>
+                        <span className="text-emerald-400 font-sans font-semibold">Dự án:</span> {fbConfig.projectId}
+                      </div>
+                      <div>
+                        <span className="text-emerald-400 font-sans font-semibold">Dịch vụ:</span> Cloud Firestore (Đồng bộ Realtime)
+                      </div>
+                      <div>
+                        <span className="text-emerald-400 font-sans font-semibold">Bảo mật:</span> Rules Client SDK
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Hộp Dán Nhanh Đoạn Mã Cấu Hình */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h4 className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-amber-500" />
+                        <span>Dán Nhanh Đoạn Mã Firebase Config (1-Click Auto Parse)</span>
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Copy toàn bộ đoạn mã <code>const firebaseConfig = &#123; ... &#125;;</code> từ Firebase Console và dán vào đây:
+                      </p>
+                    </div>
+                    {fbSaveMessage && (
+                      <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-200 animate-fade-in">
+                        {fbSaveMessage}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    <textarea
+                      rows={4}
+                      value={fbRawSnippet}
+                      onChange={(e) => setFbRawSnippet(e.target.value)}
+                      placeholder={`const firebaseConfig = {\n  apiKey: "AIzaSy...",\n  authDomain: "my-shop.firebaseapp.com",\n  projectId: "my-shop-id",\n  storageBucket: "...",\n  messagingSenderId: "...",\n  appId: "..."\n};`}
+                      className="w-full p-3 font-mono text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 text-slate-800"
+                    />
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleParseFirebaseSnippet(fbRawSnippet)}
+                        disabled={!fbRawSnippet.trim()}
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Tự Động Nhận Diện & Điền Form</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const demo = `const firebaseConfig = {\n  apiKey: "AIzaSyD-AuditShopSampleDemoKey9999",\n  authDomain: "auditshop-cloud.firebaseapp.com",\n  projectId: "auditshop-cloud",\n  storageBucket: "auditshop-cloud.appspot.com",\n  messagingSenderId: "123456789012",\n  appId: "1:123456789012:web:abcdef123456"\n};`;
+                          setFbRawSnippet(demo);
+                          handleParseFirebaseSnippet(demo);
+                        }}
+                        className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
+                      >
+                        Mẫu Thử Demo
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Form Nhập Chi Tiết Từng Thông Số */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
+                  <h4 className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+                    <Database className="w-4 h-4 text-indigo-600" />
+                    <span>Chi Tiết Thông Số Kết Nối Firebase</span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Project ID <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={fbConfig.projectId || ''}
+                        onChange={(e) => setFbConfig({ ...fbConfig, projectId: e.target.value })}
+                        placeholder="VD: auditshop-2026"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        API Key (apiKey) <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={fbConfig.apiKey || ''}
+                        onChange={(e) => setFbConfig({ ...fbConfig, apiKey: e.target.value })}
+                        placeholder="AIzaSy..."
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Auth Domain</label>
+                      <input
+                        type="text"
+                        value={fbConfig.authDomain || ''}
+                        onChange={(e) => setFbConfig({ ...fbConfig, authDomain: e.target.value })}
+                        placeholder="project-id.firebaseapp.com"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">App ID (appId)</label>
+                      <input
+                        type="text"
+                        value={fbConfig.appId || ''}
+                        onChange={(e) => setFbConfig({ ...fbConfig, appId: e.target.value })}
+                        placeholder="1:123456789:web:abcdef..."
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Storage Bucket (Tùy chọn)</label>
+                      <input
+                        type="text"
+                        value={fbConfig.storageBucket || ''}
+                        onChange={(e) => setFbConfig({ ...fbConfig, storageBucket: e.target.value })}
+                        placeholder="project-id.appspot.com"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Messaging Sender ID (Tùy chọn)</label>
+                      <input
+                        type="text"
+                        value={fbConfig.messagingSenderId || ''}
+                        onChange={(e) => setFbConfig({ ...fbConfig, messagingSenderId: e.target.value })}
+                        placeholder="123456789012"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Thông báo kết quả kiểm tra */}
+                  {fbTestStatus && (
+                    <div className={`p-3.5 rounded-xl text-xs font-medium flex items-center gap-2.5 ${
+                      fbTestStatus.type === 'success'
+                        ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+                        : 'bg-rose-50 border border-rose-200 text-rose-800'
+                    }`}>
+                      {fbTestStatus.type === 'success' ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      ) : (
+                        <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                      )}
+                      <span>{fbTestStatus.message}</span>
+                    </div>
+                  )}
+
+                  {/* Nút thao tác */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleSaveFirebaseConfig}
+                        className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+                      >
+                        <Check className="w-4 h-4" />
+                        <span>Lưu Cấu Hình & Kích Hoạt Ngay</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleTestFirebaseConnection}
+                        disabled={isTestingFb || !fbConfig.projectId}
+                        className="px-4 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isTestingFb ? 'animate-spin' : ''}`} />
+                        <span>{isTestingFb ? 'Đang Kiểm Tra Kết Nối...' : 'Kiểm Tra Kết Nối Firestore'}</span>
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleClearFirebaseConfig}
+                      className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 font-semibold text-xs transition-colors cursor-pointer flex items-center gap-1"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Xóa Cấu Hình (Về Mặc Định)</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Hướng Dẫn 4 Bước Tạo Firebase Miễn Phí */}
+                <div className="bg-amber-50/60 border border-amber-200/80 rounded-2xl p-5 shadow-xs">
+                  <h4 className="font-extrabold text-amber-950 text-sm flex items-center gap-2 mb-3">
+                    <Flame className="w-4 h-4 text-amber-600" />
+                    <span>Hướng Dẫn 4 Bước Tạo Dự Án Firebase Miễn Phí (Google Cloud vĩnh viễn)</span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-amber-900">
+                    <div className="p-3.5 bg-white/80 rounded-xl border border-amber-200/50 space-y-1.5">
+                      <div className="font-bold text-amber-950 flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded-full bg-amber-200 text-amber-800 text-[11px] font-black inline-flex items-center justify-center">1</span>
+                        <span>Tạo Project trên Google Firebase</span>
+                      </div>
+                      <p className="text-slate-600 leading-relaxed">
+                        Truy cập <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="text-indigo-600 underline font-semibold">console.firebase.google.com</a>, đăng nhập tài khoản Gmail. Bấm <strong>"Add project"</strong>, đặt tên bất kỳ (vd: <code>auditshop-database</code>) và bấm tiếp tục.
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 bg-white/80 rounded-xl border border-amber-200/50 space-y-1.5">
+                      <div className="font-bold text-amber-950 flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded-full bg-amber-200 text-amber-800 text-[11px] font-black inline-flex items-center justify-center">2</span>
+                        <span>Khởi Tạo Firestore Database</span>
+                      </div>
+                      <p className="text-slate-600 leading-relaxed">
+                        Ở menu bên trái, chọn <strong>Build ➔ Firestore Database</strong> ➔ Bấm <strong>Create database</strong>. Chọn vị trí (ví dụ <code>asia-southeast1</code> Singapore) và chọn <strong>Start in test mode</strong> (để ứng dụng có quyền đọc/ghi).
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 bg-white/80 rounded-xl border border-amber-200/50 space-y-1.5">
+                      <div className="font-bold text-amber-950 flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded-full bg-amber-200 text-amber-800 text-[11px] font-black inline-flex items-center justify-center">3</span>
+                        <span>Lấy Đoạn Mã Config Web App</span>
+                      </div>
+                      <p className="text-slate-600 leading-relaxed">
+                        Bấm vào biểu tượng bánh răng ⚙️ (Cài đặt dự án) ở góc trên bên trái ➔ Kéo xuống mục <strong>Your apps (Ứng dụng của bạn)</strong> ➔ Bấm icon Web <code>&lt;/&gt;</code> ➔ Đặt tên app và copy toàn bộ khối <code>const firebaseConfig = ...</code>.
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 bg-white/80 rounded-xl border border-amber-200/50 space-y-1.5">
+                      <div className="font-bold text-amber-950 flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded-full bg-amber-200 text-amber-800 text-[11px] font-black inline-flex items-center justify-center">4</span>
+                        <span>Dán Vào Website & Bấm Kích Hoạt</span>
+                      </div>
+                      <p className="text-slate-600 leading-relaxed">
+                        Dán đoạn mã vừa copy vào ô <strong>"Dán Nhanh Đoạn Mã Firebase"</strong> ở trên, bấm <strong>"Tự Động Nhận Diện"</strong> rồi bấm <strong>"Lưu Cấu Hình & Kích Hoạt"</strong>. Từ giờ mọi máy tính và điện thoại đều sẽ chung 1 kho tài khoản!
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

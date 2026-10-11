@@ -3,14 +3,43 @@
  * Lưu trữ phiên bản, thời gian phát hành và toàn bộ tính năng mới đã thêm.
  */
 
-export const CURRENT_SYSTEM_VERSION = 'v2.6';
+export const CURRENT_SYSTEM_VERSION = 'v2.7';
 
 export const CHANGELOG_HISTORY = [
+  {
+    version: 'v2.7',
+    releaseDate: '11/10/2026 - 16:00',
+    title: '🔥 Tích Hợp Google Firebase Cloud & Đồng Bộ Đa Thiết Bị Quốc Tế',
+    isCurrent: true,
+    badges: ['Google Firebase', 'Cloud Firestore', 'Realtime Sync', 'Đa Thiết Bị'],
+    summary: 'Tích hợp cơ sở dữ liệu Google Cloud Firestore trực tiếp vào hệ sinh thái. Hỗ trợ 1-click kết nối Firebase từ Admin Portal, tự động đồng bộ realtime tài khoản, số dư lượt quét và gói cước trên mọi thiết bị máy tính và điện thoại thông minh.',
+    categories: [
+      {
+        name: 'Hạ tầng Google Firebase Cloud',
+        tag: 'FIREBASE',
+        color: 'amber',
+        items: [
+          {
+            title: 'Cơ sở dữ liệu Google Cloud Firestore',
+            desc: 'Đồng bộ tài khoản, mật khẩu, số dư và gói VIP trên mạng lưới máy chủ Google Cloud toàn cầu với độ trễ tính bằng mili-giây.'
+          },
+          {
+            title: 'Trung tâm Quản trị Kết nối Firebase 1-Click',
+            desc: 'Bổ sung tab "🔥 Kết Nối Firebase" trong Admin Portal: Dán nhanh đoạn mã cấu hình firebaseConfig, tự động trích xuất thông số, kiểm tra kết nối Firestore trực tiếp và hướng dẫn 4 bước tạo dự án Google miễn phí.'
+          },
+          {
+            title: 'Hệ thống Cơ sở dữ liệu Kép (Dual-Cloud Resilience)',
+            desc: 'Hoạt động song song và tương thích ngược hoàn hảo giữa Google Firestore và Cloud DB Serverless, đảm bảo người dùng luôn đăng nhập thông suốt ở mọi nơi.'
+          }
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.6',
     releaseDate: '11/10/2026 - 15:35',
     title: 'Siêu Cập Nhật: Đồng Bộ Đa Thiết Bị & Hệ Thống AI Tự Luyện 100%',
-    isCurrent: true,
+    isCurrent: false,
     badges: ['Cloud Database', 'AI Engine 2.0', 'Tự Test Hoàn Hảo'],
     summary: 'Nâng cấp toàn diện cơ sở dữ liệu đám mây đa thiết bị và trang bị cỗ máy AI tự động sinh bảng kê & tự sửa lỗi đạt độ chính xác 100%.',
     categories: [

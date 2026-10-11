@@ -1,7 +1,10 @@
-/**
- * Cloud Database Service cho SoatDon.vn
- * Đồng bộ tài khoản, lượt quét và quyền truy cập tức thì giữa tất cả các máy tính / thiết bị.
- */
+import { 
+  isFirebaseConfigured, 
+  firebaseRegisterUser, 
+  firebaseLoginUser, 
+  firebaseUpdateUserBalance, 
+  firebaseFetchAllUsers 
+} from '../services/firebaseAuth';
 
 const MASTER_BIN_ID = 'acbecad';
 const DIRECT_CLOUD_URL = `https://extendsclass.com/api/json-storage/bin/${MASTER_BIN_ID}`;
@@ -46,9 +49,22 @@ async function requestCloud(endpoint, options = {}) {
 }
 
 /**
- * Lấy tất cả tài khoản từ Cloud Database về máy
+ * Lấy tất cả tài khoản từ Cloud Database hoặc Google Firebase về máy
  */
 export async function fetchCloudAccounts() {
+  // Ưu tiên đọc từ Google Firebase Firestore nếu đã cấu hình
+  if (isFirebaseConfigured()) {
+    try {
+      const fbUsers = await firebaseFetchAllUsers();
+      if (fbUsers && fbUsers.length > 0) {
+        localStorage.setItem('soatdon_accounts', JSON.stringify(fbUsers));
+        return fbUsers;
+      }
+    } catch (e) {
+      console.warn('Lỗi đọc Firestore, fallback Cloud DB:', e);
+    }
+  }
+
   const result = await requestCloud('action=get_all');
   if (result && result.accounts && Array.isArray(result.accounts)) {
     // Cập nhật lại localStorage để làm cache nhanh
@@ -64,13 +80,31 @@ export async function fetchCloudAccounts() {
 }
 
 /**
- * Đăng ký tài khoản mới và đồng bộ ngay lên Cloud Database
+ * Đăng ký tài khoản mới và đồng bộ ngay lên Cloud Database hoặc Google Firebase
  */
 export async function cloudRegister({ shopName, phone, password, plan = 'standard' }) {
   const cleanPhone = String(phone || '').trim();
   const cleanShop = String(shopName || 'Shop Online').trim();
 
-  // 1. Thử gọi qua API
+  // 0. Ưu tiên đăng ký trực tiếp trên Google Firebase Firestore nếu đã cấu hình
+  if (isFirebaseConfigured()) {
+    try {
+      const fbRes = await firebaseRegisterUser({ shopName: cleanShop, phone: cleanPhone, password, plan });
+      if (fbRes.success && fbRes.user) {
+        localStorage.setItem('soatdon_user', JSON.stringify(fbRes.user));
+        const accounts = await fetchCloudAccounts();
+        const updated = accounts.some(a => a.phone === cleanPhone) ? accounts : [...accounts, fbRes.user];
+        localStorage.setItem('soatdon_accounts', JSON.stringify(updated));
+        return fbRes;
+      } else if (fbRes.message) {
+        return fbRes;
+      }
+    } catch (e) {
+      console.warn('Lỗi đăng ký Firebase Firestore, fallback Cloud DB:', e);
+    }
+  }
+
+  // 1. Thử gọi qua API Serverless (Vercel)
   try {
     const apiRes = await fetch('/api/auth', {
       method: 'POST',
@@ -143,6 +177,22 @@ export async function cloudLogin(phone, password) {
   const cleanPhone = String(phone || '').trim();
   const cleanPass = String(password || '').trim();
 
+  // 0. Ưu tiên đăng nhập bằng Google Firebase Firestore nếu đã cấu hình
+  if (isFirebaseConfigured()) {
+    try {
+      const fbRes = await firebaseLoginUser(cleanPhone, cleanPass);
+      if (fbRes.success && fbRes.user) {
+        localStorage.setItem('soatdon_user', JSON.stringify(fbRes.user));
+        await fetchCloudAccounts();
+        return fbRes;
+      } else if (fbRes.message && fbRes.message.includes('Mật khẩu không chính xác')) {
+        return fbRes;
+      }
+    } catch (e) {
+      console.warn('Lỗi đăng nhập Firebase Firestore, fallback Cloud DB:', e);
+    }
+  }
+
   // 1. Thử gọi API đám mây
   try {
     const apiRes = await fetch('/api/auth', {
@@ -211,7 +261,7 @@ export async function cloudLogin(phone, password) {
 }
 
 /**
- * Cập nhật lượt quét hoặc gói VIP và đồng bộ tức thì lên Cloud
+ * Cập nhật lượt quét hoặc gói VIP và đồng bộ tức thì lên Cloud / Firebase
  */
 export async function cloudUpdateUserBalance(phone, addScans, newPlan) {
   const cleanPhone = String(phone || '').trim();
@@ -241,6 +291,15 @@ export async function cloudUpdateUserBalance(phone, addScans, newPlan) {
       localStorage.setItem('soatdon_accounts', JSON.stringify(accounts));
     }
   } catch (e) {}
+
+  // Cập nhật Firebase Firestore nếu có cấu hình
+  if (isFirebaseConfigured()) {
+    try {
+      await firebaseUpdateUserBalance(cleanPhone, addScans, newPlan);
+    } catch (e) {
+      console.warn('Lỗi cập nhật Firebase balance:', e);
+    }
+  }
 
   // Đồng bộ lên Cloud DB
   try {
