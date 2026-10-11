@@ -178,6 +178,73 @@ class CyberSoundEngine {
       osc.stop(now + 0.25);
     } catch {}
   }
+
+  // Tiếng màn trập camera chụp ảnh bằng chứng (Mechanical shutter click)
+  playCameraShutter() {
+    if (!this.isEnabled) return;
+    this.init();
+    if (!this.ctx) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(1400, now);
+      osc.frequency.exponentialRampToValueAtTime(200, now + 0.08);
+
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.08);
+
+      // Nhấp thứ 2
+      setTimeout(() => {
+        if (!this.ctx) return;
+        const now2 = this.ctx.currentTime;
+        const osc2 = this.ctx.createOscillator();
+        const gain2 = this.ctx.createGain();
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(900, now2);
+        osc2.frequency.exponentialRampToValueAtTime(100, now2 + 0.06);
+        gain2.gain.setValueAtTime(0.07, now2);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now2 + 0.06);
+        osc2.connect(gain2);
+        gain2.connect(this.ctx.destination);
+        osc2.start(now2);
+        osc2.stop(now2 + 0.06);
+      }, 90);
+    } catch {}
+  }
+
+  // Tiếng khóa mục tiêu radar (Target Lock)
+  playTargetLock() {
+    if (!this.isEnabled) return;
+    this.init();
+    if (!this.ctx) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      [1100, 1600].forEach((freq, i) => {
+        const t = now + i * 0.07;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, t);
+        gain.gain.setValueAtTime(0.06, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.06);
+      });
+    } catch {}
+  }
 }
 
 export const cyberSound = new CyberSoundEngine();

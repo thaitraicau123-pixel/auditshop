@@ -3,11 +3,12 @@ import {
   X, Radio, Satellite, ShieldAlert, ShieldCheck, PhoneCall, PhoneOff, 
   Volume2, VolumeX, Activity, AlertTriangle, Play, Pause, RotateCcw, 
   MapPin, CheckCircle2, Flame, Sparkles, TrendingUp, Layers, ChevronRight,
-  Zap, Award, Lock, ArrowUpRight, Cpu, Clock, Terminal, ChevronDown
+  Zap, Award, Lock, ArrowUpRight, Cpu, Clock, Terminal, ChevronDown,
+  Camera, Crosshair, Scan, Target, Eye, FileText, Check
 } from 'lucide-react';
 import { cyberSound } from '../utils/cyberSoundEngine';
 
-// Danh sách 12 Mega Hub Logistics huyết mạch toàn quốc với mã định danh ngắn gọn không đè chữ
+// Danh sách 12 Mega Hub Logistics huyết mạch toàn quốc với tọa độ GPS và trinh sát camera
 const LOGISTICS_HUBS = [
   {
     id: 'HN_LB',
@@ -18,6 +19,10 @@ const LOGISTICS_HUBS = [
     region: 'Miền Bắc',
     x: 61,
     y: 19,
+    mapX: 44.5,
+    mapY: 28.5,
+    gps: '21°02\'N 105°53\'E',
+    cctvCam: 'CAM 01 - BĂNG CHUYỀN LONG BIÊN',
     status: 'ALERT',
     overweightRate: '16.8%',
     delayedReturnRate: '24.2%',
@@ -36,6 +41,10 @@ const LOGISTICS_HUBS = [
     region: 'Miền Bắc',
     x: 67,
     y: 15,
+    mapX: 47.0,
+    mapY: 26.5,
+    gps: '21°11\'N 106°04\'E',
+    cctvCam: 'CAM 02 - MÁY QUÉT QUANG HỌC YÊN PHONG',
     status: 'CRITICAL',
     overweightRate: '22.4%',
     delayedReturnRate: '31.5%',
@@ -54,6 +63,10 @@ const LOGISTICS_HUBS = [
     region: 'Miền Bắc',
     x: 75,
     y: 20,
+    mapX: 49.5,
+    mapY: 28.5,
+    gps: '20°50\'N 106°45\'E',
+    cctvCam: 'CAM 03 - CONTAINER BÃI ĐÌNH VŨ',
     status: 'NORMAL',
     overweightRate: '6.5%',
     delayedReturnRate: '11.0%',
@@ -72,6 +85,10 @@ const LOGISTICS_HUBS = [
     region: 'Miền Bắc',
     x: 54,
     y: 33,
+    mapX: 40.5,
+    mapY: 37.5,
+    gps: '18°40\'N 105°40\'E',
+    cctvCam: 'CAM 04 - BĂNG TẢI TRUNG CHUYỂN VINH',
     status: 'ALERT',
     overweightRate: '14.1%',
     delayedReturnRate: '28.0%',
@@ -90,6 +107,10 @@ const LOGISTICS_HUBS = [
     region: 'Miền Trung',
     x: 65,
     y: 46,
+    mapX: 50.5,
+    mapY: 52.0,
+    gps: '16°00\'N 108°11\'E',
+    cctvCam: 'CAM 05 - PHÂN LUỒNG BẮC NAM HÒA CẦM',
     status: 'CRITICAL',
     overweightRate: '19.5%',
     delayedReturnRate: '36.2%',
@@ -108,6 +129,10 @@ const LOGISTICS_HUBS = [
     region: 'Miền Trung',
     x: 73,
     y: 57,
+    mapX: 55.0,
+    mapY: 62.5,
+    gps: '13°46\'N 109°13\'E',
+    cctvCam: 'CAM 06 - KHO BÃI VEN BIỂN QUY NHƠN',
     status: 'NORMAL',
     overweightRate: '8.2%',
     delayedReturnRate: '15.4%',
@@ -126,6 +151,10 @@ const LOGISTICS_HUBS = [
     region: 'Miền Trung',
     x: 59,
     y: 60,
+    mapX: 47.0,
+    mapY: 61.0,
+    gps: '13°59\'N 108°00\'E',
+    cctvCam: 'CAM 07 - BĂNG TẢI TÂY NGUYÊN',
     status: 'ALERT',
     overweightRate: '15.9%',
     delayedReturnRate: '22.7%',
@@ -144,6 +173,10 @@ const LOGISTICS_HUBS = [
     region: 'Miền Trung',
     x: 76,
     y: 69,
+    mapX: 55.5,
+    mapY: 69.5,
+    gps: '12°15\'N 109°05\'E',
+    cctvCam: 'CAM 08 - TRUNG TÂM PHÂN LOẠI KHÁNH HÒA',
     status: 'NORMAL',
     overweightRate: '7.4%',
     delayedReturnRate: '12.8%',
@@ -162,6 +195,10 @@ const LOGISTICS_HUBS = [
     region: 'Miền Nam',
     x: 51,
     y: 81,
+    mapX: 42.0,
+    mapY: 74.0,
+    gps: '10°58\'N 106°29\'E',
+    cctvCam: 'CAM 04 - BĂNG CHUYỀN SOI CÂN 3D CỦ CHI',
     status: 'CRITICAL',
     overweightRate: '25.8%',
     delayedReturnRate: '39.0%',
@@ -180,6 +217,10 @@ const LOGISTICS_HUBS = [
     region: 'Miền Nam',
     x: 59,
     y: 78,
+    mapX: 45.0,
+    mapY: 73.0,
+    gps: '10°53\'N 106°44\'E',
+    cctvCam: 'CAM 10 - KHU XƯỞNG SỈ SÓNG THẦN',
     status: 'ALERT',
     overweightRate: '18.2%',
     delayedReturnRate: '27.4%',
@@ -198,6 +239,10 @@ const LOGISTICS_HUBS = [
     region: 'Miền Nam',
     x: 65,
     y: 80,
+    mapX: 47.5,
+    mapY: 74.5,
+    gps: '10°57\'N 106°50\'E',
+    cctvCam: 'CAM 11 - BĂNG TẢI AMATA ĐỒNG NAI',
     status: 'ALERT',
     overweightRate: '13.7%',
     delayedReturnRate: '21.5%',
@@ -216,6 +261,10 @@ const LOGISTICS_HUBS = [
     region: 'Miền Nam',
     x: 43,
     y: 91,
+    mapX: 38.5,
+    mapY: 82.5,
+    gps: '10°02\'N 105°44\'E',
+    cctvCam: 'CAM 12 - TRUNG CHUYỂN MIỀN TÂY SÔNG HẬU',
     status: 'ALERT',
     overweightRate: '17.3%',
     delayedReturnRate: '33.1%',
@@ -357,10 +406,44 @@ export default function LogisticsWarRoomModal({ isOpen, onClose }) {
   const [concessionRate, setConcessionRate] = useState(0); // 0% to 100%
   const [speechSynthEnabled, setSpeechSynthEnabled] = useState(true);
   
+  // Tactical Radar & Surveillance States
+  const [radarViewMode, setRadarViewMode] = useState('RADAR_MAP'); // 'RADAR_MAP', 'CCTV_THERMAL', 'SATELLITE_AERIAL'
+  const [evidenceFlash, setEvidenceFlash] = useState(false);
+  const [evidenceToast, setEvidenceToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+
   const timerRef = useRef(null);
   const dialogTimeoutRef = useRef(null);
   const canvasRef = useRef(null);
   const chatScrollRef = useRef(null);
+
+  const handleCaptureEvidence = () => {
+    if (soundEnabled) cyberSound.playCameraShutter();
+    setEvidenceFlash(true);
+    setTimeout(() => setEvidenceFlash(false), 220);
+    setToastMessage(`📸 ĐÃ TRÍCH XUẤT ẢNH BẰNG CHỨNG GIAN LẬN [${selectedHub.code} - ${selectedHub.shortName}]! Đã lưu ảnh soi nấc cân lệch vào hồ sơ đối soát.`);
+    setEvidenceToast(true);
+    setTimeout(() => setEvidenceToast(false), 4500);
+  };
+
+  const handleLaunchDisputeFromHub = (hub) => {
+    let target = VOICE_CALL_SCENARIOS[1]; // Cân khống (SPX / Củ Chi)
+    if (hub.id === 'HN_LB' || hub.id === 'NA_VINH' || hub.id === 'QN_DH') {
+      target = VOICE_CALL_SCENARIOS[0]; // Bể vỡ
+    } else if (hub.id === 'DN_HC' || hub.id === 'CT_TD' || hub.id === 'DN_BH') {
+      target = VOICE_CALL_SCENARIOS[2]; // Om tiền COD
+    }
+    setSelectedScenario(target);
+    setActiveTab('VOICE_CALL');
+    if (soundEnabled) cyberSound.playRadioChirp();
+  };
+
+  const handleExportHubDossier = (hub) => {
+    if (soundEnabled) cyberSound.playCameraShutter();
+    setToastMessage(`📑 ĐÃ XUẤT HỒ SƠ TÁC CHIẾN ${hub.name.toUpperCase()} (EXCEL/PDF)! Đã tập hợp toàn bộ ${hub.recentAnomalies} đơn vi phạm kèm mã tracking.`);
+    setEvidenceToast(true);
+    setTimeout(() => setEvidenceToast(false), 4500);
+  };
 
   // Dọn dẹp âm thanh & timer khi unmount / đóng modal
   useEffect(() => {
@@ -610,11 +693,45 @@ export default function LogisticsWarRoomModal({ isOpen, onClose }) {
         </div>
 
         {/* ============================================================== */}
-        {/* TAB 1: RADAR RECONNAISSANCE MAP (THIẾT KẾ RỘNG RÃI, KHÔNG ĐÈ CHỮ) */}
+        {/* TAB 1: RADAR RECONNAISSANCE MAP (THIẾT KẾ QUÂN SỰ CHUYÊN NGHIỆP CÓ HÌNH ẢNH THỰC TẾ) */}
         {/* ============================================================== */}
         {activeTab === 'RADAR' && (
-          <div className="flex-1 overflow-y-auto p-4 sm:p-5 flex flex-col gap-4">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5 flex flex-col gap-4 relative">
             
+            {/* Inline Style cho hiệu ứng xoay radar và chớp màn trập */}
+            <style>{`
+              @keyframes cyberRadarSweep {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+              .animate-cyber-sweep {
+                animation: cyberRadarSweep 7s linear infinite;
+              }
+              @keyframes flashShutter {
+                0% { opacity: 0.85; }
+                100% { opacity: 0; }
+              }
+              .animate-shutter-flash {
+                animation: flashShutter 0.22s ease-out forwards;
+              }
+            `}</style>
+
+            {/* Shutter flash overlay when capturing evidence */}
+            {evidenceFlash && (
+              <div className="fixed inset-0 bg-white pointer-events-none z-50 animate-shutter-flash" />
+            )}
+
+            {/* Evidence captured Toast Notification */}
+            {evidenceToast && (
+              <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 max-w-lg w-[90%] bg-emerald-950/95 border-2 border-emerald-400 text-emerald-200 px-4 py-3 rounded-2xl shadow-[0_0_35px_rgba(16,185,129,0.5)] flex items-center gap-3 backdrop-blur-xl animate-bounce">
+                <Check className="w-5 h-5 text-emerald-400 shrink-0" />
+                <div className="text-xs font-mono">
+                  <b className="text-white block font-bold">XÁC NHẬN TÁC CHIẾN THÀNH CÔNG:</b>
+                  <span>{toastMessage}</span>
+                </div>
+              </div>
+            )}
+
             {/* Top Stat Summary Pills */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               <div className="p-3 rounded-2xl bg-slate-800/80 border border-slate-700/70">
@@ -642,134 +759,301 @@ export default function LogisticsWarRoomModal({ isOpen, onClose }) {
               </div>
             </div>
 
-            {/* Main 2-Column War Map & Hub Intel Display */}
+            {/* Main 2-Column Tactical War Map & Hub Intel Display */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
               
-              {/* Left Column: Cyber Map + Hub Quick Selector */}
-              <div className="lg:col-span-6 flex flex-col gap-3">
+              {/* Left Column (7 cols): Tactical Console Display + 12 Hub Selector */}
+              <div className="lg:col-span-7 flex flex-col gap-3">
                 
-                {/* SVG Vietnam Map Viewbox */}
-                <div className="bg-slate-950 rounded-2xl border border-indigo-500/25 p-3.5 relative overflow-hidden flex flex-col justify-between">
-                  <div className="flex items-center justify-between mb-1 z-10">
-                    <span className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5 font-mono">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      BẢN ĐỒ HUYẾT MẠCH 12 MEGA HUB
-                    </span>
-                    <span className="text-[10px] text-indigo-300 font-mono bg-indigo-950/80 px-2 py-0.5 rounded-full border border-indigo-800">
-                      Chạm chấm tròn để soi trạm
-                    </span>
+                {/* Visual View Mode Switcher Toolbar */}
+                <div className="flex items-center justify-between gap-1.5 p-1.5 rounded-2xl bg-slate-950 border border-indigo-950/70 overflow-x-auto">
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRadarViewMode('RADAR_MAP');
+                        if (soundEnabled) cyberSound.playRadioChirp();
+                      }}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
+                        radarViewMode === 'RADAR_MAP'
+                          ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 ring-1 ring-emerald-400'
+                          : 'bg-slate-900 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <Target className="w-3.5 h-3.5 text-emerald-300" />
+                      <span>🛰️ RADAR QUÂN SỰ</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRadarViewMode('CCTV_THERMAL');
+                        if (soundEnabled) cyberSound.playRadioChirp();
+                      }}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
+                        radarViewMode === 'CCTV_THERMAL'
+                          ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30 ring-1 ring-rose-400'
+                          : 'bg-slate-900 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <Camera className="w-3.5 h-3.5 text-rose-300" />
+                      <span>📹 CCTV SOI CÂN FLIR</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRadarViewMode('SATELLITE_AERIAL');
+                        if (soundEnabled) cyberSound.playRadioChirp();
+                      }}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
+                        radarViewMode === 'SATELLITE_AERIAL'
+                          ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30 ring-1 ring-cyan-400'
+                          : 'bg-slate-900 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <Satellite className="w-3.5 h-3.5 text-cyan-300" />
+                      <span>🛸 KHÔNG ẢNH VỆ TINH</span>
+                    </button>
                   </div>
 
-                  {/* SVG Map Canvas */}
-                  <div className="relative w-full h-[270px] sm:h-[300px] flex items-center justify-center">
-                    <svg viewBox="0 0 100 100" className="w-full h-full max-h-[290px]">
-                      {/* S-curve silhouette of Vietnam */}
-                      <path
-                        d="M 58 12 Q 68 15 65 24 Q 56 30 54 38 Q 63 46 70 54 Q 74 65 68 76 Q 58 84 52 88 Q 42 94 40 92 Q 38 88 46 84 Q 52 79 56 68 Q 50 56 46 44 Q 48 32 54 22 Z"
-                        fill="rgba(30, 41, 59, 0.45)"
-                        stroke="#4f46e5"
-                        strokeWidth="1.2"
-                        strokeDasharray="2 1"
+                  <span className="text-[10px] font-mono text-emerald-400 font-bold hidden sm:inline-block pr-2">
+                    ● ARGUS-7 LIVE
+                  </span>
+                </div>
+
+                {/* THE MAIN TACTICAL SCREEN CONTAINER */}
+                <div className="bg-slate-950 rounded-2xl border border-indigo-500/30 relative overflow-hidden shadow-[0_0_40px_rgba(15,23,42,0.8)]">
+                  
+                  {/* ========================================= */}
+                  {/* MODE 1: RADAR QUÂN SỰ TÁC CHIẾN VIỆT NAM  */}
+                  {/* ========================================= */}
+                  {radarViewMode === 'RADAR_MAP' && (
+                    <div className="relative w-full h-[330px] sm:h-[390px] overflow-hidden">
+                      {/* Realistic Military Console Background Image */}
+                      <img 
+                        src="/images/tactical_vietnam_radar.jpg" 
+                        alt="Tactical Vietnam Military Radar" 
+                        className="w-full h-full object-cover object-center filter brightness-95 contrast-110 select-none pointer-events-none"
                       />
 
-                      {/* Transit trunk line */}
-                      <path
-                        d="M 67 15 L 61 19 L 54 33 L 65 46 L 73 57 L 76 69 L 59 78 L 51 81 L 43 91"
-                        fill="none"
-                        stroke="rgba(99, 102, 241, 0.45)"
-                        strokeWidth="0.8"
-                        strokeDasharray="1.5 1.5"
+                      {/* CRT Scanline Overlay */}
+                      <div 
+                        className="absolute inset-0 pointer-events-none opacity-20"
+                        style={{
+                          backgroundImage: 'repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.5) 0px, rgba(0, 0, 0, 0.5) 1px, transparent 1px, transparent 3px)'
+                        }}
                       />
 
-                      {/* Sweeping radar scanner line */}
-                      <line x1="58" y1="50" x2="90" y2="20" stroke="rgba(16, 185, 129, 0.25)" strokeWidth="0.8" className="origin-center animate-radar" />
+                      {/* Vignette Shadow Overlay */}
+                      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(2,6,23,0.75)_100%)]" />
 
-                      {/* 12 Hub Clean Pins - Chỉ hiện mã ngắn gọn, không bị đè chữ */}
+                      {/* Live Rotating Conic Radar Sweep Beam */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+                        <div 
+                          className="w-[180%] h-[180%] rounded-full animate-cyber-sweep opacity-35"
+                          style={{
+                            background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 300deg, rgba(16, 185, 129, 0.15) 340deg, rgba(52, 211, 153, 0.75) 360deg)'
+                          }}
+                        />
+                      </div>
+
+                      {/* Top HUD Telemetry Banner */}
+                      <div className="absolute top-2.5 left-3 flex items-center gap-2 z-20">
+                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-950/90 border border-emerald-500/70 text-[10px] font-mono text-emerald-300 font-bold backdrop-blur-md shadow-lg">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                          TACTICAL RADAR HUD • 63 TỈNH THÀNH
+                        </span>
+                        <span className="hidden sm:inline-block px-2 py-1 rounded bg-slate-950/80 border border-slate-700/80 text-[10px] font-mono text-cyan-300">
+                          9.4 GHz X-BAND
+                        </span>
+                      </div>
+
+                      <div className="absolute top-2.5 right-3 z-20">
+                        <span className="px-2.5 py-1 rounded bg-slate-950/90 border border-indigo-500/60 text-[10px] font-mono text-indigo-300 font-bold backdrop-blur-md">
+                          KHÓA MỤC TIÊU: <span className="text-white font-extrabold">{selectedHub.name.toUpperCase()}</span>
+                        </span>
+                      </div>
+
+                      {/* 12 Hub Interactive Tactical Target Reticles Plotted on Vietnam Map */}
                       {LOGISTICS_HUBS.map((hub) => {
                         const isSelected = selectedHub.id === hub.id;
                         const isCritical = hub.status === 'CRITICAL';
                         const isAlert = hub.status === 'ALERT';
-                        const pinColor = isCritical ? '#ef4444' : isAlert ? '#f59e0b' : '#10b981';
+                        const bgColor = isCritical ? 'bg-rose-500' : isAlert ? 'bg-amber-500' : 'bg-emerald-500';
 
                         return (
-                          <g 
-                            key={hub.id} 
-                            className="cursor-pointer group"
+                          <button
+                            key={hub.id}
+                            type="button"
                             onClick={() => {
                               setSelectedHub(hub);
-                              if (soundEnabled) cyberSound.playSonarPing();
+                              if (soundEnabled) cyberSound.playTargetLock();
                             }}
+                            className="absolute group z-20 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer focus:outline-none transition-transform hover:scale-125"
+                            style={{ left: `${hub.mapX}%`, top: `${hub.mapY}%` }}
+                            title={`${hub.name} (${hub.gps}) - Nhấp để khóa mục tiêu`}
                           >
-                            {/* Outer pulsing ring for selected or critical */}
-                            {(isSelected || isCritical) && (
-                              <circle
-                                cx={hub.x}
-                                cy={hub.y}
-                                r={isSelected ? 4.5 : 3.5}
-                                fill={isCritical ? 'rgba(239, 68, 68, 0.35)' : 'rgba(99, 102, 241, 0.35)'}
-                                className="animate-ping"
-                              />
+                            {/* Pulsing Outer Wave */}
+                            <div className={`absolute -inset-2.5 rounded-full ${bgColor} opacity-40 ${isSelected ? 'animate-ping' : 'animate-pulse'}`} />
+
+                            {/* Rotating HUD Brackets if Selected */}
+                            {isSelected && (
+                              <div className="absolute -inset-3.5 border border-dashed border-cyan-400 rounded-full animate-spin [animation-duration:8s] pointer-events-none" />
                             )}
 
-                            {/* Solid pin dot */}
-                            <circle
-                              cx={hub.x}
-                              cy={hub.y}
-                              r={isSelected ? 3.0 : 2.2}
-                              fill={pinColor}
-                              stroke="#ffffff"
-                              strokeWidth={isSelected ? 1.0 : 0.6}
-                            />
+                            {/* Center Target Core */}
+                            <div className={`w-4 h-4 rounded-full ${bgColor} border-2 border-white flex items-center justify-center shadow-[0_0_12px_currentColor] text-[8px] font-black text-black`}>
+                              {hub.num}
+                            </div>
 
-                            {/* Clean number badge inside or beside */}
-                            <rect
-                              x={hub.x + 2.8}
-                              y={hub.y - 2.5}
-                              width={hub.code.length > 2 ? 8.5 : 6.5}
-                              height={4.2}
-                              rx={1.5}
-                              fill={isSelected ? '#4f46e5' : '#0f172a'}
-                              stroke={isSelected ? '#818cf8' : '#334155'}
-                              strokeWidth={0.4}
-                            />
-                            <text
-                              x={hub.x + (hub.code.length > 2 ? 7.0 : 6.0)}
-                              y={hub.y + 0.6}
-                              fill="#ffffff"
-                              fontSize="2.4"
-                              fontWeight="bold"
-                              textAnchor="middle"
-                              className="select-none pointer-events-none"
-                            >
-                              {hub.code}
-                            </text>
-                          </g>
+                            {/* Floating Target Identification Badge */}
+                            <div className={`absolute left-5 -top-2 px-1.5 py-0.5 rounded text-[9px] font-black font-mono tracking-tight whitespace-nowrap shadow-xl border backdrop-blur-md transition-all ${
+                              isSelected 
+                                ? 'bg-indigo-950/95 border-indigo-400 text-white ring-1 ring-indigo-400 scale-105 z-30' 
+                                : 'bg-slate-950/85 border-slate-700/80 text-slate-200 group-hover:bg-slate-900 group-hover:border-cyan-400'
+                            }`}>
+                              {hub.code} • {hub.shortName}
+                              {isSelected && <span className="ml-1 text-cyan-300 font-bold">[LOCKED]</span>}
+                            </div>
+                          </button>
                         );
                       })}
-                    </svg>
-                  </div>
 
-                  {/* Map Legend */}
-                  <div className="flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-800/80 pt-2">
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-rose-500" /> Nguy cơ cao
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-amber-500" /> Cảnh báo
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500" /> An toàn
-                      </span>
+                      {/* Bottom HUD Telemetry Strip */}
+                      <div className="absolute bottom-2 left-3 right-3 z-20 flex items-center justify-between text-[10px] font-mono text-slate-300 bg-slate-950/85 border border-slate-800/90 rounded-lg px-2.5 py-1 backdrop-blur-md">
+                        <div className="flex items-center gap-3">
+                          <span className="text-emerald-400 font-bold flex items-center gap-1">
+                            <Target className="w-3 h-3" /> GPS: {selectedHub.gps}
+                          </span>
+                          <span className="hidden sm:inline text-slate-400">ĐỘ LỆCH CÂN: <b className="text-rose-400">{selectedHub.overweightRate}</b></span>
+                        </div>
+                        <span className="text-cyan-400 font-bold">12/12 MEGA HUB HOẠT ĐỘNG</span>
+                      </div>
                     </div>
-                    <span className="font-mono text-indigo-400">12 Điểm Huyết Mạch</span>
-                  </div>
+                  )}
+
+                  {/* ========================================= */}
+                  {/* MODE 2: CAMERA HỒNG NGOẠI CCTV SOI CÂN    */}
+                  {/* ========================================= */}
+                  {radarViewMode === 'CCTV_THERMAL' && (
+                    <div className="relative w-full h-[330px] sm:h-[390px] overflow-hidden">
+                      {/* Real Surveillance CCTV Thermal Camera Feed Image */}
+                      <img 
+                        src="/images/warehouse_cctv_scanner.jpg" 
+                        alt="Camera Hồng Ngoại Soi Băng Chuyền" 
+                        className="w-full h-full object-cover object-center filter brightness-100 contrast-115 select-none pointer-events-none"
+                      />
+
+                      {/* Surveillance Camera HUD Frame */}
+                      <div className="absolute inset-0 pointer-events-none border-[10px] border-slate-950/40">
+                        <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-cyan-400" />
+                        <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-cyan-400" />
+                        <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-cyan-400" />
+                        <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-cyan-400" />
+                      </div>
+
+                      {/* Top Camera Information Banner */}
+                      <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-950/90 border border-rose-500/80 text-[10px] font-mono text-rose-400 font-bold backdrop-blur-md">
+                          <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                          ● LIVE REC [{selectedHub.cctvCam}]
+                        </span>
+                      </div>
+
+                      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleCaptureEvidence}
+                          className="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-black font-mono flex items-center gap-1.5 shadow-lg border border-indigo-400 cursor-pointer transition-all active:scale-95"
+                        >
+                          <Camera className="w-3.5 h-3.5" />
+                          CHỤP BẰNG CHỨNG
+                        </button>
+                      </div>
+
+                      {/* Dynamic Bounding Box Overlay on Packages */}
+                      <div className="absolute top-[48%] left-[30%] z-20 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                        <div className="px-2.5 py-1.5 rounded-lg bg-rose-950/95 border-2 border-rose-500 text-[10px] font-mono text-rose-300 shadow-2xl backdrop-blur-md animate-pulse">
+                          <div className="font-black text-rose-400 flex items-center gap-1">
+                            <AlertTriangle className="w-3.5 h-3.5 text-rose-400" /> PHÁT HIỆN GIAN LẬN (+1.500g)
+                          </div>
+                          <div className="text-[9px] text-white">Bưu cục cân: <b>1.850g</b> | AI Soi: <b className="text-emerald-400">350g</b></div>
+                          <div className="text-[9px] text-amber-300 font-bold">LỆCH: +1.500g (+32.000 đ/đơn)</div>
+                        </div>
+                      </div>
+
+                      <div className="absolute top-[43%] left-[68%] z-20 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none hidden sm:block">
+                        <div className="px-2.5 py-1.5 rounded-lg bg-emerald-950/90 border-2 border-emerald-500 text-[10px] font-mono text-emerald-300 shadow-xl backdrop-blur-md">
+                          <div className="font-black text-emerald-400">✓ CÂN NẶNG ĐẠT CHUẨN</div>
+                          <div className="text-[9px] text-white">420g | Khớp 100% SLA</div>
+                        </div>
+                      </div>
+
+                      {/* Bottom Camera Stats */}
+                      <div className="absolute bottom-3 left-4 right-4 z-20 flex items-center justify-between text-[10px] font-mono text-cyan-300 bg-slate-950/90 border border-cyan-800/80 rounded-lg px-3 py-1 backdrop-blur-md">
+                        <span>BĂNG CHUYỀN: 1.8 m/s • 43 KIỆN/PHÚT</span>
+                        <span className="text-amber-400 font-bold">NHIỆT ĐỘ: 18.2°C • LASER 3D ACTIVE</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ========================================= */}
+                  {/* MODE 3: KHÔNG ẢNH VỆ TINH KHO BÃI LOGISTICS */}
+                  {/* ========================================= */}
+                  {radarViewMode === 'SATELLITE_AERIAL' && (
+                    <div className="relative w-full h-[330px] sm:h-[390px] overflow-hidden">
+                      {/* Top-Down Satellite Photo Image */}
+                      <img 
+                        src="/images/satellite_hub_recon.jpg" 
+                        alt="Không ảnh Vệ tinh Kho Bãi Logistics" 
+                        className="w-full h-full object-cover object-center filter brightness-100 contrast-110 select-none pointer-events-none"
+                      />
+
+                      {/* Vignette Overlay */}
+                      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(2,6,23,0.7)_100%)]" />
+
+                      {/* Top Satellite Information Banner */}
+                      <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-950/90 border border-emerald-500/80 text-[10px] font-mono text-emerald-300 font-bold backdrop-blur-md">
+                          <Satellite className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                          KHÔNG ẢNH VỆ TINH 8K • {selectedHub.shortName.toUpperCase()}
+                        </span>
+                      </div>
+
+                      <div className="absolute top-4 right-4 z-20">
+                        <span className="px-2.5 py-1 rounded bg-slate-950/90 border border-slate-700 text-[10px] font-mono text-slate-300">
+                          ĐỘ CAO: 18.500m • GÓC: 144°
+                        </span>
+                      </div>
+
+                      {/* Center Target Reticle */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-2 border-emerald-400/80 border-dashed animate-spin [animation-duration:15s] flex items-center justify-center">
+                          <div className="w-12 h-12 rounded-full border border-emerald-300/60 flex items-center justify-center">
+                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bottom Info Banner */}
+                      <div className="absolute bottom-3 left-4 right-4 z-20 flex items-center justify-between text-[10px] font-mono text-emerald-300 bg-slate-950/90 border border-emerald-800/80 rounded-lg px-3 py-1 backdrop-blur-md">
+                        <span>BÃI CONTAINER &amp; CỬA XUẤT NHẬP TỰ ĐỘNG</span>
+                        <span className="text-white font-bold">TỌA ĐỘ: {selectedHub.gps}</span>
+                      </div>
+                    </div>
+                  )}
+
                 </div>
 
-                {/* Hub Quick Filter Selector Bar (Rất dễ bấm, không lo trượt) */}
-                <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800 flex flex-col gap-2">
+                {/* Tactical 12 Hub Selector Panel (Glassmorphism & Clean Regional Filter) */}
+                <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800 flex flex-col gap-2 shadow-lg">
                   <div className="flex items-center justify-between text-[11px]">
-                    <span className="font-bold text-slate-300">DANH SÁCH 12 TRẠM (CHỌN NHANH):</span>
+                    <span className="font-bold text-slate-200 flex items-center gap-1.5 font-mono">
+                      <Target className="w-3.5 h-3.5 text-indigo-400" />
+                      DANH SÁCH 12 MEGA HUB (CHỌN NHANH):
+                    </span>
+                    
                     {/* Region Filter Buttons */}
                     <div className="flex items-center gap-1">
                       {['ALL', 'Bắc', 'Trung', 'Nam'].map((reg) => (
@@ -799,17 +1083,21 @@ export default function LogisticsWarRoomModal({ isOpen, onClose }) {
                           type="button"
                           onClick={() => {
                             setSelectedHub(hub);
-                            if (soundEnabled) cyberSound.playSonarPing();
+                            if (soundEnabled) cyberSound.playTargetLock();
                           }}
                           className={`p-2 rounded-xl text-left border transition-all cursor-pointer flex items-center justify-between ${
                             isSelected 
-                              ? 'bg-indigo-950/80 border-indigo-500 text-white ring-1 ring-indigo-400' 
-                              : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:bg-slate-800'
+                              ? 'bg-indigo-950/80 border-indigo-500 text-white ring-1 ring-indigo-400 shadow-md' 
+                              : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:bg-slate-800 hover:border-slate-700'
                           }`}
                         >
                           <div className="min-w-0 pr-1">
                             <div className="text-[11px] font-bold truncate">#{hub.num} {hub.shortName}</div>
-                            <div className="text-[9px] text-slate-400">{hub.region}</div>
+                            <div className="text-[9px] text-slate-400 flex items-center gap-1">
+                              <span>{hub.region}</span>
+                              <span className="text-slate-500">•</span>
+                              <span className="text-rose-400 font-mono font-bold">{hub.overweightRate}</span>
+                            </div>
                           </div>
                           <span className={`w-2 h-2 rounded-full shrink-0 ${
                             hub.status === 'CRITICAL' ? 'bg-rose-500 animate-pulse' : hub.status === 'ALERT' ? 'bg-amber-500' : 'bg-emerald-500'
@@ -822,38 +1110,54 @@ export default function LogisticsWarRoomModal({ isOpen, onClose }) {
 
               </div>
 
-              {/* Right Column: Selected Hub Telemetry Analytics & Live Feed */}
-              <div className="lg:col-span-6 flex flex-col gap-3">
+              {/* Right Column (5 cols): Selected Hub Intelligence & Tactical Actions */}
+              <div className="lg:col-span-5 flex flex-col gap-3">
                 
                 {/* Hub Inspection Detail Card */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950 border border-indigo-500/30 shadow-xl">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-xl bg-indigo-600/30 text-indigo-400 flex items-center justify-center font-bold">
-                        {selectedHub.code}
-                      </div>
-                      <div>
-                        <h4 className="font-black text-sm text-white">{selectedHub.name}</h4>
-                        <span className="text-[10px] text-slate-400 font-mono">{selectedHub.region} • Bưu cục rủi ro: {selectedHub.topRiskCarrier}</span>
-                      </div>
+                <div className="p-4 rounded-2xl bg-slate-950 border border-indigo-500/30 shadow-2xl flex flex-col gap-3">
+                  
+                  {/* Top Hub Mini Snapshot & Identity */}
+                  <div className="flex items-center gap-3 pb-2 border-b border-slate-800/80">
+                    {/* Mini live preview camera thumbnail */}
+                    <div className="w-16 h-16 rounded-xl overflow-hidden border border-indigo-500/40 relative shrink-0 bg-slate-900">
+                      <img 
+                        src="/images/warehouse_cctv_scanner.jpg" 
+                        alt="Thumbnail" 
+                        className="w-full h-full object-cover filter brightness-90 contrast-125"
+                      />
+                      <span className="absolute bottom-0 inset-x-0 bg-slate-950/80 text-[7px] text-emerald-400 font-mono text-center font-bold">
+                        LIVE
+                      </span>
                     </div>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                      selectedHub.status === 'CRITICAL' 
-                        ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40 animate-pulse' 
-                        : selectedHub.status === 'ALERT'
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                        : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                    }`}>
-                      {selectedHub.status === 'CRITICAL' ? 'RỦI RO CAO' : selectedHub.status === 'ALERT' ? 'CẦN CHÚ Ý' : 'AN TOÀN'}
-                    </span>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono text-indigo-400 font-bold">
+                          {selectedHub.code} • TRẠM #{selectedHub.num}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${
+                          selectedHub.status === 'CRITICAL' 
+                            ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40 animate-pulse' 
+                            : selectedHub.status === 'ALERT'
+                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                            : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                        }`}>
+                          {selectedHub.status === 'CRITICAL' ? 'RỦI RO CAO' : selectedHub.status === 'ALERT' ? 'CẦN CHÚ Ý' : 'AN TOÀN'}
+                        </span>
+                      </div>
+                      <h4 className="font-black text-sm text-white truncate">{selectedHub.name}</h4>
+                      <p className="text-[10px] text-slate-400 font-mono truncate">
+                        GPS: {selectedHub.gps} • {selectedHub.region}
+                      </p>
+                    </div>
                   </div>
 
-                  <p className="text-xs text-slate-300 leading-relaxed mb-3.5 p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                  <p className="text-xs text-slate-300 leading-relaxed p-2.5 rounded-xl bg-slate-900 border border-slate-800">
                     {selectedHub.description}
                   </p>
 
                   {/* 4 Hub Metric Gauges */}
-                  <div className="grid grid-cols-2 gap-2 text-xs mb-3.5">
+                  <div className="grid grid-cols-2 gap-2 text-xs">
                     <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
                       <span className="text-[10px] text-slate-400 block font-medium">Tỷ lệ nhảy cân khống</span>
                       <span className="text-base font-black font-mono text-rose-400">{selectedHub.overweightRate}</span>
@@ -893,10 +1197,32 @@ export default function LogisticsWarRoomModal({ isOpen, onClose }) {
                       Bắt buộc chụp ảnh kiện hàng kèm thước đo và lưu biên bản bàn giao có chữ ký bưu tá để AI tự động so khớp đối soát.
                     </p>
                   </div>
+
+                  {/* 2 COMBAT QUICK ACTION BUTTONS */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleLaunchDisputeFromHub(selectedHub)}
+                      className="p-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white text-xs font-black font-mono flex items-center justify-center gap-1.5 shadow-lg shadow-rose-600/30 transition-all cursor-pointer active:scale-95"
+                    >
+                      <PhoneCall className="w-4 h-4" />
+                      <span>GỌI ĐÒI TIỀN NGAY</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleExportHubDossier(selectedHub)}
+                      className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-indigo-500/40 text-indigo-300 text-xs font-black font-mono flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span>XUẤT HỒ SƠ ĐỐI SOÁT</span>
+                    </button>
+                  </div>
+
                 </div>
 
                 {/* Real-time Incident Feed Stream */}
-                <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col gap-2">
+                <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col gap-2 shadow-lg">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-black text-slate-200 flex items-center gap-1.5 font-mono text-[11px]">
                       <Terminal className="w-3.5 h-3.5 text-emerald-400" />
