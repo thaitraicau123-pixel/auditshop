@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { SAMPLE_ORDERS } from './sampleData';
+import { SAMPLE_ORDERS } from './sampleData.js';
 
 /**
  * Làm sạch và chuyển đổi số tiền hoặc trọng lượng kiểu Việt Nam (1.000, 25,5, 1,2kg, 250g)
@@ -149,8 +149,9 @@ export function analyzeOrders(ordersData) {
         issueDetail: `Lỗi tính toán: Số lượng (${qty}) * Đơn giá (${price.toLocaleString('vi-VN')} đ) = ${correctSubtotal.toLocaleString('vi-VN')} đ, nhưng ô thành tiền gõ nhầm ${rawSubtotal.toLocaleString('vi-VN')} đ (Thất thoát trực tiếp ${diff.toLocaleString('vi-VN')} đ).`
       };
     }
-    // 1.2. Hàng Bom / Chuyển hoàn nhưng kế toán vẫn hạch toán ảo thu tiền về (chỉ áp dụng khi có tiền thực thu bất thường >= 100k ghi nhận về tài khoản)
+    // 1.2. Hàng Bom / Chuyển hoàn nhưng kế toán vẫn hạch toán ảo thu tiền về (chỉ áp dụng cho bảng kế toán bán hàng có đơn giá)
     else if (
+      price > 0 &&
       (status.toLowerCase().includes('bom') || (status.toLowerCase().includes('hoàn') && (status.toLowerCase().includes('chuyển') || status.toLowerCase().includes('không nhận') || status.toLowerCase().includes('boom')))) &&
       actualReceived >= 100000
     ) {
@@ -274,9 +275,15 @@ export function analyzeOrders(ordersData) {
       auditNote.includes('phụ phí') ||
       auditNote.includes('bất thường') ||
       auditNote.includes('ngâm') ||
-      auditNote.includes('chưa trả')
+      auditNote.includes('chưa trả') ||
+      auditNote.includes('chưa hoàn trả') ||
+      auditNote.includes('lưu kho') ||
+      auditNote.includes('quá hạn') ||
+      auditNote.includes('quá 8 ngày') ||
+      auditNote.includes('quá 7 ngày') ||
+      auditNote.includes('quá 10 ngày')
     ) {
-      if (auditNote.includes('hoàn') || auditNote.includes('ngâm') || auditNote.includes('chưa trả') || auditNote.includes('lưu kho')) {
+      if (auditNote.includes('hoàn') || auditNote.includes('ngâm') || auditNote.includes('chưa trả') || auditNote.includes('chưa hoàn trả') || auditNote.includes('lưu kho') || auditNote.includes('quá')) {
         const loss = cod > 0 ? cod : billedFee;
         totalReturnLeakage += loss;
         issue = {
@@ -318,7 +325,10 @@ export function analyzeOrders(ordersData) {
       status.toLowerCase().includes("lưu kho") ||
       status.toLowerCase().includes("thất lạc") ||
       status.toLowerCase().includes("mất hàng") ||
-      (status.toLowerCase().includes("hoàn") && (auditNote.includes('ngâm') || auditNote.includes('chưa trả') || auditNote.includes('thất lạc')))
+      status.toLowerCase().includes("> 7 ngày") ||
+      status.toLowerCase().includes("> 8 ngày") ||
+      status.toLowerCase().includes("> 10 ngày") ||
+      (status.toLowerCase().includes("hoàn") && (auditNote.includes('ngâm') || auditNote.includes('chưa trả') || auditNote.includes('chưa hoàn trả') || auditNote.includes('lưu kho') || auditNote.includes('thất lạc') || auditNote.includes('quá')))
     ) {
       const loss = cod > 0 ? cod : 250000;
       totalReturnLeakage += loss;
@@ -408,21 +418,17 @@ export function analyzeOrders(ordersData) {
  * - Tự động nhận diện các cột đã tính sẵn chênh lệch cước, chênh lệch cân nặng
  * - Loại bỏ các dòng tổng cộng / thống kê
  */
-export async function parseExcelFile(file, aiSchema = null) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+/**
+ * Phân tích workbook SheetJS thành danh sách đơn hàng đã chuẩn hóa
+ */
+export function parseExcelWorkbook(workbook) {
+  const firstSheetName = workbook.SheetNames[0];
+  const worksheet = workbook.Sheets[firstSheetName];
+  const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-    reader.onload = (e) => {
-      try {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-        if (json.length < 2) {
-          throw new Error("File Excel không có dữ liệu đơn hàng.");
-        }
+  if (json.length < 2) {
+    throw new Error("File Excel không có dữ liệu đơn hàng.");
+  }
 
         // Chuyển đổi an toàn mọi hàng thành mảng chuỗi chuẩn
         const getSafeRowStrings = (row) => {
@@ -659,12 +665,33 @@ export async function parseExcelFile(file, aiSchema = null) {
           });
         }
 
+  return rows;
+}
+
+/**
+ * Phân tích trực tiếp buffer file Excel (Dành cho Node.js hoặc testing)
+ */
+export function parseExcelBuffer(buffer) {
+  const workbook = XLSX.read(buffer, { type: 'buffer' });
+  return parseExcelWorkbook(workbook);
+}
+
+/**
+ * Đọc file Excel từ File Input trong trình duyệt
+ */
+export async function parseExcelFile(file, aiSchema = null) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const rows = parseExcelWorkbook(workbook);
         resolve(rows);
       } catch (err) {
         reject(err);
       }
     };
-
     reader.onerror = (err) => reject(err);
     reader.readAsArrayBuffer(file);
   });
