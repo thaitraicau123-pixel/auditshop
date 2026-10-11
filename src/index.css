@@ -73,3 +73,38 @@
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }
+
+/* Pet Mascot Animations */
+@keyframes pet-wag {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+
+@keyframes pet-bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.03); }
+}
+
+@keyframes pet-nod {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(6deg); }
+}
+
+.animate-pet-wag {
+  animation: pet-wag 2s ease-in-out infinite;
+}
+
+.animate-pet-bounce {
+  animation: pet-bounce 1.6s ease-in-out infinite;
+}
+
+.animate-pet-nod {
+  animation: pet-nod 2.2s ease-in-out infinite;
+}
+
+/* Cute pill hover bounce */
+.hover-pet-shake:hover .pet-icon {
+  animation: pet-wag 0.5s ease-in-out infinite;
+}
+

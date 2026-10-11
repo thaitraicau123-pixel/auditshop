@@ -10,10 +10,10 @@ export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = nu
 
   // Mức ủng hộ mặc định
   const PRESET_AMOUNTS = [
-    { amount: 15000, label: 'Cốc trà đá', icon: '🥤', desc: 'Ủng hộ thanh mát' },
-    { amount: 25000, label: 'Ly cà phê muối', icon: '☕', desc: 'Tiếp năng lượng code', popular: true },
-    { amount: 50000, label: 'Bữa cơm trưa', icon: '🍱', desc: 'Ấm lòng lập trình viên' },
-    { amount: 100000, label: 'Tiếp sức Server AI', icon: '🚀', desc: 'Duy trì máy chủ 1 tuần' }
+    { amount: 15000, label: 'Cốc trà đá', icon: '🥤', desc: 'Thanh mát & 1 cái bánh quy cho cún 🐶' },
+    { amount: 25000, label: 'Ly cà phê muối', icon: '☕', desc: 'Tiếp sức dev & cây xúc xích cho mèo 🐱', popular: true },
+    { amount: 50000, label: 'Bữa cơm trưa', icon: '🍱', desc: 'Ấm lòng dev + hộp pate cho cún mèo 🍖' },
+    { amount: 100000, label: 'Tiếp sức Server AI', icon: '🚀', desc: 'Duy trì máy chủ 1 tuần + bao hạt to ✨' }
   ];
 
   const [selectedAmount, setSelectedAmount] = useState(25000);
@@ -57,10 +57,10 @@ export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = nu
 
   // Danh sách các shop đã ủng hộ gần đây (Social Proof)
   const RECENT_SUPPORTERS = [
-    { name: 'Shop Mẹ & Bé Hà Nội', amount: '50.000 đ', note: 'Đòi lại được 2.3 củ GHTK, cảm ơn dev!' },
+    { name: 'Shop Mẹ & Bé Hà Nội', amount: '50.000 đ', note: 'Đòi lại được 2.3 củ GHTK, cún mèo ăn ngon nha!' },
     { name: 'Gia Dụng Thông Minh SG', amount: '100.000 đ', note: 'Tool quá đỉnh cao, tiếp sức server nhé!' },
     { name: 'Kho Sỉ Thời Trang Mía', amount: '25.000 đ', note: 'Mời ly cà phê muối! Buôn may bán đắt nha!' },
-    { name: 'Phụ Kiện Điện Thoại Z', amount: '50.000 đ', note: 'Rà ra 18 đơn ngâm hoàn quá hạn, quá xịn!' }
+    { name: 'Phụ Kiện Điện Thoại Z', amount: '50.000 đ', note: 'Rà ra 18 đơn ngâm hoàn, thưởng cún hộp pate!' }
   ];
 
   return (
@@ -76,14 +76,18 @@ export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = nu
 
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-400 text-white flex items-center justify-center mx-auto mb-3 shadow-lg shadow-amber-500/25">
-            <Coffee className="w-8 h-8" />
-            <Heart className="w-4 h-4 text-rose-300 fill-rose-300 absolute -top-1 -right-1 animate-bounce" />
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="text-3xl animate-pet-wag">🐶</span>
+            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-400 text-white flex items-center justify-center shadow-lg shadow-amber-500/25">
+              <Coffee className="w-7 h-7" />
+              <Heart className="w-4 h-4 text-rose-300 fill-rose-300 absolute -top-1 -right-1 animate-bounce" />
+            </div>
+            <span className="text-3xl animate-pet-bounce">🐱</span>
           </div>
 
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold uppercase tracking-wider mb-2">
             <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-            <span>Tiếp Sức Đội Ngũ Phát Triển</span>
+            <span>Tiếp Sức Đội Ngũ Phát Triển & Nuôi Cún Mèo</span>
           </div>
 
           <h3 className="text-2xl font-black text-slate-900 tracking-tight">

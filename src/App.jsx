@@ -17,6 +17,7 @@ import RoiCalculator from './components/RoiCalculator';
 import Testimonials from './components/Testimonials';
 import Footer from './components/Footer';
 import CoffeeDonateModal from './components/CoffeeDonateModal';
+import PetCompanionWidget from './components/PetCompanionWidget';
 import { analyzeOrders } from './utils/auditEngine';
 import { syncLocalAccountsToCloud, fetchCloudAccounts } from './utils/cloudDatabase';
 import { CURRENT_SYSTEM_VERSION } from './data/changelog';
@@ -300,6 +301,7 @@ export default function App() {
         }}
         soundEnabled={soundEnabled}
         onToggleSound={handleToggleSound}
+        onOpenCoffeeModal={handleOpenCoffeeModal}
       />
 
       <main className="flex-1">
@@ -466,6 +468,9 @@ export default function App() {
         onClose={() => setIsCoffeeModalOpen(false)}
         defaultContext={coffeeModalContext}
       />
+
+      {/* 🐶🐱 Thú Cưng Mini Đồng Hành (Cún Soi Cước & Mèo Thần Tài) */}
+      <PetCompanionWidget onOpenCoffeeModal={handleOpenCoffeeModal} />
     </div>
   );
 }

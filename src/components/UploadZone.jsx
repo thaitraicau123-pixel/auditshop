@@ -210,72 +210,98 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
         </div>
 
         {isScanning ? (
-          <div className="py-10 sm:py-14 text-center max-w-xl mx-auto">
-            {/* Holographic Radar Scanner HUD */}
-            <div className="relative w-28 h-28 mx-auto mb-6 flex items-center justify-center">
-              {/* Outer pulsing ring */}
-              <div className="absolute inset-0 rounded-full border-2 border-indigo-400/30 animate-ping opacity-25" />
-              <div className="absolute inset-1.5 rounded-full border border-indigo-500/20" />
-              <div className="absolute inset-4 rounded-full border border-indigo-500/30 border-dashed animate-spin" style={{ animationDuration: '8s' }} />
-              {/* Radar sweep beam */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-indigo-600/30 via-blue-500/10 to-transparent animate-radar" />
+          <div className="py-8 sm:py-12 text-center max-w-lg mx-auto animate-fadeIn">
+            {/* Top Mascot Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-900 text-xs font-bold uppercase tracking-wider mb-5 shadow-2xs">
+              <span className="text-base animate-pet-wag">🐶</span>
+              <span>Cún Soi Cước & Mèo Thần Tài</span>
+              <span className="text-base animate-pet-bounce">🐱</span>
+              <span className="text-slate-300 mx-0.5">•</span>
+              <span className="font-mono text-indigo-700 font-black">{scanProgress}%</span>
+            </div>
+
+            {/* Clean Circular HUD Core (Đỡ rối mắt, thẩm mỹ cao) */}
+            <div className="relative w-36 h-36 mx-auto mb-6 flex items-center justify-center">
+              {/* Soft background pulse */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-indigo-500/10 to-blue-500/10 blur-xl animate-pulse" />
               
-              {/* Center Holographic Core */}
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-xl shadow-indigo-500/30 z-10">
-                <Bot className="w-7 h-7 animate-pulse" />
+              {/* SVG Circular Progress Ring */}
+              <svg className="w-36 h-36 -rotate-90 transform" viewBox="0 0 100 100">
+                {/* Track circle */}
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="42"
+                  className="stroke-slate-100"
+                  strokeWidth="6"
+                  fill="transparent"
+                />
+                {/* Progress bar circle */}
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="42"
+                  className="stroke-indigo-600 transition-all duration-300 ease-out"
+                  strokeWidth="6"
+                  strokeDasharray="264"
+                  strokeDashoffset={264 - (264 * scanProgress) / 100}
+                  strokeLinecap="round"
+                  fill="transparent"
+                />
+              </svg>
+
+              {/* Inside Center: Animated Pet Mascot & Progress % */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <div className="text-3xl mb-0.5 transition-transform duration-300 transform scale-110">
+                  {scanStageIndex === 0 && <span className="animate-pet-wag inline-block">🐶🔎</span>}
+                  {scanStageIndex === 1 && <span className="animate-pet-bounce inline-block">🐶⚖️🐱</span>}
+                  {scanStageIndex === 2 && <span className="animate-pet-nod inline-block">🐱🧮</span>}
+                  {scanStageIndex >= 3 && <span className="animate-bounce inline-block">🐶✨🐱</span>}
+                </div>
+                <div className="font-mono text-xl font-black text-slate-900 tracking-tight">
+                  {scanProgress}%
+                </div>
               </div>
             </div>
 
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/80 text-xs font-bold uppercase tracking-wider mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600 animate-spin" />
-              <span>Cỗ Máy AI Đang Quét Sâu Dữ Liệu</span>
-              <span className="font-mono text-indigo-900 font-black">{scanProgress}%</span>
-            </div>
-
-            <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">
-              Đang Kiểm Toán Bảng Kê Vận Chuyển...
+            {/* Friendly Dialogue / Step Message */}
+            <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 mb-1.5 flex items-center justify-center gap-1.5">
+              <span>Đang Rà Soát Bảng Kê...</span>
             </h3>
-            <p className="text-xs sm:text-sm font-semibold text-indigo-600 font-mono mb-6">
-              {scanStep}
+
+            <p className="text-xs sm:text-sm font-semibold text-indigo-700 bg-indigo-50/80 py-2 px-4 rounded-xl border border-indigo-100 max-w-md mx-auto mb-6">
+              {scanStageIndex === 0 && `🐶 [Cún Soi Cước]: "Gâu gâu! Em đang đọc file và bỏ qua banner đầu trang..."`}
+              {scanStageIndex === 1 && `⚖️ [AI Thẩm Định]: "Đang soi từng gam cân nặng thực tế và thể tích DxRxC..."`}
+              {scanStageIndex === 2 && `🐱 [Mèo Thần Tài]: "Meo meo! Đang đếm lại tiền cước và phụ phí vùng xa..."`}
+              {scanStageIndex >= 3 && `✨ [Bảo Vệ Doanh Thu]: "Rà soát đơn hoàn ngâm > 72h & tiền thu hộ COD!"`}
             </p>
 
-            {/* Glowing Progress bar */}
-            <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200 mb-6">
-              <div 
-                className="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 rounded-full transition-all duration-300 ease-out shadow-xs"
-                style={{ width: `${scanProgress}%` }}
-              />
-            </div>
-
-            {/* 4 Interactive Scanning Stages Checklist */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left">
-              {SCAN_STAGES.map((stage, idx) => {
+            {/* 4 Clean Horizontal Step Pills (Tinh gọn, không choán diện tích) */}
+            <div className="grid grid-cols-4 gap-1.5 sm:gap-2 max-w-md mx-auto">
+              {[
+                { title: "Đọc file", icon: "📂" },
+                { title: "Cân nặng", icon: "⚖️" },
+                { title: "Cước phí", icon: "💰" },
+                { title: "Hàng hoàn", icon: "📦" }
+              ].map((step, idx) => {
                 const isPassed = scanStageIndex > idx;
                 const isCurrent = scanStageIndex === idx;
 
                 return (
-                  <div 
+                  <div
                     key={idx}
-                    className={`p-2.5 rounded-xl border text-xs flex items-center gap-2.5 transition-all ${
-                      isPassed 
-                        ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900' 
-                        : isCurrent 
-                          ? 'bg-indigo-50 border-indigo-300 text-indigo-950 ring-1 ring-indigo-400 font-bold'
-                          : 'bg-slate-50/60 border-slate-200 text-slate-400'
+                    className={`py-2 px-1.5 rounded-xl border text-[11px] font-bold text-center transition-all ${
+                      isPassed
+                        ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                        : isCurrent
+                          ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs ring-2 ring-indigo-200'
+                          : 'bg-slate-50 border-slate-200 text-slate-400'
                     }`}
                   >
-                    <div className="text-base shrink-0">{stage.icon}</div>
-                    <div className="truncate flex-1">
-                      <span className="font-mono text-[10px] opacity-75 mr-1">[0{idx + 1}/04]</span>
-                      <span>{stage.title}</span>
+                    <div className="text-xs mb-0.5">
+                      {isPassed ? '✅' : step.icon}
                     </div>
-                    {isPassed ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    ) : isCurrent ? (
-                      <Loader2 className="w-3.5 h-3.5 text-indigo-600 animate-spin shrink-0" />
-                    ) : (
-                      <div className="w-3.5 h-3.5 rounded-full border border-slate-300 shrink-0" />
-                    )}
+                    <div className="truncate text-[10px] sm:text-[11px]">{step.title}</div>
                   </div>
                 );
               })}
@@ -303,8 +329,20 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
                 className="hidden" 
               />
 
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-center text-indigo-600 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-xs">
+              <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-center text-indigo-600 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-xs relative">
                 <UploadCloud className="w-8 h-8" />
+                <span className="absolute -top-1.5 -right-1.5 text-base animate-pet-wag">🐶</span>
+                <span className="absolute -bottom-1.5 -left-1.5 text-base animate-pet-bounce">🐱</span>
+              </div>
+
+              {/* Cute Pet Assistant Badges */}
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <span className="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold inline-flex items-center gap-1">
+                  <span>🐶</span> Cún canh nấc cân
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-800 border border-rose-200 text-[11px] font-bold inline-flex items-center gap-1">
+                  <span>🐱</span> Mèo đếm tiền COD
+                </span>
               </div>
 
               <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 mb-1.5">
@@ -331,7 +369,8 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
             <div className="mt-6 pt-5 border-t border-slate-100">
               <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                 <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                  <span className="text-base animate-pet-wag">🐶</span>
+                  <span className="text-base animate-pet-bounce">🐱</span>
                   <span>Chưa có file sẵn? Thử ngay bảng kê mẫu đa hãng (1-Click AI Test):</span>
                 </span>
                 <button
@@ -348,10 +387,10 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
                 <button
                   type="button"
                   onClick={() => handleSelectSampleCarrier('GHTK')}
-                  className="p-2.5 rounded-xl bg-emerald-50/70 hover:bg-emerald-100/80 border border-emerald-200 text-emerald-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
+                  className="p-2.5 rounded-xl bg-emerald-50/70 hover:bg-emerald-100/80 border border-emerald-200 text-emerald-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs group"
                   title="Quét thử bảng kê GHTK 50 đơn"
                 >
-                  <span className="text-base">🟢</span>
+                  <span className="text-base group-hover:animate-pet-wag">🐶</span>
                   <span>GHTK</span>
                   <span className="text-[10px] text-emerald-700 font-mono font-medium">50 đơn</span>
                 </button>
@@ -359,10 +398,10 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
                 <button
                   type="button"
                   onClick={() => handleSelectSampleCarrier('GHN')}
-                  className="p-2.5 rounded-xl bg-orange-50/70 hover:bg-orange-100/80 border border-orange-200 text-orange-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
+                  className="p-2.5 rounded-xl bg-orange-50/70 hover:bg-orange-100/80 border border-orange-200 text-orange-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs group"
                   title="Quét thử bảng kê GHN 50 đơn"
                 >
-                  <span className="text-base">🟠</span>
+                  <span className="text-base group-hover:animate-pet-bounce">🐱</span>
                   <span>GHN</span>
                   <span className="text-[10px] text-orange-700 font-mono font-medium">50 đơn</span>
                 </button>
@@ -370,10 +409,10 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
                 <button
                   type="button"
                   onClick={() => handleSelectSampleCarrier('VTP')}
-                  className="p-2.5 rounded-xl bg-rose-50/70 hover:bg-rose-100/80 border border-rose-200 text-rose-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
+                  className="p-2.5 rounded-xl bg-rose-50/70 hover:bg-rose-100/80 border border-rose-200 text-rose-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs group"
                   title="Quét thử bảng kê Viettel Post 80 đơn"
                 >
-                  <span className="text-base">🔴</span>
+                  <span className="text-base group-hover:animate-pet-wag">🐶</span>
                   <span>Viettel Post</span>
                   <span className="text-[10px] text-rose-700 font-mono font-medium">80 đơn</span>
                 </button>
@@ -381,10 +420,10 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
                 <button
                   type="button"
                   onClick={() => handleSelectSampleCarrier('SPX')}
-                  className="p-2.5 rounded-xl bg-blue-50/70 hover:bg-blue-100/80 border border-blue-200 text-blue-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
+                  className="p-2.5 rounded-xl bg-blue-50/70 hover:bg-blue-100/80 border border-blue-200 text-blue-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs group"
                   title="Quét thử bảng kê Shopee Xpress 65 đơn"
                 >
-                  <span className="text-base">🔵</span>
+                  <span className="text-base group-hover:animate-pet-bounce">🐱</span>
                   <span>SPX Shopee</span>
                   <span className="text-[10px] text-blue-700 font-mono font-medium">65 đơn</span>
                 </button>
@@ -392,10 +431,10 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
                 <button
                   type="button"
                   onClick={() => handleSelectSampleCarrier('TIKTOK')}
-                  className="p-2.5 rounded-xl bg-purple-50/70 hover:bg-purple-100/80 border border-purple-200 text-purple-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
+                  className="p-2.5 rounded-xl bg-purple-50/70 hover:bg-purple-100/80 border border-purple-200 text-purple-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs group"
                   title="Quét thử bảng kê TikTok Shop 60 đơn"
                 >
-                  <span className="text-base">🎵</span>
+                  <span className="text-base group-hover:animate-pet-wag">🐶</span>
                   <span>TikTok Shop</span>
                   <span className="text-[10px] text-purple-700 font-mono font-medium">60 đơn</span>
                 </button>
@@ -403,10 +442,10 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
                 <button
                   type="button"
                   onClick={() => handleSelectSampleCarrier('CLEAN_100')}
-                  className="p-2.5 rounded-xl bg-teal-50/70 hover:bg-teal-100/80 border border-teal-200 text-teal-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
+                  className="p-2.5 rounded-xl bg-teal-50/70 hover:bg-teal-100/80 border border-teal-200 text-teal-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs group"
                   title="Quét thử bảng kê chuẩn 100% không lệch đồng nào"
                 >
-                  <span className="text-base">🏆</span>
+                  <span className="text-base group-hover:animate-pet-bounce">🐱✨</span>
                   <span>Chuẩn 100%</span>
                   <span className="text-[10px] text-teal-700 font-mono font-medium">0 lỗi</span>
                 </button>
@@ -414,10 +453,10 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
                 <button
                   type="button"
                   onClick={() => handleSelectSampleCarrier('ALL_300')}
-                  className="col-span-2 sm:col-span-1 p-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-md shadow-indigo-500/20"
+                  className="col-span-2 sm:col-span-1 p-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-md shadow-indigo-500/20 group"
                   title="Quét thử bảng kê lớn 300 đơn đa hãng"
                 >
-                  <span className="text-base">⚡</span>
+                  <span className="text-base group-hover:animate-bounce">🐶⚡🐱</span>
                   <span>Full 300 Đơn</span>
                   <span className="text-[10px] text-indigo-100 font-mono font-medium">Thực tế</span>
                 </button>
