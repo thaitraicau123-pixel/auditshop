@@ -26,8 +26,7 @@ export default function Navbar({
   onOpenRateCompare,
   onOpenQuickAudit,
   onOpenDisputePlaybook,
-  onOpenDamageClaim,
-  onOpenWarRoom
+  onOpenDamageClaim
 }) {
   const [isToolsDropdownOpen, setIsToolsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -100,19 +99,6 @@ export default function Navbar({
         {/* Navigation & Controls */}
         <nav className="flex items-center gap-1.5 sm:gap-2">
 
-          {/* 🛰️ RADAR & VOICE AI BUTTON */}
-          <button
-            type="button"
-            onClick={onOpenWarRoom}
-            className="text-xs sm:text-sm font-extrabold px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white shadow-md shadow-indigo-500/25 transition-all flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95 group"
-            title="Mở Phòng Tác Chiến Radar Vệ Tinh 63 Tỉnh Thành & Tổng Đài Voice AI Đòi Tiền"
-          >
-            <Radio className="w-3.5 h-3.5 text-emerald-300 animate-spin-slow group-hover:scale-110" />
-            <span className="hidden sm:inline">Radar &amp; Voice AI</span>
-            <span className="sm:hidden">Radar</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-          </button>
-
           {/* ⚔️ & 📊 BỘ CÔNG CỤ ĐỐI SOÁT DROPDOWN */}
           <div className="relative" ref={dropdownRef}>
             <button
@@ -135,33 +121,11 @@ export default function Navbar({
                     Bộ Công Cụ Cứu Tiền Chuyên Sâu
                   </span>
                   <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-full">
-                    6 Tiện ích đỉnh cao
+                    5 Tiện ích chuyên sâu
                   </span>
                 </div>
 
                 <div className="p-1 space-y-1">
-                  {/* Master Tool: Phòng tác chiến Radar */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsToolsDropdownOpen(false);
-                      if (onOpenWarRoom) onOpenWarRoom();
-                    }}
-                    className="w-full text-left p-2.5 rounded-xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-blue-500/10 hover:from-purple-500/20 hover:to-blue-500/20 border border-purple-200/60 dark:border-purple-800/60 transition-colors flex items-start gap-3 cursor-pointer group mb-1"
-                  >
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-xs">
-                      <Satellite className="w-5 h-5 animate-pulse" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-black text-indigo-950 dark:text-white">🛰️ Radar Vệ Tinh &amp; Voice AI Đòi Tiền</span>
-                        <span className="text-[9px] font-black bg-rose-500 text-white px-1.5 py-0.2 rounded-full animate-pulse">SIÊU CÔNG NGHỆ</span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
-                        Soi 12 Mega Hub 63 tỉnh &amp; Mô phỏng cuộc gọi Voice AI đòi tiền
-                      </p>
-                    </div>
-                  </button>
                   {/* Tool 1: So khớp 2 chiều */}
                   <button
                     type="button"

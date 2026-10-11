@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   ShieldAlert, ShieldCheck, Zap, Clock, Scale, CheckCircle2, 
-  ArrowLeftRight, Calculator, Search, MessageSquareQuote, Camera, Sparkles, Radio
+  ArrowLeftRight, Calculator, Search, MessageSquareQuote, Camera, Sparkles
 } from 'lucide-react';
 
 export default function Hero({ 
@@ -10,8 +10,7 @@ export default function Hero({
   onOpenRateCompare,
   onOpenQuickAudit,
   onOpenDisputePlaybook,
-  onOpenDamageClaim,
-  onOpenWarRoom
+  onOpenDamageClaim
 }) {
   return (
     <section className="relative pt-10 sm:pt-16 pb-12 overflow-hidden bg-tech-grid">
@@ -42,16 +41,6 @@ export default function Hero({
 
         {/* 🚀 QUICK ACTION SHORTCUT PILLS FOR NEW TOOLS */}
         <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 max-w-4xl mx-auto mb-8">
-          <button
-            type="button"
-            onClick={onOpenWarRoom}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-xs font-black shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer ring-2 ring-indigo-400/50 animate-pulse"
-          >
-            <Radio className="w-4 h-4 text-emerald-300 animate-spin-slow" />
-            <span>🛰️ Tác Chiến Radar &amp; Voice AI (MỚI)</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-          </button>
-
           <button
             type="button"
             onClick={onOpenCrossReconcile}
