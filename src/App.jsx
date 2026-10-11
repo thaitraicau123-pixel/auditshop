@@ -88,6 +88,42 @@ export default function App() {
   const [aiDiagnosis, setAiDiagnosis] = useState(null);
   const [isLoadingAi, setIsLoadingAi] = useState(false);
 
+  // Sound FX State (Bật/tắt âm thanh hiệu ứng toàn trang)
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    try {
+      return localStorage.getItem('soatdon_sound_enabled') !== 'false';
+    } catch {
+      return true;
+    }
+  });
+
+  const handleToggleSound = () => {
+    setSoundEnabled(prev => {
+      const next = !prev;
+      localStorage.setItem('soatdon_sound_enabled', String(next));
+      return next;
+    });
+  };
+
+  // Phím tắt toàn cục ESC đóng tất cả các modal
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsEmergencyModalOpen(false);
+        setIsVictoryModalOpen(false);
+        setIsPaymentModalOpen(false);
+        setIsTemplateModalOpen(false);
+        setIsAuthModalOpen(false);
+        setIsProfileModalOpen(false);
+        setIsHistoryModalOpen(false);
+        setIsAdminModalOpen(false);
+        setIsChangelogOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const handleAuditComplete = (orders, name, aiResult) => {
     // 1. Phân tích số liệu chuẩn
     const baseResult = analyzeOrders(orders);
@@ -251,6 +287,8 @@ export default function App() {
           setIsChangelogOpen(true);
           setIsAutoChangelog(false);
         }}
+        soundEnabled={soundEnabled}
+        onToggleSound={handleToggleSound}
       />
 
       <main className="flex-1">
@@ -262,6 +300,7 @@ export default function App() {
           onAuditComplete={handleAuditComplete} 
           lastScan={scanHistory[0]}
           onOpenHistory={() => setIsHistoryModalOpen(true)}
+          soundEnabled={soundEnabled}
         />
 
         {/* Results Dashboard if audited */}

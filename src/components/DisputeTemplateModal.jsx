@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Copy, Check, FileCheck, Mail, Send, Info, Sparkles, Bot, Loader2 } from 'lucide-react';
+import { X, Copy, Check, FileCheck, Mail, Send, Info, Sparkles, Bot, Loader2, Printer } from 'lucide-react';
 import { DISPUTE_TEMPLATES } from '../utils/exportDispute';
 import { aiGenerateDisputeScript } from '../utils/aiAuditor';
 
@@ -17,6 +17,84 @@ export default function DisputeTemplateModal({ isOpen, onClose, anomalies }) {
     navigator.clipboard.writeText(activeText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handlePrintFormalLetter = () => {
+    const printWindow = window.open('', '_blank', 'width=850,height=900');
+    if (!printWindow) {
+      window.print();
+      return;
+    }
+
+    const today = new Date();
+    const dateStr = `Ngày ${today.getDate()} tháng ${today.getMonth() + 1} năm ${today.getFullYear()}`;
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Bien_Ban_Khieu_Nai_${carrier}_${Date.now()}</title>
+          <style>
+            @page { size: A4; margin: 20mm; }
+            body { font-family: "Times New Roman", Times, serif; font-size: 13.5pt; line-height: 1.5; color: #000; margin: 0; padding: 24px; }
+            .header-top { text-align: center; font-weight: bold; margin-bottom: 25px; }
+            .header-top h3 { margin: 0; font-size: 13pt; text-transform: uppercase; }
+            .header-top h4 { margin: 5px 0 0 0; font-size: 13.5pt; }
+            .header-top hr { width: 180px; border: none; border-top: 1px solid #000; margin: 8px auto 0 auto; }
+            .date-right { text-align: right; font-style: italic; margin-bottom: 25px; font-size: 12.5pt; }
+            .title { text-align: center; font-size: 16pt; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; }
+            .subtitle { text-align: center; font-style: italic; font-size: 12pt; margin-bottom: 25px; }
+            .content { white-space: pre-wrap; font-family: "Times New Roman", Times, serif; font-size: 13pt; line-height: 1.6; text-align: justify; }
+            .signatures { margin-top: 55px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+            .sig-block { text-align: center; width: 45%; }
+            .sig-title { font-weight: bold; font-size: 12.5pt; text-transform: uppercase; }
+            .sig-subtitle { font-style: italic; font-size: 11pt; margin-bottom: 75px; }
+            .sig-name { font-weight: bold; font-size: 12.5pt; }
+            .footer-note { margin-top: 40px; font-size: 10pt; font-style: italic; color: #555; border-top: 1px dashed #aaa; padding-top: 8px; }
+          </style>
+        </head>
+        <body>
+          <div class="header-top">
+            <h3>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</h3>
+            <h4>Độc lập – Tự do – Hạnh phúc</h4>
+            <hr />
+          </div>
+
+          <div class="date-right">..., ${dateStr}</div>
+
+          <div class="title">ĐƠN KHIẾU NẠI & YÊU CẦU BỒI HOÀN CƯỚC VẬN CHUYỂN</div>
+          <div class="subtitle">(V/v: Sai lệch nấc cân nặng / Cước phí bất thường / Đơn hoàn ngâm quá hạn quy chế)</div>
+
+          <div class="content">${activeText.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+
+          <div class="signatures">
+            <div class="sig-block">
+              <div class="sig-title">ĐẠI DIỆN ĐƠN VỊ VẬN CHUYỂN (${carrier})</div>
+              <div class="sig-subtitle">(Ký, ghi rõ họ tên và đóng dấu xác nhận)</div>
+              <div class="sig-name">...................................................</div>
+            </div>
+
+            <div class="sig-block">
+              <div class="sig-title">NGƯỜI LÀM ĐƠN KHIẾU NẠI</div>
+              <div class="sig-subtitle">(Ký và ghi rõ họ tên)</div>
+              <div class="sig-name">Đại diện Chủ Shop</div>
+            </div>
+          </div>
+
+          <div class="footer-note">
+            * Văn bản được trích xuất tự động từ Nền tảng SoatDon.vn – Kèm theo phụ lục danh sách chi tiết các mã vận đơn bị sai sót đối soát.
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.focus();
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   const handleAiDraft = async () => {
@@ -52,7 +130,7 @@ export default function DisputeTemplateModal({ isOpen, onClose, anomalies }) {
             </div>
             <div>
               <h3 className="text-xl font-bold text-slate-900">Mẫu thư khiếu nại bồi hoàn chuẩn</h3>
-              <p className="text-xs text-slate-500">Sao chép nội dung này gửi email hoặc gửi group Zalo của bưu cục/CSKH</p>
+              <p className="text-xs text-slate-500">Gửi email / Zalo bưu cục hoặc in biên bản nộp trực tiếp</p>
             </div>
           </div>
 
@@ -91,13 +169,23 @@ export default function DisputeTemplateModal({ isOpen, onClose, anomalies }) {
           <pre className="w-full h-64 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-800 font-mono overflow-y-auto whitespace-pre-wrap leading-relaxed select-text shadow-inner">
             {activeText}
           </pre>
-          <button
-            onClick={handleCopy}
-            className="absolute top-3 right-3 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95 cursor-pointer"
-          >
-            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            <span>{copied ? 'Đã sao chép!' : 'Sao chép thư'}</span>
-          </button>
+          <div className="absolute top-3 right-3 flex items-center gap-2">
+            <button
+              onClick={handlePrintFormalLetter}
+              className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer"
+              title="In công văn khiếu nại trang trọng hoặc xuất ra file PDF nộp bưu cục"
+            >
+              <Printer className="w-3.5 h-3.5 text-slate-600" />
+              <span>In Biên Bản / PDF</span>
+            </button>
+            <button
+              onClick={handleCopy}
+              className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95 cursor-pointer"
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              <span>{copied ? 'Đã sao chép!' : 'Sao chép thư'}</span>
+            </button>
+          </div>
         </div>
 
         {/* 3 Step Guide to Dispute */}

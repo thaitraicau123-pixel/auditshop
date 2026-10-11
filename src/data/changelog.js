@@ -3,14 +3,81 @@
  * Lưu trữ phiên bản, thời gian phát hành và toàn bộ tính năng mới đã thêm.
  */
 
-export const CURRENT_SYSTEM_VERSION = 'v2.7';
+export const CURRENT_SYSTEM_VERSION = 'v2.8';
 
 export const CHANGELOG_HISTORY = [
+  {
+    version: 'v2.8',
+    releaseDate: '11/10/2026 - 19:40',
+    title: '✨ Đại Tu Toàn Diện Trải Nghiệm Người Dùng (UI/UX 2.0) & Holographic Radar Scanner',
+    isCurrent: true,
+    badges: ['Holographic Scanner', 'Web Audio FX', 'Carrier Ranking', 'Smart Filter', 'Print PDF'],
+    summary: 'Cải tiến mạnh mẽ giao diện SaaS cao cấp, hiệu ứng quét AI Holographic Radar HUD, âm thanh sinh động Web Audio, biểu đồ phân bổ tổn thất, bảng xếp hạng rủi ro hãng vận chuyển, công cụ lọc & tìm kiếm đơn bất thường tức thì, và tính năng In Biên Bản Khiếu Nại chuẩn A4/PDF gửi bưu cục.',
+    categories: [
+      {
+        name: 'Giao diện & Hiệu ứng tương tác đỉnh cao',
+        tag: 'UI/UX',
+        color: 'emerald',
+        items: [
+          {
+            title: 'Holographic Radar Scanner HUD',
+            desc: 'Hiệu ứng tia quét radar xoay tròn công nghệ cao, % tiến độ quét mượt mà cùng checklist 4 giai đoạn đối soát trực quan.'
+          },
+          {
+            title: 'Hệ thống Âm thanh Web Audio API sinh động',
+            desc: 'Tích hợp âm thanh báo động thất thoát tiền (Alert Sound) và âm thanh vinh danh chiến thắng (Victory Sound) khi bảng kê hoàn hảo 100%. Nút bật/tắt âm thanh tiện lợi trên thanh Navbar.'
+          },
+          {
+            title: 'Bộ 7 Bảng Kê Mẫu Thực Tế 1-Click',
+            desc: 'Cho phép dùng thử tức thì bảng kê của GHTK, GHN, Viettel Post, Shopee Xpress, TikTok Shop, Mẫu Chuẩn không lỗi và Mẫu Full 300 đơn mà không cần chuẩn bị file trước.'
+          }
+        ]
+      },
+      {
+        name: 'Trực quan hóa & Phân tích chuyên sâu',
+        tag: 'ANALYTICS',
+        color: 'indigo',
+        items: [
+          {
+            title: 'Biểu đồ Phân bổ Thất thoát Segmented Bar',
+            desc: 'Trực quan hóa tỷ lệ % đóng góp của 4 nhóm lỗi (Kê cân, Ngâm hoàn, Phụ phí ảo, Lệch COD) với tooltip số liệu chi tiết.'
+          },
+          {
+            title: 'Bảng xếp hạng Hãng vận chuyển gây thất thoát (Carrier Ranking)',
+            desc: 'Xếp hạng các đơn vị vận chuyển gây thiệt hại nhiều nhất cho shop, kèm tỷ lệ % và số đơn bị lỗi theo từng hãng.'
+          },
+          {
+            title: 'Chỉ số Sức khỏe Logistics (Shop Health Score /100)',
+            desc: 'Đánh giá mức độ an toàn của bảng kê theo thang điểm 100 với nhãn trạng thái Ổn định, Cảnh báo hoặc Nguy cơ cao.'
+          }
+        ]
+      },
+      {
+        name: 'Công cụ tác nghiệp thực chiến',
+        tag: 'WORKFLOW',
+        color: 'amber',
+        items: [
+          {
+            title: 'Tìm kiếm tức thì & Bộ lọc ĐVVC thông minh',
+            desc: 'Tìm nhanh theo mã vận đơn, tên khách, vị trí ô Excel (vd: E14); lọc theo từng hãng và sắp xếp theo tiền thất thoát giảm dần.'
+          },
+          {
+            title: 'Phân trang bảng đơn mượt mà (Pagination)',
+            desc: 'Trình bày gọn gàng 15 đơn/trang, hỗ trợ chuyển trang nhanh, tương thích hoàn hảo trên điện thoại di động.'
+          },
+          {
+            title: 'In Biên Bản Khiếu Nại Trang Trọng & Xuất PDF',
+            desc: 'Xuất công văn khiếu nại định dạng chuẩn A4 có quốc hiệu, tiêu đề, nội dung và nơi ký tên đóng dấu gửi Giám đốc bưu cục.'
+          }
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.7',
     releaseDate: '11/10/2026 - 16:00',
     title: '🔥 Tích Hợp Google Firebase Cloud & Đồng Bộ Đa Thiết Bị Quốc Tế',
-    isCurrent: true,
+    isCurrent: false,
     badges: ['Google Firebase', 'Cloud Firestore', 'Realtime Sync', 'Đa Thiết Bị'],
     summary: 'Tích hợp cơ sở dữ liệu Google Cloud Firestore trực tiếp vào hệ sinh thái. Hỗ trợ 1-click kết nối Firebase từ Admin Portal, tự động đồng bộ realtime tài khoản, số dư lượt quét và gói cước trên mọi thiết bị máy tính và điện thoại thông minh.',
     categories: [

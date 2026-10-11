@@ -1,9 +1,18 @@
-import React from 'react';
-import { Lock, Unlock, Download, Mail, ExternalLink, ShieldCheck, AlertCircle, Copy, Check } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { 
+  Lock, Unlock, Download, Mail, ExternalLink, ShieldCheck, AlertCircle, 
+  Copy, Check, Search, ArrowUpDown, ChevronLeft, ChevronRight, Filter, Layers, ListFilter
+} from 'lucide-react';
 import { exportDisputeExcel } from '../utils/exportDispute';
 
 export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onOpenTemplateModal, shopName }) {
-  const [copiedId, setCopiedId] = React.useState(null);
+  const [copiedId, setCopiedId] = useState(null);
+  const [copiedBatch, setCopiedBatch] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [carrierFilter, setCarrierFilter] = useState('ALL');
+  const [sortBy, setSortBy] = useState('LEAKAGE_DESC');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 15;
 
   const handleCopy = (id) => {
     navigator.clipboard.writeText(id);
@@ -13,6 +22,65 @@ export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onO
 
   const handleExportExcel = () => {
     exportDisputeExcel(anomalies, shopName || "Shop_Online");
+  };
+
+  // Lấy danh sách các hãng duy nhất
+  const uniqueCarriers = useMemo(() => {
+    const set = new Set();
+    anomalies.forEach(a => { if (a.carrier) set.add(a.carrier); });
+    return Array.from(set);
+  }, [anomalies]);
+
+  // Lọc và sắp xếp
+  const filteredAnomalies = useMemo(() => {
+    let list = [...anomalies];
+
+    if (carrierFilter !== 'ALL') {
+      list = list.filter(a => a.carrier === carrierFilter);
+    }
+
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase().trim();
+      list = list.filter(a => 
+        (a.id && a.id.toLowerCase().includes(q)) ||
+        (a.customer && a.customer.toLowerCase().includes(q)) ||
+        (a.issueDetail && a.issueDetail.toLowerCase().includes(q)) ||
+        (a.excelCell && a.excelCell.toLowerCase().includes(q))
+      );
+    }
+
+    if (sortBy === 'LEAKAGE_DESC') {
+      list.sort((a, b) => (b.leakAmount || 0) - (a.leakAmount || 0));
+    } else if (sortBy === 'LEAKAGE_ASC') {
+      list.sort((a, b) => (a.leakAmount || 0) - (b.leakAmount || 0));
+    } else if (sortBy === 'ROW_ASC') {
+      list.sort((a, b) => (a.excelRow || 0) - (b.excelRow || 0));
+    }
+
+    return list;
+  }, [anomalies, carrierFilter, searchTerm, sortBy]);
+
+  // Reset page khi filter đổi
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, carrierFilter, sortBy]);
+
+  // Phân trang
+  const totalPages = Math.max(1, Math.ceil(filteredAnomalies.length / pageSize));
+  const paginatedList = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredAnomalies.slice(start, start + pageSize);
+  }, [filteredAnomalies, currentPage, pageSize]);
+
+  const handleBatchCopy = () => {
+    if (!isUnlocked) {
+      onUnlockClick();
+      return;
+    }
+    const ids = filteredAnomalies.map(a => a.id).join('\n');
+    navigator.clipboard.writeText(ids);
+    setCopiedBatch(true);
+    setTimeout(() => setCopiedBatch(false), 2500);
   };
 
   return (
@@ -34,9 +102,19 @@ export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onO
             </p>
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
             {isUnlocked ? (
               <>
+                <button
+                  type="button"
+                  onClick={handleBatchCopy}
+                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold transition-all cursor-pointer border border-slate-200 shadow-2xs"
+                  title="Sao chép toàn bộ mã đơn đang hiển thị vào Clipboard để gửi bưu cục"
+                >
+                  {copiedBatch ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-indigo-600" />}
+                  <span>{copiedBatch ? "Đã chép mã!" : "Chép tất cả mã"}</span>
+                </button>
+
                 <button
                   onClick={onOpenTemplateModal}
                   className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition-all cursor-pointer border border-slate-200"
@@ -50,7 +128,7 @@ export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onO
                   className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all transform hover:scale-105 active:scale-95 cursor-pointer"
                 >
                   <Download className="w-4 h-4" />
-                  <span>Xuất file Excel khiếu nại (.xlsx)</span>
+                  <span>Xuất file Excel (.xlsx)</span>
                 </button>
               </>
             ) : (
@@ -62,6 +140,74 @@ export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onO
                 <span>Mở khóa tất cả mã đơn & Tải file khiếu nại</span>
               </button>
             )}
+          </div>
+        </div>
+
+        {/* Toolbar: Search, Carrier Filter, Sort Controls */}
+        <div className="p-3 sm:px-6 bg-white border-b border-slate-200/80 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 text-xs">
+          {/* Live Search */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input 
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Tìm nhanh mã đơn, tên khách, ô Excel (vd: E14)..."
+              className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40 text-slate-800 text-xs"
+            />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Filter by carrier pills */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-bold text-slate-400 mr-1 hidden lg:inline">Hãng:</span>
+            <button
+              onClick={() => setCarrierFilter('ALL')}
+              className={`px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition-colors cursor-pointer ${
+                carrierFilter === 'ALL'
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Tất cả ({anomalies.length})
+            </button>
+            {uniqueCarriers.map(c => {
+              const count = anomalies.filter(a => a.carrier === c).length;
+              return (
+                <button
+                  key={c}
+                  onClick={() => setCarrierFilter(c)}
+                  className={`px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition-colors cursor-pointer ${
+                    carrierFilter === c
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {c} ({count})
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Sort selector */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-[11px] font-bold text-slate-400 mr-1">Xếp theo:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold focus:outline-none cursor-pointer"
+            >
+              <option value="LEAKAGE_DESC">💰 Tiền mất nhiều nhất ⬇️</option>
+              <option value="LEAKAGE_ASC">💵 Tiền mất ít nhất ⬆️</option>
+              <option value="ROW_ASC">📍 Thứ tự dòng Excel</option>
+            </select>
           </div>
         </div>
 
@@ -80,156 +226,245 @@ export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onO
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {anomalies.map((item, index) => {
-                const isItemLocked = !isUnlocked;
-
-                return (
-                  <tr 
-                    key={item.id + index}
-                    className={`transition-colors ${
-                      isItemLocked 
-                        ? 'bg-slate-50/50 select-none' 
-                        : 'hover:bg-slate-50'
-                    }`}
-                  >
-                    <td className="py-3.5 px-4 font-mono text-slate-400">
-                      #{index + 1}
-                    </td>
-
-                    {/* Mã vận đơn & Tọa độ ô Excel */}
-                    <td className="py-3.5 px-4 font-mono font-bold">
-                      {isItemLocked ? (
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="blur-xs text-slate-400 filter select-none tracking-widest">
-                              {item.carrier.slice(0, 3)}-99******
-                            </span>
-                            <Lock className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                          </div>
-                          {item.excelRow && (
-                            <span className="text-[10px] text-slate-400 font-sans mt-0.5 inline-block">
-                              📍 Dòng {item.excelRow}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <div>
-                          <div className="flex items-center gap-1.5 text-indigo-700">
-                            <span>{item.id}</span>
-                            <button 
-                              onClick={() => handleCopy(item.id)}
-                              className="p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-700 transition-colors"
-                              title="Sao chép mã đơn"
-                            >
-                              {copiedId === item.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                            </button>
-                          </div>
-                          {item.excelCell && (
-                            <div className="mt-1 flex items-center gap-1">
-                              <span 
-                                onClick={() => handleCopy(item.excelCell)}
-                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-[10px] font-mono cursor-pointer transition-colors"
-                                title="Bấm để sao chép ô Excel (Mở Excel bấm Ctrl+G để nhảy tới ô này)"
-                              >
-                                📍 Ô: {item.excelCell}
-                              </span>
-                              <span className="text-[10px] text-slate-400 font-sans">
-                                (Dòng {item.excelRow})
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </td>
-
-                    {/* Hãng */}
-                    <td className="py-3.5 px-4">
-                      <span className="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-medium text-xs border border-slate-200">
-                        {item.carrier}
-                      </span>
-                    </td>
-
-                    {/* Trọng lượng / Khách hàng & Địa chỉ */}
-                    <td className="py-3.5 px-4">
-                      {isItemLocked ? (
-                        <span className="blur-xs filter text-slate-400">•••g / •••g</span>
-                      ) : (
-                        <div>
-                          <div className="text-xs text-slate-800 font-medium">
-                            {item.customer || 'Khách lẻ'}
-                          </div>
-                          {item.customerAddress && item.customerAddress !== 'Toàn quốc' && (
-                            <div className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
-                              <span>📍</span>
-                              <span className="truncate max-w-[130px]">{item.customerAddress}</span>
-                            </div>
-                          )}
-                          {item.hasWeightCol && (
-                            <div className="text-[11px] font-mono text-slate-500 mt-0.5">
-                              <span>{item.shopWeight}g</span>
-                              <span className="text-slate-400 mx-1">→</span>
-                              <span className={`font-bold ${item.billedWeight > item.shopWeight ? 'text-amber-600' : 'text-slate-700'}`}>
-                                {item.billedWeight}g
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </td>
-
-                    {/* Số tiền thất thoát */}
-                    <td className="py-3.5 px-4 font-mono font-bold text-rose-600">
-                      +{item.leakAmount.toLocaleString('vi-VN')} đ
-                    </td>
-
-                    {/* Lý do chi tiết & Vị trí kiểm tra */}
-                    <td className="py-3.5 px-4 max-w-xs sm:max-w-md">
-                      {isItemLocked ? (
-                        <div className="flex items-center gap-2">
-                          <span className="blur-xs filter text-slate-400 select-none">
-                            Phát hiện hãng kê khống nấc cước hoặc ngâm đơn hoàn không hoàn tất bồi thường...
-                          </span>
-                        </div>
-                      ) : (
-                        <div>
-                          <p className="text-xs text-slate-700 leading-snug">
-                            {item.issueDetail}
-                          </p>
-                          {item.excelCell && (
-                            <p className="text-[11px] text-indigo-600 font-medium mt-1 flex items-center gap-1">
-                              <span>🔍 Kiểm tra trên Excel:</span>
-                              <code className="bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-200 text-indigo-700 text-[10px]">
-                                {item.excelLocation || `Ô ${item.excelCell}`}
-                              </code>
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </td>
-
-                    {/* Action / Lock badge */}
-                    <td className="py-3.5 px-4 text-center">
-                      {isItemLocked ? (
+              {paginatedList.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mb-2">
+                        <Search className="w-6 h-6" />
+                      </div>
+                      <p className="font-bold text-slate-700">Không tìm thấy đơn hàng nào khớp với bộ lọc</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Thử xóa từ khóa tìm kiếm hoặc chọn xem "Tất cả" hãng vận chuyển
+                      </p>
+                      {(searchTerm || carrierFilter !== 'ALL') && (
                         <button
-                          onClick={onUnlockClick}
-                          className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                          onClick={() => { setSearchTerm(''); setCarrierFilter('ALL'); }}
+                          className="mt-3 px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 font-semibold text-xs hover:bg-indigo-100 transition-colors"
                         >
-                          <Lock className="w-3 h-3" />
-                          <span>Mở khóa</span>
+                          Xóa bộ lọc
                         </button>
-                      ) : (
-                        <span className="px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold inline-flex items-center gap-1">
-                          <Check className="w-3 h-3 text-emerald-600" />
-                          <span>Đã mở</span>
-                        </span>
                       )}
-                    </td>
-                  </tr>
-                );
-              })}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                paginatedList.map((item, index) => {
+                  const itemIndex = (currentPage - 1) * pageSize + index;
+                  const isItemLocked = !isUnlocked;
+
+                  return (
+                    <tr 
+                      key={item.id + itemIndex}
+                      className={`transition-colors ${
+                        isItemLocked 
+                          ? 'bg-slate-50/50 select-none' 
+                          : 'hover:bg-slate-50'
+                      }`}
+                    >
+                      <td className="py-3.5 px-4 font-mono text-slate-400">
+                        #{itemIndex + 1}
+                      </td>
+
+                      {/* Mã vận đơn & Tọa độ ô Excel */}
+                      <td className="py-3.5 px-4 font-mono font-bold">
+                        {isItemLocked ? (
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="blur-xs text-slate-400 filter select-none tracking-widest">
+                                {item.carrier.slice(0, 3)}-99******
+                              </span>
+                              <Lock className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                            </div>
+                            {item.excelRow && (
+                              <span className="text-[10px] text-slate-400 font-sans mt-0.5 inline-block">
+                                📍 Dòng {item.excelRow}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <div>
+                            <div className="flex items-center gap-1.5 text-indigo-700">
+                              <span>{item.id}</span>
+                              <button 
+                                onClick={() => handleCopy(item.id)}
+                                className="p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-700 transition-colors"
+                                title="Sao chép mã đơn"
+                              >
+                                {copiedId === item.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                              </button>
+                            </div>
+                            {item.excelCell && (
+                              <div className="mt-1 flex items-center gap-1">
+                                <span 
+                                  onClick={() => handleCopy(item.excelCell)}
+                                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-[10px] font-mono cursor-pointer transition-colors"
+                                  title="Bấm để sao chép ô Excel (Mở Excel bấm Ctrl+G để nhảy tới ô này)"
+                                >
+                                  📍 Ô: {item.excelCell}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-sans">
+                                  (Dòng {item.excelRow})
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Hãng */}
+                      <td className="py-3.5 px-4">
+                        <span className="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-medium text-xs border border-slate-200">
+                          {item.carrier}
+                        </span>
+                      </td>
+
+                      {/* Trọng lượng / Khách hàng & Địa chỉ */}
+                      <td className="py-3.5 px-4">
+                        {isItemLocked ? (
+                          <span className="blur-xs filter text-slate-400">•••g / •••g</span>
+                        ) : (
+                          <div>
+                            <div className="text-xs text-slate-800 font-medium">
+                              {item.customer || 'Khách lẻ'}
+                            </div>
+                            {item.customerAddress && item.customerAddress !== 'Toàn quốc' && (
+                              <div className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
+                                <span>📍</span>
+                                <span className="truncate max-w-[130px]">{item.customerAddress}</span>
+                              </div>
+                            )}
+                            {item.hasWeightCol && (
+                              <div className="text-[11px] font-mono text-slate-500 mt-0.5">
+                                <span>{item.shopWeight}g</span>
+                                <span className="text-slate-400 mx-1">→</span>
+                                <span className={`font-bold ${item.billedWeight > item.shopWeight ? 'text-amber-600' : 'text-slate-700'}`}>
+                                  {item.billedWeight}g
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Số tiền thất thoát */}
+                      <td className="py-3.5 px-4 font-mono font-bold text-rose-600">
+                        +{item.leakAmount.toLocaleString('vi-VN')} đ
+                      </td>
+
+                      {/* Lý do chi tiết & Vị trí kiểm tra */}
+                      <td className="py-3.5 px-4 max-w-xs sm:max-w-md">
+                        {isItemLocked ? (
+                          <div className="flex items-center gap-2">
+                            <span className="blur-xs filter text-slate-400 select-none">
+                              Phát hiện hãng kê khống nấc cước hoặc ngâm đơn hoàn không hoàn tất bồi thường...
+                            </span>
+                          </div>
+                        ) : (
+                          <div>
+                            <p className="text-xs text-slate-700 leading-snug">
+                              {item.issueDetail}
+                            </p>
+                            {item.excelCell && (
+                              <p className="text-[11px] text-indigo-600 font-medium mt-1 flex items-center gap-1">
+                                <span>🔍 Kiểm tra trên Excel:</span>
+                                <code className="bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-200 text-indigo-700 text-[10px]">
+                                  {item.excelLocation || `Ô ${item.excelCell}`}
+                                </code>
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Action / Lock badge */}
+                      <td className="py-3.5 px-4 text-center">
+                        {isItemLocked ? (
+                          <button
+                            onClick={onUnlockClick}
+                            className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            <Lock className="w-3 h-3" />
+                            <span>Mở khóa</span>
+                          </button>
+                        ) : (
+                          <span className="px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold inline-flex items-center gap-1">
+                            <Check className="w-3 h-3 text-emerald-600" />
+                            <span>Đã mở</span>
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls Bar */}
+        {filteredAnomalies.length > 0 && (
+          <div className="p-4 px-6 bg-slate-50 border-t border-slate-200/90 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <div className="text-slate-500 font-medium">
+              Hiển thị <span className="font-bold text-slate-800">{(currentPage - 1) * pageSize + 1}</span> - <span className="font-bold text-slate-800">{Math.min(currentPage * pageSize, filteredAnomalies.length)}</span> trong số <span className="font-bold text-indigo-600">{filteredAnomalies.length}</span> đơn phát hiện bất thường
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 transition-all"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Trước</span>
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }).map((_, i) => {
+                    const pageNum = i + 1;
+                    if (
+                      pageNum === 1 || 
+                      pageNum === totalPages || 
+                      (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`w-7 h-7 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            currentPage === pageNum
+                              ? 'bg-indigo-600 text-white shadow-xs'
+                              : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    } else if (
+                      pageNum === currentPage - 2 || 
+                      pageNum === currentPage + 2
+                    ) {
+                      return <span key={pageNum} className="text-slate-400 px-0.5">...</span>;
+                    }
+                    return null;
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 transition-all"
+                >
+                  <span className="hidden sm:inline">Sau</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Lock overlay banner for non-unlocked state */}
         {!isUnlocked && anomalies.length > 3 && (

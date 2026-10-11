@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, ShieldAlert, Sparkles, TrendingUp, User, UserPlus, Zap, Clock, Rocket } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Sparkles, TrendingUp, User, UserPlus, Zap, Clock, Rocket, Volume2, VolumeX, Flame } from 'lucide-react';
 import { CURRENT_SYSTEM_VERSION } from '../data/changelog';
 
 export default function Navbar({ 
@@ -11,7 +11,9 @@ export default function Navbar({
   onOpenHistory,
   historyCount = 0,
   onOpenAdminModal,
-  onOpenChangelog
+  onOpenChangelog,
+  soundEnabled = true,
+  onToggleSound
 }) {
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
@@ -104,6 +106,34 @@ export default function Navbar({
               <span>Đăng Ký / Đăng Nhập</span>
             </button>
           )}
+
+          {/* Live Firebase Cloud Status */}
+          <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] font-bold text-amber-900 shadow-2xs">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+            </span>
+            <Flame className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />
+            <span>Firebase Live</span>
+          </div>
+
+          {/* Sound FX Toggle Button */}
+          <button 
+            type="button"
+            onClick={onToggleSound}
+            className={`p-2 rounded-xl border transition-all cursor-pointer ${
+              soundEnabled 
+                ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 shadow-2xs' 
+                : 'bg-slate-100 border-slate-200 text-slate-400 hover:text-slate-600'
+            }`}
+            title={soundEnabled ? "Âm thanh hiệu ứng: Đang Bật (Bấm để Tắt)" : "Âm thanh hiệu ứng: Đang Tắt (Bấm để Bật)"}
+          >
+            {soundEnabled ? (
+              <Volume2 className="w-4 h-4 text-indigo-600" />
+            ) : (
+              <VolumeX className="w-4 h-4 text-slate-400" />
+            )}
+          </button>
 
           {/* Admin Control Portal Button */}
           <button 

@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   AlertTriangle, Scale, PackageX, Receipt, Banknote, ShieldAlert, 
-  RotateCcw, FileText, CheckCircle2, Sparkles, Bot, Loader2, Trophy, PartyPopper 
+  RotateCcw, FileText, CheckCircle2, Sparkles, Bot, Loader2, Trophy, PartyPopper,
+  BarChart3, TrendingDown, Building2, Printer, ChevronRight, Zap, Award
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -20,6 +21,28 @@ export default function AuditDashboard({
 
   const { totalOrders, anomalyCount, totalLeakage, breakdown } = auditResult;
   const anomalyRate = ((anomalyCount / totalOrders) * 100).toFixed(1);
+
+  // Phân tích tổn thất theo Hãng vận chuyển
+  const carrierMap = {};
+  (auditResult.anomalies || []).forEach(item => {
+    const c = item.carrier || 'Khác';
+    if (!carrierMap[c]) {
+      carrierMap[c] = { carrier: c, count: 0, leakage: 0 };
+    }
+    carrierMap[c].count += 1;
+    carrierMap[c].leakage += (item.leakAmount || 0);
+  });
+  const carrierBreakdownList = Object.values(carrierMap).sort((a, b) => b.leakage - a.leakage);
+
+  // Điểm sức khỏe logistics của Shop (0 - 100)
+  const healthScore = Math.max(15, Math.min(100, Math.round(100 - (anomalyCount / totalOrders * 100) * 2.2)));
+
+  // Tỷ lệ % của 4 nhóm lỗi
+  const safeTotal = totalLeakage > 0 ? totalLeakage : 1;
+  const weightPct = ((breakdown.weight / safeTotal) * 100).toFixed(1);
+  const returnsPct = ((breakdown.returns / safeTotal) * 100).toFixed(1);
+  const feePct = ((breakdown.fee / safeTotal) * 100).toFixed(1);
+  const codPct = ((breakdown.cod / safeTotal) * 100).toFixed(1);
 
   // Hiệu ứng pháo hoa khi không có lỗi nào
   useEffect(() => {
@@ -290,6 +313,155 @@ export default function AuditDashboard({
           </p>
         </div>
       </div>
+
+      {/* Visual Loss Distribution & Carrier Impact Analysis */}
+      {anomalyCount > 0 && (
+        <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-7 mb-8 shadow-xs">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-5 pb-4 border-t-0 border-b border-slate-100">
+            <div>
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-indigo-600" />
+                <h3 className="font-extrabold text-slate-900 text-base sm:text-lg">
+                  Biểu Đồ Phân Bổ Thất Thoát & Phân Tích Đơn Vị Vận Chuyển
+                </h3>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Trực quan hóa tỷ trọng các nguồn thất thoát chính và mức độ rủi ro theo từng hãng bưu cục.
+              </p>
+            </div>
+
+            {/* Shop Logistics Health Score Badge */}
+            <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/80 p-2.5 px-4 rounded-2xl shrink-0">
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Điểm An Toàn Bảng Kê</span>
+                <span className={`text-xl font-black font-mono ${
+                  healthScore >= 80 ? 'text-emerald-600' : healthScore >= 60 ? 'text-amber-600' : 'text-rose-600'
+                }`}>
+                  {healthScore}/100
+                </span>
+              </div>
+              <div className={`px-2.5 py-1 rounded-xl text-xs font-bold ${
+                healthScore >= 80 
+                  ? 'bg-emerald-100 text-emerald-800' 
+                  : healthScore >= 60 
+                    ? 'bg-amber-100 text-amber-800' 
+                    : 'bg-rose-100 text-rose-800'
+              }`}>
+                {healthScore >= 80 ? '🟢 Ổn định' : healthScore >= 60 ? '🟡 Cảnh báo' : '🔴 Nguy cơ cao'}
+              </div>
+            </div>
+          </div>
+
+          {/* Segmented Loss Progress Bar */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between text-xs font-bold text-slate-600 mb-2">
+              <span>Tỷ trọng 4 nhóm thất thoát trong tổng {totalLeakage.toLocaleString('vi-VN')} đ:</span>
+              <span className="text-[11px] text-slate-400 font-normal">Di chuột vào thanh để xem số liệu</span>
+            </div>
+
+            <div className="w-full h-4 rounded-full overflow-hidden flex bg-slate-100 p-0.5 border border-slate-200">
+              {Number(weightPct) > 0 && (
+                <div 
+                  style={{ width: `${weightPct}%` }}
+                  className="h-full bg-amber-400 hover:bg-amber-500 transition-colors cursor-pointer rounded-l-full"
+                  title={`Kê lố cân nặng: ${breakdown.weight.toLocaleString('vi-VN')} đ (${weightPct}%)`}
+                />
+              )}
+              {Number(returnsPct) > 0 && (
+                <div 
+                  style={{ width: `${returnsPct}%` }}
+                  className="h-full bg-rose-500 hover:bg-rose-600 transition-colors cursor-pointer"
+                  title={`Đơn hoàn ngâm quá hạn: ${breakdown.returns.toLocaleString('vi-VN')} đ (${returnsPct}%)`}
+                />
+              )}
+              {Number(feePct) > 0 && (
+                <div 
+                  style={{ width: `${feePct}%` }}
+                  className="h-full bg-blue-500 hover:bg-blue-600 transition-colors cursor-pointer"
+                  title={`Phụ phí bất thường: ${breakdown.fee.toLocaleString('vi-VN')} đ (${feePct}%)`}
+                />
+              )}
+              {Number(codPct) > 0 && (
+                <div 
+                  style={{ width: `${codPct}%` }}
+                  className="h-full bg-emerald-500 hover:bg-emerald-600 transition-colors cursor-pointer rounded-r-full"
+                  title={`Lệch tiền COD: ${breakdown.cod.toLocaleString('vi-VN')} đ (${codPct}%)`}
+                />
+              )}
+            </div>
+
+            {/* Legend pills */}
+            <div className="flex flex-wrap items-center gap-4 mt-3 text-xs">
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-amber-400"></span>
+                <span className="text-slate-600">Kê cân: <b>{weightPct}%</b> ({breakdown.weight.toLocaleString('vi-VN')} đ)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-rose-500"></span>
+                <span className="text-slate-600">Hàng hoàn giam: <b>{returnsPct}%</b> ({breakdown.returns.toLocaleString('vi-VN')} đ)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-blue-500"></span>
+                <span className="text-slate-600">Phụ phí ảo: <b>{feePct}%</b> ({breakdown.fee.toLocaleString('vi-VN')} đ)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
+                <span className="text-slate-600">Lệch COD: <b>{codPct}%</b> ({breakdown.cod.toLocaleString('vi-VN')} đ)</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Carrier Loss Impact Ranking Table */}
+          {carrierBreakdownList.length > 0 && (
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-1.5">
+                <Building2 className="w-4 h-4 text-indigo-500" />
+                <span>Xếp Hạng Đơn Vị Vận Chuyển Gây Thất Thoát Nhiều Nhất:</span>
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {carrierBreakdownList.map((item, idx) => {
+                  const percentOfTotal = ((item.leakage / safeTotal) * 100).toFixed(1);
+
+                  return (
+                    <div 
+                      key={item.carrier}
+                      className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/80 flex items-center justify-between hover:bg-slate-100/70 transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs ${
+                          idx === 0 
+                            ? 'bg-rose-100 text-rose-700 border border-rose-200' 
+                            : 'bg-slate-200 text-slate-700'
+                        }`}>
+                          #{idx + 1}
+                        </div>
+                        <div>
+                          <div className="font-extrabold text-xs text-slate-900 truncate max-w-[140px]">
+                            {item.carrier}
+                          </div>
+                          <div className="text-[11px] text-slate-400">
+                            {item.count} đơn bất thường
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <div className="font-mono font-bold text-xs text-rose-600">
+                          {item.leakage.toLocaleString('vi-VN')} đ
+                        </div>
+                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 font-semibold border border-rose-100">
+                          {percentOfTotal}% tổng mất
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Filters pill bar */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">

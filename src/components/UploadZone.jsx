@@ -1,32 +1,69 @@
-import React, { useState, useRef } from 'react';
-import { UploadCloud, FileSpreadsheet, PlayCircle, Download, CheckCircle, AlertCircle, Loader2, Sparkles, Bot, Zap, ShieldCheck, Clock, ArrowRight } from 'lucide-react';
-import { parseExcelFile, downloadSampleExcel } from '../utils/auditEngine';
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  UploadCloud, FileSpreadsheet, PlayCircle, Download, CheckCircle, AlertCircle, 
+  Loader2, Sparkles, Bot, Zap, ShieldCheck, Clock, ArrowRight, CheckCircle2, 
+  Flame, Award, Package, ShoppingBag, Truck
+} from 'lucide-react';
+import { parseExcelFile, parseExcelWorkbook, downloadSampleExcel } from '../utils/auditEngine';
 import { SAMPLE_ORDERS } from '../utils/sampleData';
 import { aiDeepAuditOrders } from '../utils/aiAuditor';
+import { generateTestDataset } from '../utils/aiSelfTester';
+import { sounds } from '../utils/soundEffects';
 
-export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory }) {
+export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, soundEnabled = true }) {
   const [isDragging, setIsDragging] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [scanStep, setScanStep] = useState('');
+  const [scanProgress, setScanProgress] = useState(0);
+  const [scanStageIndex, setScanStageIndex] = useState(0);
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
+
+  const SCAN_STAGES = [
+    { title: "Đọc cấu trúc bảng kê & loại bỏ banner tiêu đề", icon: "📂" },
+    { title: "Đối chiếu kích thước thể tích (DxRxC) & nấc cân nặng", icon: "⚖️" },
+    { title: "Thẩm định cước niêm yết & phát hiện phụ phí ảo", icon: "💰" },
+    { title: "Rà soát đơn hoàn ngâm > 72h & tiền thu hộ COD", icon: "📦" }
+  ];
 
   const runAiAuditFlow = async (orders, filename) => {
     setIsScanning(true);
     setError(null);
-    setScanStep("🤖 Đang đọc cấu trúc bảng kê & nạp vào mô hình AI Kiểm Toán...");
+    setScanProgress(15);
+    setScanStageIndex(0);
+    setScanStep("Đang nạp dữ liệu và kiểm tra cấu trúc cột...");
 
     try {
-      setScanStep("🧠 AI đang thẩm định đối chiếu từng dòng cước & cân nặng...");
+      await new Promise(r => setTimeout(r, 350));
+      setScanProgress(40);
+      setScanStageIndex(1);
+      setScanStep("AI đang tính toán nấc cân nặng thực tế và thể tích quy đổi...");
+
       const aiResultPromise = aiDeepAuditOrders(orders);
       
-      await new Promise(r => setTimeout(r, 600));
-      setScanStep("🔍 Đang phát hiện kê lố cân nặng, phụ phí ảo và đơn hoàn giam kho...");
-      
+      await new Promise(r => setTimeout(r, 450));
+      setScanProgress(70);
+      setScanStageIndex(2);
+      setScanStep("Đang so sánh biểu phí thỏa thuận và phụ phí vùng xa...");
+
+      await new Promise(r => setTimeout(r, 400));
+      setScanProgress(90);
+      setScanStageIndex(3);
+      setScanStep("Đang kiểm toán đơn chuyển hoàn giam kho và tiền COD...");
+
       const aiResult = await aiResultPromise;
 
-      setScanStep("✨ AI hoàn tất phân tích! Đang tổng hợp báo cáo chi tiết...");
-      await new Promise(r => setTimeout(r, 400));
+      setScanProgress(100);
+      setScanStep("✨ Hoàn tất kiểm toán toàn diện! Đang mở bảng kết quả...");
+      await new Promise(r => setTimeout(r, 350));
+
+      if (soundEnabled) {
+        if (orders && orders.some(o => o.isWeightCheat || o.isReturnStalled || o.isExcessiveFee || o.isCodDiscrepancy)) {
+          sounds.playAlarm();
+        } else {
+          sounds.playVictory();
+        }
+      }
 
       setIsScanning(false);
       onAuditComplete(orders, filename, aiResult);
@@ -34,6 +71,42 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory })
       console.warn("AI flow error, fallback gracefully:", err);
       setIsScanning(false);
       onAuditComplete(orders, filename, null);
+    }
+  };
+
+  const handleSelectSampleCarrier = async (carrierKey) => {
+    try {
+      if (carrierKey === 'ALL_300') {
+        handleSampleClick();
+        return;
+      }
+
+      if (carrierKey === 'CLEAN_100') {
+        setIsScanning(true);
+        setScanStep("🏆 Đang nạp bảng kê đối soát chuẩn 100% không phát sinh lỗi...");
+        const dataset = generateTestDataset(50, 'CLEAN', 'GHTK');
+        const parsedOrders = parseExcelWorkbook(dataset.workbook);
+        await runAiAuditFlow(parsedOrders, "Bang_Ke_Chuan_Doi_Soat_100_Phan_Tram.xlsx");
+        return;
+      }
+
+      const carrierMap = {
+        GHTK: { count: 50, name: "Bang_Ke_Doi_Soat_GHTK_50_Don.xlsx" },
+        GHN: { count: 50, name: "Bang_Ke_Doi_Soat_GHN_50_Don.xlsx" },
+        VTP: { count: 80, name: "Bang_Ke_Doi_Soat_Viettel_Post_80_Don.xlsx" },
+        SPX: { count: 65, name: "Bang_Ke_Doi_Soat_Shopee_Xpress_65_Don.xlsx" },
+        TIKTOK: { count: 60, name: "Bang_Ke_Doi_Soat_TikTok_Shop_60_Don.xlsx" }
+      };
+
+      const info = carrierMap[carrierKey] || { count: 50, name: "Bang_Ke_Doi_Soat_Mau.xlsx" };
+      setIsScanning(true);
+      setScanStep(`📂 Đang khởi tạo bảng kê ${carrierKey} (${info.count} đơn)...`);
+      const dataset = generateTestDataset(info.count, 'MIXED', carrierKey);
+      const parsedOrders = parseExcelWorkbook(dataset.workbook);
+      await runAiAuditFlow(parsedOrders, info.name);
+    } catch (err) {
+      console.warn("Lỗi load sample carrier:", err);
+      runAiAuditFlow(SAMPLE_ORDERS, "Bang_Ke_Doi_Soat_Mau.xlsx");
     }
   };
 
@@ -137,17 +210,75 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory })
         </div>
 
         {isScanning ? (
-          <div className="py-14 text-center">
-            <div className="relative w-16 h-16 mx-auto mb-6">
-              <div className="absolute inset-0 rounded-full border-4 border-indigo-200 animate-ping" />
-              <div className="w-16 h-16 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin flex items-center justify-center">
-                <Sparkles className="w-8 h-8 text-indigo-600 animate-pulse" />
+          <div className="py-10 sm:py-14 text-center max-w-xl mx-auto">
+            {/* Holographic Radar Scanner HUD */}
+            <div className="relative w-28 h-28 mx-auto mb-6 flex items-center justify-center">
+              {/* Outer pulsing ring */}
+              <div className="absolute inset-0 rounded-full border-2 border-indigo-400/30 animate-ping opacity-25" />
+              <div className="absolute inset-1.5 rounded-full border border-indigo-500/20" />
+              <div className="absolute inset-4 rounded-full border border-indigo-500/30 border-dashed animate-spin" style={{ animationDuration: '8s' }} />
+              {/* Radar sweep beam */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-indigo-600/30 via-blue-500/10 to-transparent animate-radar" />
+              
+              {/* Center Holographic Core */}
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-xl shadow-indigo-500/30 z-10">
+                <Bot className="w-7 h-7 animate-pulse" />
               </div>
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Hệ Thống AI Đang Phân Tích...</h3>
-            <p className="text-sm font-semibold text-indigo-600 font-mono animate-pulse">{scanStep}</p>
-            <div className="w-64 h-2 bg-slate-100 rounded-full mx-auto mt-6 overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 animate-pulse w-4/5 rounded-full" />
+
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/80 text-xs font-bold uppercase tracking-wider mb-2">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600 animate-spin" />
+              <span>Cỗ Máy AI Đang Quét Sâu Dữ Liệu</span>
+              <span className="font-mono text-indigo-900 font-black">{scanProgress}%</span>
+            </div>
+
+            <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">
+              Đang Kiểm Toán Bảng Kê Vận Chuyển...
+            </h3>
+            <p className="text-xs sm:text-sm font-semibold text-indigo-600 font-mono mb-6">
+              {scanStep}
+            </p>
+
+            {/* Glowing Progress bar */}
+            <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200 mb-6">
+              <div 
+                className="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 rounded-full transition-all duration-300 ease-out shadow-xs"
+                style={{ width: `${scanProgress}%` }}
+              />
+            </div>
+
+            {/* 4 Interactive Scanning Stages Checklist */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left">
+              {SCAN_STAGES.map((stage, idx) => {
+                const isPassed = scanStageIndex > idx;
+                const isCurrent = scanStageIndex === idx;
+
+                return (
+                  <div 
+                    key={idx}
+                    className={`p-2.5 rounded-xl border text-xs flex items-center gap-2.5 transition-all ${
+                      isPassed 
+                        ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900' 
+                        : isCurrent 
+                          ? 'bg-indigo-50 border-indigo-300 text-indigo-950 ring-1 ring-indigo-400 font-bold'
+                          : 'bg-slate-50/60 border-slate-200 text-slate-400'
+                    }`}
+                  >
+                    <div className="text-base shrink-0">{stage.icon}</div>
+                    <div className="truncate flex-1">
+                      <span className="font-mono text-[10px] opacity-75 mr-1">[0{idx + 1}/04]</span>
+                      <span>{stage.title}</span>
+                    </div>
+                    {isPassed ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    ) : isCurrent ? (
+                      <Loader2 className="w-3.5 h-3.5 text-indigo-600 animate-spin shrink-0" />
+                    ) : (
+                      <div className="w-3.5 h-3.5 rounded-full border border-slate-300 shrink-0" />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         ) : (
@@ -158,10 +289,10 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory })
               onDragLeave={() => setIsDragging(false)}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              className={`border-2 border-dashed rounded-2xl p-8 sm:p-10 text-center cursor-pointer transition-all duration-200 ${
+              className={`border-2 border-dashed rounded-3xl p-8 sm:p-10 text-center cursor-pointer transition-all duration-300 relative overflow-hidden group ${
                 isDragging 
-                  ? 'border-indigo-600 bg-indigo-50/50 scale-[1.01]' 
-                  : 'border-slate-300 hover:border-indigo-500 bg-slate-50/60 hover:bg-slate-50'
+                  ? 'border-indigo-600 bg-indigo-50/70 scale-[1.01] shadow-lg shadow-indigo-500/10' 
+                  : 'border-slate-300 hover:border-indigo-500 bg-slate-50/50 hover:bg-slate-50/90 hover:shadow-md'
               }`}
             >
               <input 
@@ -172,49 +303,125 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory })
                 className="hidden" 
               />
 
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform shadow-xs">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-center text-indigo-600 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-xs">
                 <UploadCloud className="w-8 h-8" />
               </div>
 
-              <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-1.5">
-                Kéo thả file Excel đối soát vào đây, hoặc <span className="text-indigo-600 underline decoration-indigo-300 font-extrabold">chọn từ máy tính</span>
+              <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 mb-1.5">
+                Kéo thả file Excel đối soát vào đây, hoặc <span className="text-indigo-600 underline decoration-indigo-300 font-black group-hover:text-indigo-700">chọn từ máy tính</span>
               </h3>
               <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto mb-4">
-                Hỗ trợ bảng kê của GHTK, GHN, Shopee Xpress, TikTok Shop, Viettel Post (.xlsx, .xls, .csv).
+                Tương thích 100% bảng kê của GHTK, GHN, Shopee Xpress, TikTok Shop, Viettel Post (.xlsx, .xls, .csv).
               </p>
 
               <div className="inline-flex items-center gap-2 text-xs text-slate-600 bg-white px-3.5 py-1.5 rounded-xl border border-slate-200 shadow-xs">
                 <Sparkles className="w-4 h-4 text-indigo-600" />
-                <span>AI tự động loại bỏ dòng thừa, đọc kích thước thể tích và nhận diện chính xác 100%</span>
+                <span>AI tự động loại bỏ banner, nhận diện nấc cân và đối chiếu sai lệch trong 10 giây</span>
               </div>
             </div>
 
             {error && (
-              <div className="mt-4 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+              <div className="mt-4 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm flex items-center gap-2 animate-shake">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
-            {/* Quick action buttons */}
-            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={handleSampleClick}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm shadow-md shadow-blue-500/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-              >
-                <PlayCircle className="w-5 h-5 text-indigo-100" />
-                <span>Quét thử ngay bằng AI (Bảng kê thực tế 300 đơn)</span>
-              </button>
+            {/* Quick 1-Click Multi-Carrier Sample Bar */}
+            <div className="mt-6 pt-5 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                  <span>Chưa có file sẵn? Thử ngay bảng kê mẫu đa hãng (1-Click AI Test):</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={downloadSampleExcel}
+                  className="text-[11px] font-semibold text-slate-500 hover:text-indigo-600 inline-flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  <Download className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Tải file Excel mẫu (.xlsx)</span>
+                </button>
+              </div>
 
-              <button
-                type="button"
-                onClick={downloadSampleExcel}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 text-xs text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
-              >
-                <Download className="w-4 h-4 text-slate-400" />
-                <span>Tải bảng kê mẫu 300 đơn (.xlsx)</span>
-              </button>
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleSelectSampleCarrier('GHTK')}
+                  className="p-2.5 rounded-xl bg-emerald-50/70 hover:bg-emerald-100/80 border border-emerald-200 text-emerald-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
+                  title="Quét thử bảng kê GHTK 50 đơn"
+                >
+                  <span className="text-base">🟢</span>
+                  <span>GHTK</span>
+                  <span className="text-[10px] text-emerald-700 font-mono font-medium">50 đơn</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSelectSampleCarrier('GHN')}
+                  className="p-2.5 rounded-xl bg-orange-50/70 hover:bg-orange-100/80 border border-orange-200 text-orange-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
+                  title="Quét thử bảng kê GHN 50 đơn"
+                >
+                  <span className="text-base">🟠</span>
+                  <span>GHN</span>
+                  <span className="text-[10px] text-orange-700 font-mono font-medium">50 đơn</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSelectSampleCarrier('VTP')}
+                  className="p-2.5 rounded-xl bg-rose-50/70 hover:bg-rose-100/80 border border-rose-200 text-rose-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
+                  title="Quét thử bảng kê Viettel Post 80 đơn"
+                >
+                  <span className="text-base">🔴</span>
+                  <span>Viettel Post</span>
+                  <span className="text-[10px] text-rose-700 font-mono font-medium">80 đơn</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSelectSampleCarrier('SPX')}
+                  className="p-2.5 rounded-xl bg-blue-50/70 hover:bg-blue-100/80 border border-blue-200 text-blue-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
+                  title="Quét thử bảng kê Shopee Xpress 65 đơn"
+                >
+                  <span className="text-base">🔵</span>
+                  <span>SPX Shopee</span>
+                  <span className="text-[10px] text-blue-700 font-mono font-medium">65 đơn</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSelectSampleCarrier('TIKTOK')}
+                  className="p-2.5 rounded-xl bg-purple-50/70 hover:bg-purple-100/80 border border-purple-200 text-purple-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
+                  title="Quét thử bảng kê TikTok Shop 60 đơn"
+                >
+                  <span className="text-base">🎵</span>
+                  <span>TikTok Shop</span>
+                  <span className="text-[10px] text-purple-700 font-mono font-medium">60 đơn</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSelectSampleCarrier('CLEAN_100')}
+                  className="p-2.5 rounded-xl bg-teal-50/70 hover:bg-teal-100/80 border border-teal-200 text-teal-950 font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
+                  title="Quét thử bảng kê chuẩn 100% không lệch đồng nào"
+                >
+                  <span className="text-base">🏆</span>
+                  <span>Chuẩn 100%</span>
+                  <span className="text-[10px] text-teal-700 font-mono font-medium">0 lỗi</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSelectSampleCarrier('ALL_300')}
+                  className="col-span-2 sm:col-span-1 p-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-md shadow-indigo-500/20"
+                  title="Quét thử bảng kê lớn 300 đơn đa hãng"
+                >
+                  <span className="text-base">⚡</span>
+                  <span>Full 300 Đơn</span>
+                  <span className="text-[10px] text-indigo-100 font-mono font-medium">Thực tế</span>
+                </button>
+              </div>
             </div>
           </>
         )}
