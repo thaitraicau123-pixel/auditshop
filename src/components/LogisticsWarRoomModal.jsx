@@ -3,18 +3,21 @@ import {
   X, Radio, Satellite, ShieldAlert, ShieldCheck, PhoneCall, PhoneOff, 
   Volume2, VolumeX, Activity, AlertTriangle, Play, Pause, RotateCcw, 
   MapPin, CheckCircle2, Flame, Sparkles, TrendingUp, Layers, ChevronRight,
-  Zap, Award, Lock, ArrowUpRight, Cpu, Clock, Terminal
+  Zap, Award, Lock, ArrowUpRight, Cpu, Clock, Terminal, ChevronDown
 } from 'lucide-react';
 import { cyberSound } from '../utils/cyberSoundEngine';
 
-// Danh sách 12 Mega Hub Logistics huyết mạch toàn quốc
+// Danh sách 12 Mega Hub Logistics huyết mạch toàn quốc với mã định danh ngắn gọn không đè chữ
 const LOGISTICS_HUBS = [
   {
     id: 'HN_LB',
+    code: 'HN',
+    num: 1,
     name: 'Kho Mega Long Biên (Hà Nội)',
+    shortName: 'Mega Long Biên',
     region: 'Miền Bắc',
-    x: 62, // Tỷ lệ % tọa độ trên bản đồ SVG
-    y: 18,
+    x: 61,
+    y: 19,
     status: 'ALERT',
     overweightRate: '16.8%',
     delayedReturnRate: '24.2%',
@@ -26,9 +29,12 @@ const LOGISTICS_HUBS = [
   },
   {
     id: 'BN_HUB',
+    code: 'BN',
+    num: 2,
     name: 'Mega Hub Bắc Ninh (Kho Yên Phong)',
+    shortName: 'Mega Bắc Ninh',
     region: 'Miền Bắc',
-    x: 66,
+    x: 67,
     y: 15,
     status: 'CRITICAL',
     overweightRate: '22.4%',
@@ -37,13 +43,16 @@ const LOGISTICS_HUBS = [
     riskScore: 92,
     topRiskCarrier: 'SPX & TikTok Logistics',
     recentAnomalies: 156,
-    description: 'Kho phân loại tự động lớn nhất miền Bắc. Băng chuyền quang học hay lỗi nhận diện kích thước thùng giấy.'
+    description: 'Kho phân loại tự động lớn nhất miền Bắc. Băng chuyền quang học hay lỗi nhận diện kích thước thùng giấy dính chùm.'
   },
   {
     id: 'HP_DV',
+    code: 'HP',
+    num: 3,
     name: 'Kho Cảng Đình Vũ (Hải Phòng)',
+    shortName: 'Cảng Đình Vũ',
     region: 'Miền Bắc',
-    x: 74,
+    x: 75,
     y: 20,
     status: 'NORMAL',
     overweightRate: '6.5%',
@@ -56,10 +65,13 @@ const LOGISTICS_HUBS = [
   },
   {
     id: 'NA_VINH',
+    code: 'NA',
+    num: 4,
     name: 'Kho Trung Chuyển Vinh (Nghệ An)',
-    region: 'Bắc Trung Bộ',
-    x: 55,
-    y: 32,
+    shortName: 'Kho Vinh',
+    region: 'Miền Bắc',
+    x: 54,
+    y: 33,
     status: 'ALERT',
     overweightRate: '14.1%',
     delayedReturnRate: '28.0%',
@@ -71,10 +83,13 @@ const LOGISTICS_HUBS = [
   },
   {
     id: 'DN_HC',
+    code: 'ĐN',
+    num: 5,
     name: 'Mega Hub Hòa Cầm (Đà Nẵng)',
+    shortName: 'Mega Hòa Cầm',
     region: 'Miền Trung',
-    x: 64,
-    y: 45,
+    x: 65,
+    y: 46,
     status: 'CRITICAL',
     overweightRate: '19.5%',
     delayedReturnRate: '36.2%',
@@ -86,10 +101,13 @@ const LOGISTICS_HUBS = [
   },
   {
     id: 'QN_DH',
+    code: 'QN',
+    num: 6,
     name: 'Kho Vận Quy Nhơn (Bình Định)',
-    region: 'Nam Trung Bộ',
-    x: 72,
-    y: 56,
+    shortName: 'Kho Quy Nhơn',
+    region: 'Miền Trung',
+    x: 73,
+    y: 57,
     status: 'NORMAL',
     overweightRate: '8.2%',
     delayedReturnRate: '15.4%',
@@ -101,10 +119,13 @@ const LOGISTICS_HUBS = [
   },
   {
     id: 'GL_PLK',
+    code: 'GL',
+    num: 7,
     name: 'Kho Pleiku (Gia Lai - Tây Nguyên)',
-    region: 'Tây Nguyên',
-    x: 60,
-    y: 59,
+    shortName: 'Kho Pleiku',
+    region: 'Miền Trung',
+    x: 59,
+    y: 60,
     status: 'ALERT',
     overweightRate: '15.9%',
     delayedReturnRate: '22.7%',
@@ -116,10 +137,13 @@ const LOGISTICS_HUBS = [
   },
   {
     id: 'KH_NT',
-    name: 'Kho Diên Khánh (Khánh Hòa - Nha Trang)',
-    region: 'Nam Trung Bộ',
-    x: 75,
-    y: 68,
+    code: 'NT',
+    num: 8,
+    name: 'Kho Diên Khánh (Nha Trang)',
+    shortName: 'Kho Nha Trang',
+    region: 'Miền Trung',
+    x: 76,
+    y: 69,
     status: 'NORMAL',
     overweightRate: '7.4%',
     delayedReturnRate: '12.8%',
@@ -131,9 +155,12 @@ const LOGISTICS_HUBS = [
   },
   {
     id: 'SG_CC',
+    code: 'SG',
+    num: 9,
     name: 'Mega Hub Củ Chi (TP. Hồ Chí Minh)',
+    shortName: 'Mega Củ Chi',
     region: 'Miền Nam',
-    x: 52,
+    x: 51,
     y: 81,
     status: 'CRITICAL',
     overweightRate: '25.8%',
@@ -146,10 +173,13 @@ const LOGISTICS_HUBS = [
   },
   {
     id: 'BD_ST',
+    code: 'BD',
+    num: 10,
     name: 'Kho Sóng Thần (Dĩ An - Bình Dương)',
-    region: 'Đông Nam Bộ',
-    x: 58,
-    y: 79,
+    shortName: 'Kho Sóng Thần',
+    region: 'Miền Nam',
+    x: 59,
+    y: 78,
     status: 'ALERT',
     overweightRate: '18.2%',
     delayedReturnRate: '27.4%',
@@ -161,9 +191,12 @@ const LOGISTICS_HUBS = [
   },
   {
     id: 'DN_BH',
+    code: 'ĐNAI',
+    num: 11,
     name: 'Kho Amata (Biên Hòa - Đồng Nai)',
-    region: 'Đông Nam Bộ',
-    x: 63,
+    shortName: 'Kho Amata',
+    region: 'Miền Nam',
+    x: 65,
     y: 80,
     status: 'ALERT',
     overweightRate: '13.7%',
@@ -176,9 +209,12 @@ const LOGISTICS_HUBS = [
   },
   {
     id: 'CT_TD',
+    code: 'CT',
+    num: 12,
     name: 'Mega Hub Tây Đô (Cần Thơ)',
-    region: 'Đồng Bằng Sông Cửu Long',
-    x: 44,
+    shortName: 'Mega Cần Thơ',
+    region: 'Miền Nam',
+    x: 43,
     y: 91,
     status: 'ALERT',
     overweightRate: '17.3%',
@@ -187,16 +223,16 @@ const LOGISTICS_HUBS = [
     riskScore: 79,
     topRiskCarrier: 'GHN & VNPost',
     recentAnomalies: 88,
-    description: 'Cửa ngõ miền Tây sông nước. Bưu tá thường báo hủy ảo vì lý do "nước nổi / xa đường ô tô".'
+    description: 'Cửa ngõ miền Tây sông nước. Bưu tá thường báo hủy ảo vì lý do nước nổi hoặc xa đường ô tô.'
   }
 ];
 
-// Danh sách các vụ việc trinh sát thời gian thực
+// Danh sách các sự cố trinh sát thời gian thực
 const LIVE_INCIDENTS = [
-  { time: '00:04:12', hub: 'Kho Củ Chi Mega Hub', carrier: 'SPX', type: 'KÊ KHỐNG CÂN NẶNG', detail: 'Phát hiện 28 đơn nấc 350g bị máy quét đo tự động nhảy lên 1.850g (+32.000đ/đơn).' },
+  { time: '00:04:12', hub: 'Kho Củ Chi Mega Hub', carrier: 'SPX', type: 'KÊ KHỐNG CÂN NẶNG', detail: 'Phát hiện 28 đơn nấc 350g bị máy quét tự động nhảy lên 1.850g (+32.000đ/đơn).' },
   { time: '00:05:40', hub: 'Mega Hub Bắc Ninh', carrier: 'GHTK', type: 'NGÂM HÀNG HOÀN', detail: '34 bưu kiện shop thời trang hoàn kho đã quá 9 ngày chưa điều phối giao về shop.' },
   { time: '00:06:15', hub: 'Mega Hub Hòa Cầm (Đà Nẵng)', carrier: 'GHN', type: 'LỆCH TIỀN COD', detail: 'Đơn mã GHN-998271 thu khách 850.000đ nhưng bảng kê đối soát chỉ ghi 650.000đ.' },
-  { time: '00:07:02', hub: 'Kho Sóng Thần (Bình Dương)', carrier: 'J&T', type: 'GIAO ẢO / HỦY BỪNG', detail: 'Bưu tá cập nhật "Khách từ chối nhận" nhưng khách gửi log chứng minh không có cuộc gọi nào.' },
+  { time: '00:07:02', hub: 'Kho Sóng Thần (Bình Dương)', carrier: 'J&T', type: 'GIAO ẢO / HỦY BỪNG', detail: 'Bưu tá cập nhật Khách từ chối nhận nhưng khách gửi log chứng minh không có cuộc gọi nào.' },
   { time: '00:08:29', hub: 'Mega Hub Tây Đô (Cần Thơ)', carrier: 'VNPost', type: 'OM TIỀN COD', detail: 'Dòng tiền COD 32.400.000đ bị giữ lại quá 5 ngày làm việc vượt cam kết SLA.' }
 ];
 
@@ -204,8 +240,8 @@ const LIVE_INCIDENTS = [
 const VOICE_CALL_SCENARIOS = [
   {
     id: 'SCENARIO_1',
-    title: 'Đòi Đền Bù Hàng Bể Vỡ 1.450.000đ',
-    subtitle: 'Bưu tá làm bể vỡ chai nước hoa cao cấp nhưng đổ lỗi shop đóng gói ẩu',
+    title: 'Hàng Bể Vỡ 1.450.000đ',
+    subtitle: 'Bưu tá làm vỡ chai nước hoa cao cấp nhưng đổ lỗi shop đóng gói ẩu',
     carrier: 'GHTK - Chuyên Viên Khiếu Nại Bưu Cục',
     disputeAmount: '1.450.000 đ',
     dialogue: [
@@ -238,7 +274,7 @@ const VOICE_CALL_SCENARIOS = [
   },
   {
     id: 'SCENARIO_2',
-    title: 'Ép Hoàn Tiền Cân Khống 45 Đơn (1.890.000đ)',
+    title: 'Cân Khống 45 Đơn (1.890.000đ)',
     subtitle: 'Kho Củ Chi tự ý nhảy nấc cân nặng từ 350g lên 2.200g (+42.000đ/đơn)',
     carrier: 'SPX Logistics - Quản Lý Khu Vực',
     disputeAmount: '1.890.000 đ',
@@ -272,7 +308,7 @@ const VOICE_CALL_SCENARIOS = [
   },
   {
     id: 'SCENARIO_3',
-    title: 'Truy Thu Gấp 12.500.000đ COD Bị Om 7 Ngày',
+    title: 'Om Tiền COD 12.500.000đ',
     subtitle: 'Khách đã nhận hàng thành công 1 tuần nhưng tiền thu hộ COD chưa về tài khoản',
     carrier: 'Viettel Post - Kế Toán Đối Soát Bưu Cục',
     disputeAmount: '12.500.000 đ',
@@ -309,7 +345,7 @@ const VOICE_CALL_SCENARIOS = [
 export default function LogisticsWarRoomModal({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('RADAR'); // 'RADAR' or 'VOICE_CALL'
   const [selectedHub, setSelectedHub] = useState(LOGISTICS_HUBS[8]); // Default: Mega Hub Củ Chi TP.HCM
-  const [carrierFilter, setCarrierFilter] = useState('ALL');
+  const [regionFilter, setRegionFilter] = useState('ALL'); // 'ALL', 'Miền Bắc', 'Miền Trung', 'Miền Nam'
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Voice Call State
@@ -324,6 +360,7 @@ export default function LogisticsWarRoomModal({ isOpen, onClose }) {
   const timerRef = useRef(null);
   const dialogTimeoutRef = useRef(null);
   const canvasRef = useRef(null);
+  const chatScrollRef = useRef(null);
 
   // Dọn dẹp âm thanh & timer khi unmount / đóng modal
   useEffect(() => {
@@ -356,9 +393,16 @@ export default function LogisticsWarRoomModal({ isOpen, onClose }) {
     if (!isOpen || activeTab !== 'RADAR' || !soundEnabled) return;
     const interval = setInterval(() => {
       cyberSound.playSonarPing();
-    }, 6000);
+    }, 8000);
     return () => clearInterval(interval);
   }, [isOpen, activeTab, soundEnabled]);
+
+  // Tự động cuộn hội thoại xuống cuối khi có tin mới
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [callStep, isCalling]);
 
   // Animation Canvas Waveform cho cuộc gọi thoại
   useEffect(() => {
@@ -372,16 +416,16 @@ export default function LogisticsWarRoomModal({ isOpen, onClose }) {
       const width = canvas.width;
       const height = canvas.height;
       const centerY = height / 2;
-      const barCount = 36;
+      const barCount = 28;
       const barWidth = width / barCount - 2;
 
       for (let i = 0; i < barCount; i++) {
         const time = Date.now() * 0.008;
         const amp = isCalling && !callSuccess 
-          ? Math.abs(Math.sin(time + i * 0.3) * (height * 0.45)) + 4 
-          : 6;
+          ? Math.abs(Math.sin(time + i * 0.35) * (height * 0.42)) + 3 
+          : 4;
 
-        ctx.fillStyle = i % 2 === 0 ? '#6366f1' : '#ec4899';
+        ctx.fillStyle = i % 2 === 0 ? '#818cf8' : '#f43f5e';
         ctx.fillRect(i * (barWidth + 2), centerY - amp / 2, barWidth, amp);
       }
       animationFrameId = requestAnimationFrame(renderWave);
@@ -398,15 +442,15 @@ export default function LogisticsWarRoomModal({ isOpen, onClose }) {
     setCallStep(0);
     setCallDuration(0);
     setCallSuccess(false);
-    setConcessionRate(10);
+    setConcessionRate(15);
 
     // Phát chuông điện thoại
     if (soundEnabled) {
       cyberSound.playPhoneRing();
-      setTimeout(() => cyberSound.playPhoneRing(), 1600);
+      setTimeout(() => cyberSound.playPhoneRing(), 1500);
     }
 
-    // Sau 3.5s bắt đầu đàm thoại
+    // Sau 3 giây bắt đầu đàm thoại
     setTimeout(() => {
       if (soundEnabled) cyberSound.playPhoneConnect();
       runDialogueStep(0);
@@ -415,7 +459,7 @@ export default function LogisticsWarRoomModal({ isOpen, onClose }) {
       timerRef.current = setInterval(() => {
         setCallDuration(prev => prev + 1);
       }, 1000);
-    }, 3200);
+    }, 3000);
   };
 
   const handleStopCall = () => {
@@ -465,6 +509,10 @@ export default function LogisticsWarRoomModal({ isOpen, onClose }) {
     }, item.duration || 7000);
   };
 
+  const filteredHubs = regionFilter === 'ALL' 
+    ? LOGISTICS_HUBS 
+    : LOGISTICS_HUBS.filter(h => h.region.includes(regionFilter));
+
   if (!isOpen) return null;
 
   return (
@@ -472,33 +520,32 @@ export default function LogisticsWarRoomModal({ isOpen, onClose }) {
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/90 backdrop-blur-xl p-2 sm:p-4 flex items-center justify-center animate-fade-in"
     >
-      <div className="bg-slate-900 border border-indigo-500/30 w-full max-w-6xl rounded-3xl shadow-[0_0_60px_-15px_rgba(99,102,241,0.35)] overflow-hidden flex flex-col my-auto max-h-[95vh] relative text-slate-100">
+      <div className="bg-slate-900 border border-indigo-500/30 w-full max-w-6xl rounded-3xl shadow-[0_0_60px_-15px_rgba(99,102,241,0.35)] overflow-hidden flex flex-col my-auto max-h-[94vh] relative text-slate-100">
         
         {/* TOP COMMAND HUD BAR */}
-        <div className="px-4 sm:px-6 py-3.5 bg-slate-950/90 border-b border-indigo-900/50 flex items-center justify-between shrink-0 sticky top-0 z-30">
+        <div className="px-4 sm:px-6 py-3 bg-slate-950/95 border-b border-indigo-900/50 flex items-center justify-between shrink-0 sticky top-0 z-30">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-600/30 border border-indigo-500/50 text-indigo-400 flex items-center justify-center shrink-0 relative">
+            <div className="w-9 h-9 rounded-2xl bg-indigo-600/30 border border-indigo-500/50 text-indigo-400 flex items-center justify-center shrink-0 relative">
               <Satellite className="w-5 h-5 text-indigo-400 animate-pulse" />
               <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-400/40 animate-ping" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-black text-sm sm:text-base tracking-wide bg-gradient-to-r from-white via-indigo-200 to-indigo-400 bg-clip-text text-transparent">
-                  AI LOGISTICS WAR ROOM &amp; RADAR BƯU CỤ 63 TỈNH
+                  AI LOGISTICS WAR ROOM
                 </h3>
                 <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-black uppercase tracking-wider">
-                  VỆ TINH LIVE
+                  VỆ TINH 63 TỈNH
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 hidden sm:block font-mono">
-                Hệ thống trinh sát điểm đen gian lận cước &amp; Tổng đài Voice AI đòi tiền tự động
+                Trinh sát điểm đen gian lận cước &amp; Tổng đài Voice AI đòi tiền tự động
               </p>
             </div>
           </div>
 
           {/* Action buttons */}
           <div className="flex items-center gap-2">
-            {/* Sound Toggle */}
             <button
               type="button"
               onClick={() => setSoundEnabled(!soundEnabled)}
@@ -512,221 +559,282 @@ export default function LogisticsWarRoomModal({ isOpen, onClose }) {
               {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
             </button>
 
-            {/* Close button */}
             <button
               type="button"
               onClick={onClose}
-              className="w-9 h-9 rounded-full bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white transition-colors flex items-center justify-center cursor-pointer shrink-0"
+              className="w-8 h-8 rounded-full bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white transition-colors flex items-center justify-center cursor-pointer shrink-0"
               title="Đóng phòng tác chiến (Esc)"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* MODE NAVIGATION TABS */}
-        <div className="px-4 sm:px-6 py-2.5 bg-slate-950/50 border-b border-slate-800 flex items-center justify-between gap-2 overflow-x-auto">
+        {/* MODE SWITCHER TABS - RÕ RÀNG, TÁCH BẠCH */}
+        <div className="px-4 sm:px-6 py-2.5 bg-slate-950/70 border-b border-slate-800 flex items-center justify-between gap-2 overflow-x-auto shrink-0">
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => setActiveTab('RADAR')}
-              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all cursor-pointer ${
                 activeTab === 'RADAR'
                   ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30'
                   : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border border-slate-700/60'
               }`}
             >
-              <Radio className="w-4 h-4 text-emerald-400 animate-spin-slow" />
-              <span>🛰️ Bản Đồ Vệ Tinh Radar Trinh Sát</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+              <Radio className="w-3.5 h-3.5 text-emerald-400" />
+              <span>🛰️ Tính Năng 1: Bản Đồ Vệ Tinh Radar Trinh Sát</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveTab('VOICE_CALL')}
-              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all cursor-pointer ${
                 activeTab === 'VOICE_CALL'
                   ? 'bg-gradient-to-r from-rose-600 via-pink-600 to-purple-600 text-white shadow-md shadow-rose-600/30'
                   : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border border-slate-700/60'
               }`}
             >
-              <PhoneCall className="w-4 h-4 text-amber-300 animate-bounce" />
-              <span>🎙️ Tổng Đài Voice AI Đòi Tiền (Gọi Thử Nghiệm)</span>
+              <PhoneCall className="w-3.5 h-3.5 text-amber-300" />
+              <span>🎙️ Tính Năng 2: Tổng Đài Voice AI Đòi Tiền Hotline</span>
               <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-black uppercase">
-                MIND-BLOWING
+                HOT
               </span>
             </button>
           </div>
 
-          <div className="hidden lg:flex items-center gap-4 text-xs font-mono text-slate-400">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              PULSE: 12 TRẠM MEGA
-            </span>
-            <span className="text-slate-600">|</span>
-            <span className="text-indigo-300">ĐỘ TRỄ SỐ LIỆU: &lt; 0.2s</span>
+          <div className="hidden md:flex items-center gap-2 text-xs font-mono text-slate-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>12 TRẠM MEGA ĐANG HOẠT ĐỘNG</span>
           </div>
         </div>
 
-        {/* TAB 1: RADAR RECONNAISSANCE MAP */}
+        {/* ============================================================== */}
+        {/* TAB 1: RADAR RECONNAISSANCE MAP (THIẾT KẾ RỘNG RÃI, KHÔNG ĐÈ CHỮ) */}
+        {/* ============================================================== */}
         {activeTab === 'RADAR' && (
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-6">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5 flex flex-col gap-4">
             
-            {/* Top Stat Ticker */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="p-3.5 rounded-2xl bg-slate-800/70 border border-slate-700/60 shadow-xs">
-                <span className="text-[11px] text-slate-400 block font-semibold">TỔNG ĐƠN ĐANG THEO DÕI</span>
-                <span className="text-xl sm:text-2xl font-black font-mono text-white">482.910</span>
-                <span className="text-[10px] text-emerald-400 flex items-center gap-1 mt-0.5">
-                  <TrendingUp className="w-3 h-3" /> +12.4% lưu lượng hôm nay
-                </span>
+            {/* Top Stat Summary Pills */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div className="p-3 rounded-2xl bg-slate-800/80 border border-slate-700/70">
+                <span className="text-[10px] text-slate-400 block font-semibold uppercase">LƯU LƯỢNG QUÉT</span>
+                <span className="text-lg font-black font-mono text-white">482.910 đơn</span>
+                <span className="text-[10px] text-emerald-400 block mt-0.5">+12.4% lưu lượng 24h</span>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-slate-800/70 border border-rose-900/40 shadow-xs">
-                <span className="text-[11px] text-rose-300 block font-semibold">ĐƠN BỊ KÊ KHỐNG CÂN (24H)</span>
-                <span className="text-xl sm:text-2xl font-black font-mono text-rose-400">3.491 đơn</span>
-                <span className="text-[10px] text-rose-300 mt-0.5 block">Ước tính lệch: ~98.200.000 đ</span>
+              <div className="p-3 rounded-2xl bg-slate-800/80 border border-rose-900/50">
+                <span className="text-[10px] text-rose-300 block font-semibold uppercase">BỊ KÊ KHỐNG CÂN</span>
+                <span className="text-lg font-black font-mono text-rose-400">3.491 đơn</span>
+                <span className="text-[10px] text-rose-300 block mt-0.5">Lệch ~98.200.000 đ</span>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-slate-800/70 border border-amber-900/40 shadow-xs">
-                <span className="text-[11px] text-amber-300 block font-semibold">ĐƠN HOÀN OM QUÁ 72H</span>
-                <span className="text-xl sm:text-2xl font-black font-mono text-amber-400">1.820 đơn</span>
-                <span className="text-[10px] text-amber-300 mt-0.5 block">Tập trung: Củ Chi &amp; Hòa Cầm</span>
+              <div className="p-3 rounded-2xl bg-slate-800/80 border border-amber-900/50">
+                <span className="text-[10px] text-amber-300 block font-semibold uppercase">OM HOÀN &gt; 72H</span>
+                <span className="text-lg font-black font-mono text-amber-400">1.820 đơn</span>
+                <span className="text-[10px] text-amber-300 block mt-0.5">Củ Chi &amp; Hòa Cầm</span>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-slate-800/70 border border-indigo-900/40 shadow-xs">
-                <span className="text-[11px] text-indigo-300 block font-semibold">ĐÃ ĐÒI HOÀN TIỀN THÀNH CÔNG</span>
-                <span className="text-xl sm:text-2xl font-black font-mono text-emerald-400">89.4% vụ</span>
-                <span className="text-[10px] text-emerald-300 mt-0.5 block">Thời gian giải quyết: ~18 giờ</span>
+              <div className="p-3 rounded-2xl bg-slate-800/80 border border-indigo-900/50">
+                <span className="text-[10px] text-indigo-300 block font-semibold uppercase">TỶ LỆ THU HỒI TIỀN</span>
+                <span className="text-lg font-black font-mono text-emerald-400">89.4% thành công</span>
+                <span className="text-[10px] text-emerald-300 block mt-0.5">Giải quyết trong 18h</span>
               </div>
             </div>
 
-            {/* Interactive Cyber Map & Hub Details Panel */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            {/* Main 2-Column War Map & Hub Intel Display */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
               
-              {/* Vietnam Cyber SVG Map Box */}
-              <div className="lg:col-span-7 bg-slate-950/80 rounded-3xl border border-indigo-500/20 p-4 sm:p-6 relative overflow-hidden min-h-[480px] flex flex-col justify-between">
+              {/* Left Column: Cyber Map + Hub Quick Selector */}
+              <div className="lg:col-span-6 flex flex-col gap-3">
                 
-                {/* Background Radar Grid lines */}
-                <div className="absolute inset-0 bg-tech-grid opacity-20 pointer-events-none" />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-[380px] h-[380px] rounded-full border border-indigo-500/15 animate-ping opacity-25" />
-                  <div className="w-[260px] h-[260px] rounded-full border border-indigo-500/20" />
-                  <div className="w-[120px] h-[120px] rounded-full border border-indigo-500/25" />
-                </div>
-
-                {/* Header overlay */}
-                <div className="relative z-10 flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-xs font-black uppercase tracking-wider text-slate-300 font-mono">
-                      BẢN ĐỒ HUYẾT MẠCH BƯU CHÍNH (VIỆT NAM CYBER RECON)
+                {/* SVG Vietnam Map Viewbox */}
+                <div className="bg-slate-950 rounded-2xl border border-indigo-500/25 p-3.5 relative overflow-hidden flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-1 z-10">
+                    <span className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5 font-mono">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      BẢN ĐỒ HUYẾT MẠCH 12 MEGA HUB
+                    </span>
+                    <span className="text-[10px] text-indigo-300 font-mono bg-indigo-950/80 px-2 py-0.5 rounded-full border border-indigo-800">
+                      Chạm chấm tròn để soi trạm
                     </span>
                   </div>
-                  <span className="text-[10px] text-indigo-400 bg-indigo-950/80 px-2.5 py-0.5 rounded-full border border-indigo-800">
-                    Bấm vào từng Hub để soi rủi ro
-                  </span>
+
+                  {/* SVG Map Canvas */}
+                  <div className="relative w-full h-[270px] sm:h-[300px] flex items-center justify-center">
+                    <svg viewBox="0 0 100 100" className="w-full h-full max-h-[290px]">
+                      {/* S-curve silhouette of Vietnam */}
+                      <path
+                        d="M 58 12 Q 68 15 65 24 Q 56 30 54 38 Q 63 46 70 54 Q 74 65 68 76 Q 58 84 52 88 Q 42 94 40 92 Q 38 88 46 84 Q 52 79 56 68 Q 50 56 46 44 Q 48 32 54 22 Z"
+                        fill="rgba(30, 41, 59, 0.45)"
+                        stroke="#4f46e5"
+                        strokeWidth="1.2"
+                        strokeDasharray="2 1"
+                      />
+
+                      {/* Transit trunk line */}
+                      <path
+                        d="M 67 15 L 61 19 L 54 33 L 65 46 L 73 57 L 76 69 L 59 78 L 51 81 L 43 91"
+                        fill="none"
+                        stroke="rgba(99, 102, 241, 0.45)"
+                        strokeWidth="0.8"
+                        strokeDasharray="1.5 1.5"
+                      />
+
+                      {/* Sweeping radar scanner line */}
+                      <line x1="58" y1="50" x2="90" y2="20" stroke="rgba(16, 185, 129, 0.25)" strokeWidth="0.8" className="origin-center animate-radar" />
+
+                      {/* 12 Hub Clean Pins - Chỉ hiện mã ngắn gọn, không bị đè chữ */}
+                      {LOGISTICS_HUBS.map((hub) => {
+                        const isSelected = selectedHub.id === hub.id;
+                        const isCritical = hub.status === 'CRITICAL';
+                        const isAlert = hub.status === 'ALERT';
+                        const pinColor = isCritical ? '#ef4444' : isAlert ? '#f59e0b' : '#10b981';
+
+                        return (
+                          <g 
+                            key={hub.id} 
+                            className="cursor-pointer group"
+                            onClick={() => {
+                              setSelectedHub(hub);
+                              if (soundEnabled) cyberSound.playSonarPing();
+                            }}
+                          >
+                            {/* Outer pulsing ring for selected or critical */}
+                            {(isSelected || isCritical) && (
+                              <circle
+                                cx={hub.x}
+                                cy={hub.y}
+                                r={isSelected ? 4.5 : 3.5}
+                                fill={isCritical ? 'rgba(239, 68, 68, 0.35)' : 'rgba(99, 102, 241, 0.35)'}
+                                className="animate-ping"
+                              />
+                            )}
+
+                            {/* Solid pin dot */}
+                            <circle
+                              cx={hub.x}
+                              cy={hub.y}
+                              r={isSelected ? 3.0 : 2.2}
+                              fill={pinColor}
+                              stroke="#ffffff"
+                              strokeWidth={isSelected ? 1.0 : 0.6}
+                            />
+
+                            {/* Clean number badge inside or beside */}
+                            <rect
+                              x={hub.x + 2.8}
+                              y={hub.y - 2.5}
+                              width={hub.code.length > 2 ? 8.5 : 6.5}
+                              height={4.2}
+                              rx={1.5}
+                              fill={isSelected ? '#4f46e5' : '#0f172a'}
+                              stroke={isSelected ? '#818cf8' : '#334155'}
+                              strokeWidth={0.4}
+                            />
+                            <text
+                              x={hub.x + (hub.code.length > 2 ? 7.0 : 6.0)}
+                              y={hub.y + 0.6}
+                              fill="#ffffff"
+                              fontSize="2.4"
+                              fontWeight="bold"
+                              textAnchor="middle"
+                              className="select-none pointer-events-none"
+                            >
+                              {hub.code}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </svg>
+                  </div>
+
+                  {/* Map Legend */}
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-800/80 pt-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-rose-500" /> Nguy cơ cao
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-amber-500" /> Cảnh báo
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" /> An toàn
+                      </span>
+                    </div>
+                    <span className="font-mono text-indigo-400">12 Điểm Huyết Mạch</span>
+                  </div>
                 </div>
 
-                {/* SVG Vietnam Map Outline & Pulsing Hub Nodes */}
-                <div className="relative w-full h-[400px] flex items-center justify-center my-2">
-                  <svg viewBox="0 0 100 100" className="w-full h-full max-h-[390px] drop-shadow-[0_0_20px_rgba(99,102,241,0.25)]">
-                    {/* Đường bờ biển hình chữ S Việt Nam cách điệu mượt mà */}
-                    <path
-                      d="M 58 12 Q 68 15 65 24 Q 56 30 54 38 Q 63 46 70 54 Q 74 65 68 76 Q 58 84 52 88 Q 42 94 40 92 Q 38 88 46 84 Q 52 79 56 68 Q 50 56 46 44 Q 48 32 54 22 Z"
-                      fill="rgba(30, 41, 59, 0.45)"
-                      stroke="#4f46e5"
-                      strokeWidth="1.2"
-                      strokeDasharray="2 1"
-                    />
+                {/* Hub Quick Filter Selector Bar (Rất dễ bấm, không lo trượt) */}
+                <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800 flex flex-col gap-2">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="font-bold text-slate-300">DANH SÁCH 12 TRẠM (CHỌN NHANH):</span>
+                    {/* Region Filter Buttons */}
+                    <div className="flex items-center gap-1">
+                      {['ALL', 'Bắc', 'Trung', 'Nam'].map((reg) => (
+                        <button
+                          key={reg}
+                          type="button"
+                          onClick={() => setRegionFilter(reg === 'ALL' ? 'ALL' : `Miền ${reg}`)}
+                          className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                            (reg === 'ALL' && regionFilter === 'ALL') || regionFilter === `Miền ${reg}`
+                              ? 'bg-indigo-600 text-white'
+                              : 'bg-slate-800 text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          {reg}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                    {/* Tuyến đường nối logistics Bắc - Trung - Nam */}
-                    <path
-                      d="M 66 15 L 62 18 L 55 32 L 64 45 L 72 56 L 68 76 L 58 79 L 52 81 L 44 91"
-                      fill="none"
-                      stroke="rgba(99, 102, 241, 0.4)"
-                      strokeWidth="0.8"
-                      strokeDasharray="1 1.5"
-                    />
-
-                    {/* Vòng quét Radar quay tròn */}
-                    <line x1="58" y1="50" x2="90" y2="20" stroke="rgba(16, 185, 129, 0.3)" strokeWidth="0.8" className="origin-center animate-radar" />
-
-                    {/* 12 Hub Nodes */}
-                    {LOGISTICS_HUBS.map((hub) => {
+                  {/* Horizontal Scrollable Hub Buttons */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-[140px] overflow-y-auto pr-1">
+                    {filteredHubs.map((hub) => {
                       const isSelected = selectedHub.id === hub.id;
-                      const isCritical = hub.status === 'CRITICAL';
-                      const isAlert = hub.status === 'ALERT';
-
                       return (
-                        <g 
-                          key={hub.id} 
-                          className="cursor-pointer group"
+                        <button
+                          key={hub.id}
+                          type="button"
                           onClick={() => {
                             setSelectedHub(hub);
                             if (soundEnabled) cyberSound.playSonarPing();
                           }}
+                          className={`p-2 rounded-xl text-left border transition-all cursor-pointer flex items-center justify-between ${
+                            isSelected 
+                              ? 'bg-indigo-950/80 border-indigo-500 text-white ring-1 ring-indigo-400' 
+                              : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:bg-slate-800'
+                          }`}
                         >
-                          {/* Pulsing ring */}
-                          <circle
-                            cx={hub.x}
-                            cy={hub.y}
-                            r={isSelected ? 3.5 : 2.5}
-                            fill={isCritical ? 'rgba(239, 68, 68, 0.4)' : isAlert ? 'rgba(245, 158, 11, 0.4)' : 'rgba(16, 185, 129, 0.4)'}
-                            className="animate-ping"
-                          />
-                          {/* Inner Node */}
-                          <circle
-                            cx={hub.x}
-                            cy={hub.y}
-                            r={isSelected ? 2.8 : 2.0}
-                            fill={isCritical ? '#ef4444' : isAlert ? '#f59e0b' : '#10b981'}
-                            stroke="#ffffff"
-                            strokeWidth="0.6"
-                          />
-                          {/* Label tooltip */}
-                          <text
-                            x={hub.x + 3.2}
-                            y={hub.y + 0.8}
-                            fill={isSelected ? '#ffffff' : '#94a3b8'}
-                            fontSize="2.8"
-                            fontWeight={isSelected ? 'bold' : 'normal'}
-                            className="select-none group-hover:fill-indigo-300 transition-colors"
-                          >
-                            {hub.name.split('(')[0]}
-                          </text>
-                        </g>
+                          <div className="min-w-0 pr-1">
+                            <div className="text-[11px] font-bold truncate">#{hub.num} {hub.shortName}</div>
+                            <div className="text-[9px] text-slate-400">{hub.region}</div>
+                          </div>
+                          <span className={`w-2 h-2 rounded-full shrink-0 ${
+                            hub.status === 'CRITICAL' ? 'bg-rose-500 animate-pulse' : hub.status === 'ALERT' ? 'bg-amber-500' : 'bg-emerald-500'
+                          }`} />
+                        </button>
                       );
                     })}
-                  </svg>
+                  </div>
                 </div>
 
-                {/* Map Legend */}
-                <div className="relative z-10 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-800/80 pt-2.5">
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-rose-500" /> Báo động đỏ (Nguy cơ cao)
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-amber-500" /> Cảnh báo
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500" /> Bình thường
-                    </span>
-                  </div>
-                  <span className="font-mono text-indigo-400">GPS: VN-LOG-RADAR-V3</span>
-                </div>
               </div>
 
-              {/* Hub Inspection Detail Card */}
-              <div className="lg:col-span-5 flex flex-col gap-4">
-                <div className="p-5 rounded-3xl bg-slate-950/90 border border-indigo-500/30 shadow-xl">
+              {/* Right Column: Selected Hub Telemetry Analytics & Live Feed */}
+              <div className="lg:col-span-6 flex flex-col gap-3">
+                
+                {/* Hub Inspection Detail Card */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950 border border-indigo-500/30 shadow-xl">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <MapPin className="w-5 h-5 text-indigo-400" />
+                      <div className="w-8 h-8 rounded-xl bg-indigo-600/30 text-indigo-400 flex items-center justify-center font-bold">
+                        {selectedHub.code}
+                      </div>
                       <div>
                         <h4 className="font-black text-sm text-white">{selectedHub.name}</h4>
-                        <span className="text-[11px] text-slate-400 font-mono">{selectedHub.region}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">{selectedHub.region} • Bưu cục rủi ro: {selectedHub.topRiskCarrier}</span>
                       </div>
                     </div>
                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
@@ -736,77 +844,77 @@ export default function LogisticsWarRoomModal({ isOpen, onClose }) {
                         ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                         : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                     }`}>
-                      {selectedHub.status === 'CRITICAL' ? 'NGUY CƠ CAO (92/100)' : selectedHub.status === 'ALERT' ? 'CẦN CHÚ Ý' : 'AN TOÀN'}
+                      {selectedHub.status === 'CRITICAL' ? 'RỦI RO CAO' : selectedHub.status === 'ALERT' ? 'CẦN CHÚ Ý' : 'AN TOÀN'}
                     </span>
                   </div>
 
-                  <p className="text-xs text-slate-300 leading-relaxed mb-4 p-3 rounded-xl bg-slate-900 border border-slate-800">
+                  <p className="text-xs text-slate-300 leading-relaxed mb-3.5 p-2.5 rounded-xl bg-slate-900 border border-slate-800">
                     {selectedHub.description}
                   </p>
 
                   {/* 4 Hub Metric Gauges */}
-                  <div className="grid grid-cols-2 gap-2.5 text-xs mb-4">
-                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                      <span className="text-[11px] text-slate-400 block font-medium">Tỷ lệ nhảy cân khống</span>
+                  <div className="grid grid-cols-2 gap-2 text-xs mb-3.5">
+                    <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block font-medium">Tỷ lệ nhảy cân khống</span>
                       <span className="text-base font-black font-mono text-rose-400">{selectedHub.overweightRate}</span>
-                      <div className="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                      <div className="w-full bg-slate-800 h-1 rounded-full mt-1 overflow-hidden">
                         <div className="bg-rose-500 h-full rounded-full" style={{ width: selectedHub.overweightRate }} />
                       </div>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                      <span className="text-[11px] text-slate-400 block font-medium">Om hàng hoàn &gt; 72h</span>
+                    <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block font-medium">Om hàng hoàn &gt; 72h</span>
                       <span className="text-base font-black font-mono text-amber-400">{selectedHub.delayedReturnRate}</span>
-                      <div className="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                      <div className="w-full bg-slate-800 h-1 rounded-full mt-1 overflow-hidden">
                         <div className="bg-amber-500 h-full rounded-full" style={{ width: selectedHub.delayedReturnRate }} />
                       </div>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                      <span className="text-[11px] text-slate-400 block font-medium">Thời gian hoàn COD TB</span>
+                    <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block font-medium">Thời gian hoàn COD TB</span>
                       <span className="text-base font-black font-mono text-indigo-300">{selectedHub.avgCodDays}</span>
-                      <span className="text-[10px] text-slate-500 block mt-0.5">Cam kết SLA: &lt; 2 ngày</span>
+                      <span className="text-[9px] text-slate-500 block mt-0.5">SLA cam kết: &lt; 2 ngày</span>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                      <span className="text-[11px] text-slate-400 block font-medium">Bưu cục rủi ro nhất</span>
-                      <span className="text-xs font-black text-rose-300 mt-1 block truncate">{selectedHub.topRiskCarrier}</span>
-                      <span className="text-[10px] text-slate-500 block mt-0.5">{selectedHub.recentAnomalies} đơn lỗi gần đây</span>
+                    <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block font-medium">Sự cố phát hiện gần đây</span>
+                      <span className="text-base font-black font-mono text-white">{selectedHub.recentAnomalies} đơn</span>
+                      <span className="text-[9px] text-rose-400 block mt-0.5">Đã gắn cờ kiểm tra</span>
                     </div>
                   </div>
 
                   {/* Recommendations */}
-                  <div className="p-3 rounded-xl bg-indigo-950/40 border border-indigo-800/60 text-xs text-indigo-200 space-y-1 mb-4">
-                    <b className="text-white flex items-center gap-1.5">
+                  <div className="p-2.5 rounded-xl bg-indigo-950/40 border border-indigo-800/60 text-xs text-indigo-200">
+                    <b className="text-white flex items-center gap-1.5 text-[11px]">
                       <Zap className="w-3.5 h-3.5 text-amber-400" />
-                      Khuyến nghị từ SoatDon.vn:
+                      Lưu ý đóng hàng tại trạm này:
                     </b>
-                    <p className="text-[11px] text-slate-300 leading-relaxed">
-                      Khi gửi hàng qua trạm này, shop bắt buộc phải chụp ảnh kiện hàng kèm thước đo và lưu biên bản bàn giao có chữ ký bưu tá để đối soát tự động.
+                    <p className="text-[11px] text-slate-300 leading-relaxed mt-0.5">
+                      Bắt buộc chụp ảnh kiện hàng kèm thước đo và lưu biên bản bàn giao có chữ ký bưu tá để AI tự động so khớp đối soát.
                     </p>
                   </div>
                 </div>
 
                 {/* Real-time Incident Feed Stream */}
-                <div className="p-4 rounded-3xl bg-slate-950/90 border border-slate-800 flex flex-col gap-2.5">
+                <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col gap-2">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-black text-slate-200 flex items-center gap-1.5">
+                    <span className="font-black text-slate-200 flex items-center gap-1.5 font-mono text-[11px]">
                       <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-                      NHẬT KÝ SỰ CỐ TRINH SÁT (REAL-TIME FEED)
+                      SỰ CỐ TRINH SÁT THEO THỜI GIAN THỰC
                     </span>
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   </div>
 
-                  <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
+                  <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
                     {LIVE_INCIDENTS.map((inc, i) => (
-                      <div key={i} className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800/80 text-[11px] flex flex-col gap-0.5">
+                      <div key={i} className="p-2 rounded-xl bg-slate-900/90 border border-slate-800/80 text-[11px] flex flex-col gap-0.5">
                         <div className="flex items-center justify-between text-slate-400 font-mono text-[10px]">
                           <span className="text-indigo-400 font-bold">[{inc.time}] {inc.hub}</span>
-                          <span className="text-rose-400 font-bold bg-rose-950/60 px-1.5 py-0.2 rounded border border-rose-900">
+                          <span className="text-rose-400 font-bold bg-rose-950/60 px-1 py-0.2 rounded border border-rose-900 text-[9px]">
                             {inc.type}
                           </span>
                         </div>
-                        <p className="text-slate-300 leading-snug">{inc.detail}</p>
+                        <p className="text-slate-300 leading-snug text-[10px]">{inc.detail}</p>
                       </div>
                     ))}
                   </div>
@@ -818,209 +926,227 @@ export default function LogisticsWarRoomModal({ isOpen, onClose }) {
           </div>
         )}
 
-        {/* TAB 2: VOICE CALL WAR ROOM SIMULATOR */}
+        {/* ============================================================== */}
+        {/* TAB 2: VOICE CALL WAR ROOM SIMULATOR (SPLIT SCREEN GỌN GÀNG, KHÔNG ĐÈ) */}
+        {/* ============================================================== */}
         {activeTab === 'VOICE_CALL' && (
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-6">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5 flex flex-col gap-4">
             
-            {/* Scenario Picker Carousel */}
-            <div>
-              <span className="text-xs font-black uppercase tracking-wider text-slate-400 block mb-2.5">
-                1. CHỌN TÌNH HUỐNG TRANH CHẤP CẦN TỔNG ĐÀI AI GỌI ĐÒI TIỀN:
-              </span>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {VOICE_CALL_SCENARIOS.map((scen) => {
-                  const isSelected = selectedScenario.id === scen.id;
-                  return (
-                    <div
-                      key={scen.id}
-                      onClick={() => {
-                        if (isCalling) handleStopCall();
-                        setSelectedScenario(scen);
-                      }}
-                      className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-                        isSelected 
-                          ? 'bg-gradient-to-br from-indigo-900/40 via-purple-900/30 to-slate-900 border-indigo-500 shadow-lg shadow-indigo-500/20 ring-1 ring-indigo-400' 
-                          : 'bg-slate-950/80 border-slate-800 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-black text-white">{scen.title}</span>
-                        <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] font-mono font-bold">
-                          {scen.disputeAmount}
-                        </span>
+            {/* Split Screen 2 Cột: Bên trái Điều khiển & Thước đo, Bên phải Màn hình đàm thoại */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+              
+              {/* CỘT TRÁI (38%): CHỌN TÌNH HUỐNG & ĐIỀU KHIỂN CUỘC GỌI */}
+              <div className="lg:col-span-5 flex flex-col gap-3">
+                
+                {/* 3 Scenario Cards */}
+                <div className="space-y-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-400 block font-mono">
+                    1. CHỌN TÌNH HUỐNG TRANH CHẤP:
+                  </span>
+                  
+                  {VOICE_CALL_SCENARIOS.map((scen) => {
+                    const isSelected = selectedScenario.id === scen.id;
+                    return (
+                      <div
+                        key={scen.id}
+                        onClick={() => {
+                          if (isCalling) handleStopCall();
+                          setSelectedScenario(scen);
+                        }}
+                        className={`p-3 rounded-2xl border transition-all cursor-pointer ${
+                          isSelected 
+                            ? 'bg-gradient-to-r from-indigo-950/80 to-purple-950/80 border-indigo-500 shadow-md ring-1 ring-indigo-400' 
+                            : 'bg-slate-950/90 border-slate-800 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-black text-white">{scen.title}</span>
+                          <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] font-mono font-bold">
+                            {scen.disputeAmount}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 line-clamp-1">
+                          {scen.subtitle}
+                        </p>
                       </div>
-                      <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">
-                        {scen.subtitle}
-                      </p>
-                      <div className="mt-2.5 pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-indigo-300 font-mono">
-                        <span>{scen.carrier}</span>
-                        <span>{scen.dialogue.length} lượt đàm thoại</span>
-                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Call Control Card */}
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-slate-400 block">ĐỐI TÁC BƯU CỤC:</span>
+                      <span className="text-xs font-black text-indigo-300 truncate max-w-[200px] block">{selectedScenario.carrier}</span>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
 
-            {/* LIVE AUDIO WAR ROOM CALL CONSOLE */}
-            <div className="p-6 rounded-3xl bg-slate-950 border border-indigo-500/30 relative overflow-hidden flex flex-col gap-6 shadow-2xl">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className={`w-3 h-3 rounded-full ${isCalling ? 'bg-rose-500 animate-ping' : 'bg-slate-600'}`} />
-                    <h4 className="text-base sm:text-lg font-black text-white">
-                      {isCalling ? 'CUỘC GỌI TÁC CHIẾN ĐANG DIỄN RA TRỰC TIẾP' : 'SẴN SÀNG KẾT NỐI TỔNG ĐÀI ĐÒI TIỀN'}
-                    </h4>
+                    <div className="text-right">
+                      <span className="text-xs font-bold text-slate-400 block">TIỀN TRANH CHẤP:</span>
+                      <span className="text-sm font-black font-mono text-rose-400">{selectedScenario.disputeAmount}</span>
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-400 mt-0.5 font-mono">
-                    Đầu nối bưu cục: <b className="text-indigo-400">{selectedScenario.carrier}</b> • Giá trị tranh chấp: <b className="text-rose-400">{selectedScenario.disputeAmount}</b>
-                  </p>
-                </div>
 
-                {/* Call Control Buttons */}
-                <div className="flex items-center gap-3">
-                  {/* TTS Speech Toggle */}
-                  <button
-                    type="button"
-                    onClick={() => setSpeechSynthEnabled(!speechSynthEnabled)}
-                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                      speechSynthEnabled 
-                        ? 'bg-purple-950/80 border-purple-700 text-purple-300' 
-                        : 'bg-slate-900 border-slate-800 text-slate-500'
-                    }`}
-                    title="Bật/Tắt giọng đọc AI tiếng Việt thật phát ra loa"
-                  >
-                    <Volume2 className="w-3.5 h-3.5" />
-                    <span>Giọng Nói AI ({speechSynthEnabled ? 'BẬT' : 'TẮT'})</span>
-                  </button>
+                  {/* Big Action Buttons */}
+                  <div className="flex items-center gap-2 pt-1">
+                    {!isCalling ? (
+                      <button
+                        type="button"
+                        onClick={handleStartCall}
+                        className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        <PhoneCall className="w-4 h-4 animate-bounce" />
+                        <span>BẮT ĐẦU GỌI NGAY</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleStopCall}
+                        className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs sm:text-sm shadow-lg shadow-rose-600/30 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                      >
+                        <PhoneOff className="w-4 h-4" />
+                        <span>GÁC MÁY / HỦY</span>
+                      </button>
+                    )}
 
-                  {!isCalling ? (
+                    {/* Speech Voice Toggle */}
                     <button
                       type="button"
-                      onClick={handleStartCall}
-                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-emerald-600/30 flex items-center gap-2 cursor-pointer transition-all hover:scale-105"
+                      onClick={() => setSpeechSynthEnabled(!speechSynthEnabled)}
+                      className={`px-3 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
+                        speechSynthEnabled 
+                          ? 'bg-purple-950 border-purple-700 text-purple-300' 
+                          : 'bg-slate-900 border-slate-800 text-slate-500'
+                      }`}
+                      title="Bật/Tắt giọng đọc AI tiếng Việt thật phát ra loa"
                     >
-                      <PhoneCall className="w-4 h-4 animate-bounce" />
-                      <span>BẮT ĐẦU GỌI NGAY</span>
+                      <Volume2 className="w-3.5 h-3.5" />
+                      <span>Loa ({speechSynthEnabled ? 'BẬT' : 'TẮT'})</span>
                     </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleStopCall}
-                      className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs sm:text-sm shadow-lg shadow-rose-600/30 flex items-center gap-2 cursor-pointer transition-all"
-                    >
-                      <PhoneOff className="w-4 h-4" />
-                      <span>GÁC MÁY / HỦY</span>
-                    </button>
-                  )}
-                </div>
-              </div>
+                  </div>
 
-              {/* Call Waveform Visualizer & Concession Gauge */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center bg-slate-900/90 p-4 rounded-2xl border border-slate-800">
-                <div className="md:col-span-8 flex flex-col gap-2">
-                  <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
-                    <span>AUDIO WAVEFORM (VOICE RADAR)</span>
-                    <span className="text-indigo-400">
-                      THỜI LƯỢNG: {String(Math.floor(callDuration / 60)).padStart(2, '0')}:{String(callDuration % 60).padStart(2, '0')}
+                  {/* Audio Waveform Canvas */}
+                  <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono mb-1">
+                      <span>VOICE RADAR WAVEFORM</span>
+                      <span className="text-indigo-400">
+                        {isCalling ? `00:${String(callDuration).padStart(2, '0')}` : 'CHỜ KẾT NỐI'}
+                      </span>
+                    </div>
+                    <canvas ref={canvasRef} width={380} height={40} className="w-full h-[40px] rounded-lg bg-slate-950" />
+                  </div>
+
+                  {/* Concession Meter */}
+                  <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col gap-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-slate-300 text-[11px]">BƯU CỤC NHƯỢNG BỘ:</span>
+                      <span className="font-mono font-black text-sm text-emerald-400">{concessionRate}%</span>
+                    </div>
+                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-700 ${
+                          concessionRate === 100 ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-gradient-to-r from-amber-500 to-rose-500'
+                        }`} 
+                        style={{ width: `${concessionRate}%` }} 
+                      />
+                    </div>
+                    <span className="text-[10px] text-slate-400">
+                      {concessionRate === 100 
+                        ? '🎉 Bưu cục đã đầu hàng, chấp thuận bồi thường 100%!' 
+                        : isCalling 
+                        ? 'AI đang dồn ép bưu cục bằng căn cứ pháp lý...' 
+                        : 'Sẵn sàng tác chiến'}
                     </span>
                   </div>
-                  {/* Canvas visualizer */}
-                  <canvas ref={canvasRef} width={600} height={60} className="w-full h-[60px] rounded-xl bg-slate-950" />
                 </div>
 
-                <div className="md:col-span-4 p-3 rounded-xl bg-slate-950 border border-slate-800 flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-slate-300">TỶ LỆ BƯU CỤC NHƯỢNG BỘ:</span>
-                    <span className="font-mono font-black text-base text-emerald-400">{concessionRate}%</span>
-                  </div>
-                  <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full transition-all duration-700 ${
-                        concessionRate === 100 ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-gradient-to-r from-amber-500 to-rose-500'
-                      }`} 
-                      style={{ width: `${concessionRate}%` }} 
-                    />
-                  </div>
-                  <span className="text-[10px] text-slate-400 mt-1">
-                    {concessionRate === 100 
-                      ? '🎉 Bưu cục đã chấp thuận bồi thường 100%!' 
-                      : isCalling 
-                      ? 'AI đang dùng Luật Bưu chính dồn ép lý lẽ...' 
-                      : 'Chưa kết nối'}
-                  </span>
-                </div>
               </div>
 
-              {/* Dynamic Transcript Live Dialogue Stream */}
-              <div className="space-y-3 min-h-[220px] max-h-[340px] overflow-y-auto pr-2">
-                {!isCalling && callStep === 0 && (
-                  <div className="p-8 text-center text-slate-500 text-xs">
-                    <PhoneCall className="w-8 h-8 mx-auto mb-2 text-slate-600 animate-pulse" />
-                    Bấm <b>"BẮT ĐẦU GỌI NGAY"</b> ở trên để nghe Trợ lý AI thực chiến đối chất thép với bưu cục bằng Luật Bưu chính 2010.
+              {/* CỘT PHẢI (62%): MÀN HÌNH ĐÀM THOẠI TRỰC TIẾP (HOTLINE CALL MONITOR) */}
+              <div className="lg:col-span-7 flex flex-col gap-3">
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950 border border-indigo-500/30 shadow-xl flex flex-col min-h-[440px] max-h-[500px]">
+                  
+                  {/* Call Header */}
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-3 shrink-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2.5 h-2.5 rounded-full ${isCalling ? 'bg-rose-500 animate-ping' : 'bg-slate-600'}`} />
+                      <span className="text-xs font-black uppercase text-white font-mono">
+                        {isCalling ? 'ĐANG KẾT NỐI TRỰC TIẾP VỚI ĐẠI DIỆN BƯU CỤC' : 'MÀN HÌNH ĐÀM THOẠI VOICE AI'}
+                      </span>
+                    </div>
+
+                    <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-800">
+                      Luật Bưu Chính 2010
+                    </span>
                   </div>
-                )}
 
-                {selectedScenario.dialogue.slice(0, callStep + 1).map((item, idx) => {
-                  const isAi = item.speaker === 'AI_AGENT';
-                  const isCurrent = idx === callStep && isCalling;
-
-                  return (
-                    <div 
-                      key={idx} 
-                      className={`p-3.5 rounded-2xl border transition-all ${
-                        isAi 
-                          ? 'bg-indigo-950/40 border-indigo-800/80 ml-6 sm:ml-12' 
-                          : 'bg-rose-950/30 border-rose-900/60 mr-6 sm:mr-12'
-                      } ${isCurrent ? 'ring-2 ring-indigo-400 shadow-md' : ''}`}
-                    >
-                      <div className="flex items-center justify-between mb-1 text-xs">
-                        <span className={`font-black flex items-center gap-1.5 ${isAi ? 'text-indigo-300' : 'text-rose-300'}`}>
-                          {isAi ? <Cpu className="w-3.5 h-3.5 text-indigo-400" /> : <PhoneCall className="w-3.5 h-3.5 text-rose-400" />}
-                          {isAi ? '🤖 AI Kiểm Toán SoatDon.vn (Bên Khiếu Nại):' : '👨‍💼 Đại Diện Bưu Cục Vận Chuyển:'}
-                        </span>
-                        {isCurrent && (
-                          <span className="text-[10px] font-bold text-amber-400 bg-amber-950/60 px-2 py-0.2 rounded-full animate-pulse border border-amber-800">
-                            ĐANG NÓI...
-                          </span>
-                        )}
+                  {/* Scrollable Dialogue Message Bubbles */}
+                  <div ref={chatScrollRef} className="flex-1 overflow-y-auto space-y-3 pr-1 pb-2">
+                    {!isCalling && callStep === 0 && (
+                      <div className="h-full flex flex-col items-center justify-center text-center p-8 text-slate-500">
+                        <PhoneCall className="w-10 h-10 mb-3 text-slate-600 animate-pulse" />
+                        <h5 className="font-extrabold text-sm text-slate-400 mb-1">Tổng Đài Đang Ở Chế Độ Chờ</h5>
+                        <p className="text-xs text-slate-500 max-w-sm">
+                          Bấm nút <b>"BẮT ĐẦU GỌI NGAY"</b> ở bên trái để nghe Trợ lý AI thực chiến đối chất thép với bưu cục bằng từng điều khoản pháp luật.
+                        </p>
                       </div>
-                      <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-sans">
-                        {item.text}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
+                    )}
 
-              {/* Victory Voucher Banner when 100% Won */}
-              {callSuccess && (
-                <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/80 via-teal-950/80 to-slate-900 border border-emerald-500/50 flex flex-col sm:flex-row items-center justify-between gap-3 animate-fade-in">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold shrink-0">
-                      <Award className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h5 className="font-extrabold text-sm text-white flex items-center gap-2">
-                        ĐÒI TIỀN THÀNH CÔNG RỰC RỠ: {selectedScenario.disputeAmount}
-                      </h5>
-                      <p className="text-xs text-emerald-300">
-                        Bưu cục đã đồng ý lập biên bản bồi thường 100% và duyệt giảm trừ cước vào kỳ thanh toán tới.
-                      </p>
-                    </div>
+                    {selectedScenario.dialogue.slice(0, callStep + 1).map((item, idx) => {
+                      const isAi = item.speaker === 'AI_AGENT';
+                      const isCurrent = idx === callStep && isCalling;
+
+                      return (
+                        <div 
+                          key={idx} 
+                          className={`p-3 rounded-2xl border transition-all ${
+                            isAi 
+                              ? 'bg-indigo-950/40 border-indigo-800/80 ml-4 sm:ml-8' 
+                              : 'bg-rose-950/30 border-rose-900/60 mr-4 sm:mr-8'
+                          } ${isCurrent ? 'ring-2 ring-indigo-400 shadow-md' : ''}`}
+                        >
+                          <div className="flex items-center justify-between mb-1.5 text-xs">
+                            <span className={`font-black flex items-center gap-1.5 ${isAi ? 'text-indigo-300' : 'text-rose-300'}`}>
+                              {isAi ? <Cpu className="w-3.5 h-3.5 text-indigo-400" /> : <PhoneCall className="w-3.5 h-3.5 text-rose-400" />}
+                              {isAi ? '🤖 AI Kiểm Toán SoatDon.vn:' : '👨‍💼 Đại Diện Bưu Cục:'}
+                            </span>
+                            {isCurrent && (
+                              <span className="text-[9px] font-bold text-amber-400 bg-amber-950/60 px-1.5 py-0.2 rounded-full animate-pulse border border-amber-800">
+                                ĐANG NÓI...
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-sans">
+                            {item.text}
+                          </p>
+                        </div>
+                      );
+                    })}
+
+                    {/* Victory Banner inside chat */}
+                    {callSuccess && (
+                      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/90 via-teal-950/90 to-slate-900 border border-emerald-500/60 flex flex-col sm:flex-row items-center justify-between gap-3 animate-fade-in mt-3">
+                        <div className="flex items-center gap-2.5">
+                          <Award className="w-6 h-6 text-emerald-400 shrink-0" />
+                          <div>
+                            <div className="font-extrabold text-xs text-white">ĐÒI TIỀN THÀNH CÔNG: {selectedScenario.disputeAmount}</div>
+                            <div className="text-[11px] text-emerald-300">Bưu cục đã chấp thuận bồi thường 100% vào kỳ đối soát tới.</div>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => alert(`Đã xuất biên bản thỏa thuận hòa giải giá trị ${selectedScenario.disputeAmount}!`)}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition-all cursor-pointer whitespace-nowrap shrink-0"
+                        >
+                          Tải Biên Bản A4
+                        </button>
+                      </div>
+                    )}
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      alert(`Đã xuất biên bản thỏa thuận hòa giải có chữ ký số xác thực giá trị ${selectedScenario.disputeAmount}!`);
-                    }}
-                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition-all cursor-pointer whitespace-nowrap shrink-0"
-                  >
-                    Tải Biên Bản Thỏa Thuận A4
-                  </button>
                 </div>
-              )}
+              </div>
 
             </div>
 
@@ -1028,17 +1154,17 @@ export default function LogisticsWarRoomModal({ isOpen, onClose }) {
         )}
 
         {/* FOOTER BAR */}
-        <div className="px-5 py-3 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 shrink-0">
+        <div className="px-5 py-2.5 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 shrink-0">
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-slate-300 font-mono">Hệ thống Trinh sát &amp; Voice Call AI hoạt động với độ tin cậy 99.98%</span>
+            <span className="text-slate-300 font-mono text-[11px]">Hệ thống Trinh sát Radar &amp; Voice Call AI hoạt động với độ tin cậy 99.98%</span>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold transition-colors cursor-pointer"
+            className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold transition-colors cursor-pointer text-xs"
           >
-            Đóng Phòng Tác Chiến
+            Đóng Cửa Sổ (Esc)
           </button>
         </div>
 
