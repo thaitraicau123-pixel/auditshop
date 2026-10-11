@@ -24,6 +24,7 @@ import RateCompareModal from './components/RateCompareModal';
 import QuickAuditModal from './components/QuickAuditModal';
 import DisputePlaybookModal from './components/DisputePlaybookModal';
 import DamageClaimModal from './components/DamageClaimModal';
+import LogisticsWarRoomModal from './components/LogisticsWarRoomModal';
 import { analyzeOrders } from './utils/auditEngine';
 import { syncLocalAccountsToCloud, fetchCloudAccounts } from './utils/cloudDatabase';
 import { CURRENT_SYSTEM_VERSION } from './data/changelog';
@@ -151,6 +152,9 @@ export default function App() {
   const [isQuickAuditOpen, setIsQuickAuditOpen] = useState(false);
   const [isDisputePlaybookOpen, setIsDisputePlaybookOpen] = useState(false);
   const [isDamageClaimOpen, setIsDamageClaimOpen] = useState(false);
+  
+  // 🛰️ Phòng Tác Chiến Radar Vệ Tinh & Tổng Đài Voice AI (Siêu Công Nghệ)
+  const [isWarRoomOpen, setIsWarRoomOpen] = useState(false);
 
   // Pet Game & Hall of Fame State (Mini-game nuôi thú cưng & Bảng Vàng)
   const [isPetGameOpen, setIsPetGameOpen] = useState(false);
@@ -199,6 +203,7 @@ export default function App() {
         setIsQuickAuditOpen(false);
         setIsDisputePlaybookOpen(false);
         setIsDamageClaimOpen(false);
+        setIsWarRoomOpen(false);
       }
 
       // 🔐 Phím tắt bí mật chỉ anh Bùi Quốc Thái biết: Ctrl + Shift + A (hoặc Cmd + Shift + A trên Mac)
@@ -398,6 +403,7 @@ export default function App() {
         onOpenQuickAudit={() => setIsQuickAuditOpen(true)}
         onOpenDisputePlaybook={() => setIsDisputePlaybookOpen(true)}
         onOpenDamageClaim={() => setIsDamageClaimOpen(true)}
+        onOpenWarRoom={() => setIsWarRoomOpen(true)}
       />
 
       <main className="flex-1">
@@ -409,6 +415,7 @@ export default function App() {
           onOpenQuickAudit={() => setIsQuickAuditOpen(true)}
           onOpenDisputePlaybook={() => setIsDisputePlaybookOpen(true)}
           onOpenDamageClaim={() => setIsDamageClaimOpen(true)}
+          onOpenWarRoom={() => setIsWarRoomOpen(true)}
         />
 
         {/* Upload & Scanner Zone */}
@@ -629,6 +636,12 @@ export default function App() {
       <DamageClaimModal 
         isOpen={isDamageClaimOpen}
         onClose={() => setIsDamageClaimOpen(false)}
+      />
+
+      {/* 🛰️ Phòng Tác Chiến Vệ Tinh Radar 63 Tỉnh Thành & Tổng Đài Voice AI Đòi Tiền (Siêu Công Nghệ) */}
+      <LogisticsWarRoomModal 
+        isOpen={isWarRoomOpen}
+        onClose={() => setIsWarRoomOpen(false)}
       />
     </div>
   );
