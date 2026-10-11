@@ -3,14 +3,43 @@
  * Lưu trữ phiên bản, thời gian phát hành và toàn bộ tính năng mới đã thêm.
  */
 
-export const CURRENT_SYSTEM_VERSION = 'v2.8';
+export const CURRENT_SYSTEM_VERSION = 'v2.9';
 
 export const CHANGELOG_HISTORY = [
+  {
+    version: 'v2.9',
+    releaseDate: '11/10/2026 - 20:20',
+    title: '☕ Ra Mắt Tính Năng "Mời Dev Ly Cà Phê" & 3 Điểm Rơi Tri Ân Thông Minh',
+    isCurrent: true,
+    badges: ['Mời Cà Phê ☕', 'VietQR 1-Chạm', '3 Điểm Rơi Cảm Xúc', 'Bảng Vàng Tri Ân'],
+    summary: 'Tích hợp tiện ích Mời Dev Ly Cà Phê (Buy Me A Coffee) qua VietQR MB Bank tại 3 thời điểm tâm lý vàng: ngay sau khi xuất file khiếu nại, tại chân trang Footer và trong cửa sổ vinh danh chiến thắng để lấy hên bão đơn!',
+    categories: [
+      {
+        name: 'Tiện ích Tiếp Sức & Gắn Kết Cộng Đồng',
+        tag: 'COMMUNITY',
+        color: 'amber',
+        items: [
+          {
+            title: 'Hộp thoại Mời Cà Phê VietQR Tức Thì (15k - 25k - 50k - 100k)',
+            desc: 'Mã QR động tạo sẵn nội dung chuyển khoản, hiển thị STK MB Bank 0986019623 với các mức ủng hộ gần gũi: Cốc trà đá 15k, Ly cà phê muối 25k, Bữa cơm trưa 50k, hoặc số tiền tùy tâm.'
+          },
+          {
+            title: '3 Điểm Rơi Cảm Xúc Thông Minh',
+            desc: 'Điểm 1: Tự động nhắc nhở sau khi xuất file Excel khiếu nại; Điểm 2: Nút bấm trang trọng tại chân trang Footer; Điểm 3: Gợi ý "Mời cà phê lấy hên buôn may bán đắt" khi kiểm toán sạch 100% không mất tiền.'
+          },
+          {
+            title: 'Bảng Vàng Tri Ân Các Shop Hảo Tâm',
+            desc: 'Vinh danh những lời nhắn gửi và tình cảm quý báu của các chủ shop đã đồng hành tiếp sức cho máy chủ AI SoatDon.vn.'
+          }
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.8',
     releaseDate: '11/10/2026 - 19:40',
     title: '✨ Đại Tu Toàn Diện Trải Nghiệm Người Dùng (UI/UX 2.0) & Holographic Radar Scanner',
-    isCurrent: true,
+    isCurrent: false,
     badges: ['Holographic Scanner', 'Web Audio FX', 'Carrier Ranking', 'Smart Filter', 'Print PDF'],
     summary: 'Cải tiến mạnh mẽ giao diện SaaS cao cấp, hiệu ứng quét AI Holographic Radar HUD, âm thanh sinh động Web Audio, biểu đồ phân bổ tổn thất, bảng xếp hạng rủi ro hãng vận chuyển, công cụ lọc & tìm kiếm đơn bất thường tức thì, và tính năng In Biên Bản Khiếu Nại chuẩn A4/PDF gửi bưu cục.',
     categories: [

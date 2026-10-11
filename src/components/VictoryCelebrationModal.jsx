@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
-import { Trophy, X, CheckCircle2, Sparkles, Star, Award, RotateCcw, Share2, ShieldCheck } from 'lucide-react';
+import { Trophy, X, CheckCircle2, Sparkles, Star, Award, RotateCcw, Share2, ShieldCheck, Coffee } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sounds } from '../utils/soundEffects';
 
-export default function VictoryCelebrationModal({ isOpen, onClose, totalOrders, fileName, onReset }) {
+export default function VictoryCelebrationModal({ isOpen, onClose, totalOrders, fileName, onReset, onOpenCoffeeModal }) {
   if (!isOpen) return null;
 
   useEffect(() => {
@@ -126,6 +126,30 @@ export default function VictoryCelebrationModal({ isOpen, onClose, totalOrders, 
           >
             <RotateCcw className="w-4 h-4" />
             <span>Quét Thử Bảng Kê Kỳ Khác</span>
+          </button>
+        </div>
+
+        {/* Điểm rơi 3: Mời cà phê lấy hên khi bảng kê sạch 100% */}
+        <div className="mt-6 pt-5 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+          <div className="flex items-center gap-2.5 text-xs text-slate-300">
+            <span className="text-xl">🍀</span>
+            <div>
+              <div className="font-bold text-amber-300">Hôm nay shop không bị trừ oan đồng nào!</div>
+              <div className="text-[11px] text-slate-400">Mời dev 1 ly cà phê lấy hên tháng này buôn may bão đơn nhé!</div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              if (onOpenCoffeeModal) {
+                onOpenCoffeeModal("🍀 Chúc mừng shop kiểm toán hoàn hảo 100%! Mời dev ly cà phê lấy hên buôn may bán đắt nhé ☕");
+              }
+            }}
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0"
+          >
+            <Coffee className="w-4 h-4 text-amber-400" />
+            <span>Mời cà phê lấy hên ☕</span>
           </button>
         </div>
       </div>

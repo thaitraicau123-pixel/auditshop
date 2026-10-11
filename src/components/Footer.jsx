@@ -1,7 +1,7 @@
 import React from 'react';
-import { ShieldCheck, MessageCircle, Mail } from 'lucide-react';
+import { ShieldCheck, MessageCircle, Mail, Coffee, Heart } from 'lucide-react';
 
-export default function Footer() {
+export default function Footer({ onOpenCoffeeModal }) {
   return (
     <footer className="border-t border-slate-200 bg-white py-10 text-xs text-slate-500">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -13,6 +13,20 @@ export default function Footer() {
             <div className="font-extrabold text-slate-900 text-sm">SoatDon<span className="text-indigo-600">.vn</span></div>
             <p className="text-slate-400 text-[11px]">Hệ thống bảo vệ doanh thu & kiểm toán cước vận chuyển thông minh</p>
           </div>
+        </div>
+
+        {/* Điểm rơi 2: Nút Mời ly cà phê trang trọng ở Footer */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onOpenCoffeeModal?.("Ủng hộ duy trì máy chủ AI và cập nhật thuật toán SoatDon.vn")}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/90 font-bold text-xs transition-all shadow-2xs hover:shadow-xs cursor-pointer group"
+            title="Mời đội ngũ phát triển 1 ly cà phê muối tiếp sức duy trì máy chủ"
+          >
+            <Coffee className="w-4 h-4 text-amber-600 group-hover:rotate-12 transition-transform" />
+            <span>Mời dev ly cà phê ☕</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
+          </button>
         </div>
 
         <div className="text-center md:text-right">

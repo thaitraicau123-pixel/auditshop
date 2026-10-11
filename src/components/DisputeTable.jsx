@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Lock, Unlock, Download, Mail, ExternalLink, ShieldCheck, AlertCircle, 
-  Copy, Check, Search, ArrowUpDown, ChevronLeft, ChevronRight, Filter, Layers, ListFilter
+  Copy, Check, Search, ArrowUpDown, ChevronLeft, ChevronRight, Filter, Layers, ListFilter, Coffee
 } from 'lucide-react';
 import { exportDisputeExcel } from '../utils/exportDispute';
 
-export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onOpenTemplateModal, shopName }) {
+export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onOpenTemplateModal, shopName, onOpenCoffeeModal }) {
   const [copiedId, setCopiedId] = useState(null);
   const [copiedBatch, setCopiedBatch] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,6 +22,14 @@ export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onO
 
   const handleExportExcel = () => {
     exportDisputeExcel(anomalies, shopName || "Shop_Online");
+    // Điểm rơi 1: Nhẹ nhàng gợi ý mời cà phê sau khi đã tải xong file khiếu nại 1.2 giây
+    setTimeout(() => {
+      if (onOpenCoffeeModal) {
+        onOpenCoffeeModal(
+          "🎉 File Excel khiếu nại đã tải về máy thành công! Chúc shop đòi lại trọn vẹn số tiền thất thoát. Nếu công cụ này giúp ích cho bạn, hãy mời dev một ly cà phê nhé!"
+        );
+      }
+    }, 1200);
   };
 
   // Lấy danh sách các hãng duy nhất
@@ -124,6 +132,16 @@ export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onO
                 </button>
 
                 <button
+                  type="button"
+                  onClick={() => onOpenCoffeeModal?.("🎉 Cảm ơn shop đã tin dùng SoatDon! Mời dev một ly cà phê muối tiếp sức duy trì máy chủ nhé ☕")}
+                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold transition-all cursor-pointer border border-amber-200 shadow-2xs"
+                  title="Mời đội ngũ phát triển một ly cà phê tiếp sức"
+                >
+                  <Coffee className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Mời cà phê ☕</span>
+                </button>
+
+                <button
                   onClick={handleExportExcel}
                   className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all transform hover:scale-105 active:scale-95 cursor-pointer"
                 >
@@ -142,6 +160,25 @@ export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onO
             )}
           </div>
         </div>
+
+        {/* Banner Mời cà phê nhẹ nhàng khi đã mở khóa */}
+        {isUnlocked && (
+          <div className="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-amber-50/90 via-orange-50/70 to-amber-50/90 border-b border-amber-200/60 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-amber-950">
+            <div className="flex items-center gap-2">
+              <span className="text-base">☕</span>
+              <span>
+                SoatDon vừa giúp shop bóc tách toàn bộ đơn sai lệch. Nếu thấy web hữu ích, bạn có thể <b>mời dev 1 ly cà phê muối 25k</b> để tiếp sức duy trì máy chủ nhé!
+              </span>
+            </div>
+            <button
+              onClick={() => onOpenCoffeeModal?.("Ủng hộ duy trì máy chủ AI SoatDon.vn")}
+              className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shrink-0 transition-colors cursor-pointer shadow-2xs flex items-center gap-1"
+            >
+              <Coffee className="w-3 h-3" />
+              <span>Mời 1 ly 25k</span>
+            </button>
+          </div>
+        )}
 
         {/* Toolbar: Search, Carrier Filter, Sort Controls */}
         <div className="p-3 sm:px-6 bg-white border-b border-slate-200/80 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 text-xs">

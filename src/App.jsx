@@ -16,6 +16,7 @@ import ChangelogModal from './components/ChangelogModal';
 import RoiCalculator from './components/RoiCalculator';
 import Testimonials from './components/Testimonials';
 import Footer from './components/Footer';
+import CoffeeDonateModal from './components/CoffeeDonateModal';
 import { analyzeOrders } from './utils/auditEngine';
 import { syncLocalAccountsToCloud, fetchCloudAccounts } from './utils/cloudDatabase';
 import { CURRENT_SYSTEM_VERSION } from './data/changelog';
@@ -105,6 +106,15 @@ export default function App() {
     });
   };
 
+  // Coffee Donate Modal State (Mời dev ly cà phê)
+  const [isCoffeeModalOpen, setIsCoffeeModalOpen] = useState(false);
+  const [coffeeModalContext, setCoffeeModalContext] = useState(null);
+
+  const handleOpenCoffeeModal = (context) => {
+    setCoffeeModalContext(context || null);
+    setIsCoffeeModalOpen(true);
+  };
+
   // Phím tắt toàn cục ESC đóng tất cả các modal
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -118,6 +128,7 @@ export default function App() {
         setIsHistoryModalOpen(false);
         setIsAdminModalOpen(false);
         setIsChangelogOpen(false);
+        setIsCoffeeModalOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -326,6 +337,7 @@ export default function App() {
                 onUnlockClick={() => setIsPaymentModalOpen(true)}
                 onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
                 shopName={fileName.replace(/\.[^/.]+$/, "")}
+                onOpenCoffeeModal={handleOpenCoffeeModal}
               />
             )}
           </>
@@ -338,7 +350,7 @@ export default function App() {
         <Testimonials />
       </main>
 
-      <Footer />
+      <Footer onOpenCoffeeModal={handleOpenCoffeeModal} />
 
       {/* 🚨 CỬA SỔ BÁO ĐỘNG ĐỎ KHI PHÁT HIỆN THẤT THOÁT TIỀN */}
       <EmergencyAlertModal 
@@ -363,6 +375,7 @@ export default function App() {
         totalOrders={auditResult?.totalOrders || 0}
         fileName={fileName}
         onReset={handleReset}
+        onOpenCoffeeModal={handleOpenCoffeeModal}
       />
 
       {/* Payment & VietQR Checkout Modal */}
@@ -445,6 +458,13 @@ export default function App() {
         isOpen={isChangelogOpen}
         onClose={() => setIsChangelogOpen(false)}
         isAutoOpen={isAutoChangelog}
+      />
+
+      {/* ☕ Pop-up Mời Dev Ly Cà Phê (Tiếp Sức Máy Chủ AI) */}
+      <CoffeeDonateModal 
+        isOpen={isCoffeeModalOpen}
+        onClose={() => setIsCoffeeModalOpen(false)}
+        defaultContext={coffeeModalContext}
       />
     </div>
   );
