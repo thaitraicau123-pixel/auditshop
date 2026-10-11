@@ -315,7 +315,9 @@ export default function App() {
   ) : [];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8fafc] text-slate-800 font-sans selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#f8fafc] text-slate-800 font-sans selection:bg-indigo-500 selection:text-white relative">
+      {/* Ambient background tech mesh pattern */}
+      <div className="fixed inset-0 pointer-events-none bg-tech-grid opacity-35 -z-10" />
       <Navbar 
         onOpenPricing={() => setIsPaymentModalOpen(true)}
         onScrollToCalculator={handleScrollToCalculator}

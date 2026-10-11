@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { 
   AlertTriangle, Scale, PackageX, Receipt, Banknote, ShieldAlert, 
   RotateCcw, FileText, CheckCircle2, Sparkles, Bot, Loader2, Trophy, PartyPopper,
-  BarChart3, TrendingDown, Building2, Printer, ChevronRight, Zap, Award
+  BarChart3, TrendingDown, Building2, Printer, ChevronRight, Zap, Award, ArrowUpRight
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -76,13 +76,13 @@ export default function AuditDashboard({
   // MÀN HÌNH CHÚC MỪNG NẾU KHÔNG CÓ LỖI NÀO
   if (anomalyCount === 0) {
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 mb-16">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 mb-16 animate-fadeIn">
         <div className="bg-white border-2 border-emerald-500/50 rounded-3xl p-8 sm:p-12 text-center shadow-xl relative overflow-hidden">
           <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-500/25">
             <Trophy className="w-10 h-10 text-white animate-bounce" />
           </div>
 
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-bold uppercase tracking-wider mb-3">
+          <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-bold uppercase tracking-wider mb-3 shadow-2xs">
             <PartyPopper className="w-4 h-4 text-emerald-600" />
             <span>Bảng kê đối soát hoàn hảo 100%</span>
           </div>
@@ -96,35 +96,36 @@ export default function AuditDashboard({
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto mb-8 text-left">
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-3">
+            <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200/90 flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
               <div>
                 <div className="text-xs font-bold text-slate-900">Khối lượng chuẩn 100%</div>
-                <div className="text-[11px] text-slate-500">Không có đơn nào bị kê khống nấc cân</div>
+                <div className="text-[11px] text-slate-500 mt-0.5">Không có đơn nào bị kê khống nấc cân</div>
               </div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-3">
+            <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200/90 flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
               <div>
                 <div className="text-xs font-bold text-slate-900">0 đơn hoàn ngâm kho</div>
-                <div className="text-[11px] text-slate-500">Tất cả đơn chuyển hoàn đều đúng tiến độ</div>
+                <div className="text-[11px] text-slate-500 mt-0.5">Tất cả đơn chuyển hoàn đều đúng tiến độ</div>
               </div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-3">
+            <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200/90 flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
               <div>
                 <div className="text-xs font-bold text-slate-900">Cước & COD đối soát đủ</div>
-                <div className="text-[11px] text-slate-500">Không phát sinh phụ phí bất thường</div>
+                <div className="text-[11px] text-slate-500 mt-0.5">Không phát sinh phụ phí bất thường</div>
               </div>
             </div>
           </div>
 
           <div className="flex justify-center">
             <button
+              type="button"
               onClick={onReset}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-sm shadow-md shadow-emerald-600/20 transition-all cursor-pointer flex items-center gap-2"
+              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-sm shadow-md shadow-emerald-600/20 transition-all cursor-pointer flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
             >
               <RotateCcw className="w-4 h-4" />
               <span>Quét bảng kê kỳ khác</span>
@@ -136,81 +137,85 @@ export default function AuditDashboard({
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-8">
-      {/* File scanned info bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 bg-white border border-slate-200/90 px-4 py-3 rounded-2xl shadow-xs">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-10 animate-fadeIn">
+      
+      {/* File Scanned Info Header Bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 bg-white border border-slate-200/90 px-5 py-3.5 rounded-2xl shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
+          <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold border border-emerald-200/60">
             <CheckCircle2 className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <div className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
               <span>Đã hoàn thành kiểm toán:</span>
-              <span className="font-mono text-indigo-600">{fileName}</span>
+              <span className="font-mono text-indigo-700 font-bold">{fileName}</span>
             </div>
             <p className="text-xs text-slate-500">
-              Đã rà soát <b>{totalOrders} đơn hàng</b> • Phát hiện <b>{anomalyCount} đơn bất thường</b> ({anomalyRate}%)
+              Đã rà soát <b>{totalOrders} đơn hàng</b> • Phát hiện <b className="text-rose-600">{anomalyCount} đơn bất thường</b> ({anomalyRate}%)
             </p>
           </div>
         </div>
 
         <button
+          type="button"
           onClick={onReset}
-          className="text-xs text-slate-500 hover:text-slate-800 font-medium flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
+          className="text-xs text-slate-600 hover:text-slate-900 font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 transition-colors cursor-pointer"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           <span>Quét file khác</span>
         </button>
       </div>
 
-      {/* AI Diagnosis Insights if available */}
+      {/* AI Diagnosis Insights if loading */}
       {isLoadingAi && (
-        <div className="mb-6 p-4 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center gap-3 text-indigo-900 text-xs sm:text-sm">
-          <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
+        <div className="mb-6 p-4 rounded-2xl bg-indigo-50/90 border border-indigo-200 flex items-center gap-3 text-indigo-900 text-xs sm:text-sm">
+          <Loader2 className="w-5 h-5 animate-spin text-indigo-600 shrink-0" />
           <span>🤖 Hệ thống AI đang tổng hợp báo cáo chẩn đoán nguyên nhân thất thoát...</span>
         </div>
       )}
 
+      {/* AI Diagnosis Card */}
       {aiDiagnosis && (
-        <div className="mb-6 p-5 sm:p-6 rounded-2xl bg-indigo-50/80 border border-indigo-200/90 shadow-xs">
+        <div className="mb-6 p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-indigo-50/90 via-blue-50/50 to-indigo-50/90 border border-indigo-200/90 shadow-xs">
           <div className="flex items-center gap-2.5 mb-2.5">
-            <div className="p-1.5 rounded-lg bg-indigo-100 text-indigo-700">
+            <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
               <Sparkles className="w-4 h-4" />
             </div>
             <h3 className="text-xs sm:text-sm font-extrabold text-indigo-950 uppercase tracking-wide">
               Báo Cáo Chẩn Đoán Chuyên Gia Logistics (Hệ Thống AI Đối Soát Độc Quyền)
             </h3>
           </div>
-          <div className="text-xs sm:text-sm text-slate-700 whitespace-pre-wrap leading-relaxed font-normal">
+          <div className="text-xs sm:text-sm text-slate-700 whitespace-pre-wrap leading-relaxed font-normal bg-white/70 p-4 rounded-2xl border border-indigo-100/80">
             {aiDiagnosis}
           </div>
         </div>
       )}
 
       {/* Main Alert Banner */}
-      <div className="bg-gradient-to-r from-rose-50 via-red-50 to-amber-50 border border-red-200 rounded-3xl p-6 sm:p-8 mb-8 shadow-sm relative overflow-hidden">
+      <div className="bg-gradient-to-r from-rose-50 via-red-50/70 to-amber-50 border border-rose-200 rounded-3xl p-6 sm:p-8 mb-8 shadow-sm relative overflow-hidden">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
             <div className="p-3.5 rounded-2xl bg-rose-100 text-rose-600 border border-rose-200 shrink-0 shadow-xs">
               <ShieldAlert className="w-8 h-8 sm:w-10 sm:h-10 animate-bounce" />
             </div>
             <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-xs font-bold uppercase tracking-wider mb-2 border border-rose-300">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100 text-rose-800 text-xs font-black uppercase tracking-wider mb-2 border border-rose-300">
                 Phát hiện thất thoát nghiêm trọng
               </div>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">
-                Ước tính bị trừ oan: <span className="text-rose-600 font-mono underline decoration-rose-300">{totalLeakage.toLocaleString('vi-VN')} VNĐ</span>
+                Ước tính bị trừ oan: <span className="text-rose-600 font-mono underline decoration-rose-300 decoration-2">{totalLeakage.toLocaleString('vi-VN')} VNĐ</span>
               </h2>
-              <p className="text-sm sm:text-base text-slate-600 mt-2 max-w-xl">
-                Nếu không khiếu nại trước thời hạn (trong 48h - 72h), số tiền này sẽ bị các đơn vị vận chuyển khấu trừ vĩnh viễn vào chi phí kỳ đối soát.
+              <p className="text-xs sm:text-sm text-slate-600 mt-2 max-w-xl leading-relaxed">
+                Nếu không khiếu nại trước thời hạn (trong 48h - 72h), số tiền này sẽ bị các đơn vị vận chuyển khấu trừ vĩnh viễn vào chi phí kỳ đối soát của shop!
               </p>
             </div>
           </div>
 
           {!isUnlocked && (
             <button
+              type="button"
               onClick={onUnlockClick}
-              className="w-full md:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-indigo-600/25 transition-all transform hover:scale-105 active:scale-95 shrink-0 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full md:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-extrabold text-sm sm:text-base shadow-lg shadow-indigo-600/25 transition-all transform hover:scale-105 active:scale-95 shrink-0 flex items-center justify-center gap-2 cursor-pointer"
             >
               <FileText className="w-5 h-5" />
               <span>Mở khóa mã đơn & Xuất file khiếu nại</span>
@@ -221,17 +226,18 @@ export default function AuditDashboard({
 
       {/* 4 Categorized Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        
         {/* Card 1: Kê cân nặng */}
         <div 
           onClick={() => onFilterChange('WEIGHT_INFLATION')}
           className={`p-5 rounded-2xl border transition-all cursor-pointer ${
             activeFilter === 'WEIGHT_INFLATION' 
-              ? 'bg-amber-50/80 border-amber-400 shadow-sm ring-1 ring-amber-400' 
-              : 'bg-white border-slate-200/90 hover:border-slate-300 shadow-xs'
+              ? 'bg-amber-50/90 border-amber-400 shadow-sm ring-2 ring-amber-400' 
+              : 'bg-white border-slate-200/90 hover:border-amber-300 shadow-xs hover:shadow-sm'
           }`}
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-700">Kê lố cân nặng</span>
+            <span className="text-xs font-black uppercase tracking-wider text-amber-800">Kê lố cân nặng</span>
             <div className="p-2 rounded-xl bg-amber-100 text-amber-700">
               <Scale className="w-4 h-4" />
             </div>
@@ -240,7 +246,7 @@ export default function AuditDashboard({
             {breakdown.weight.toLocaleString('vi-VN')} <span className="text-xs font-normal text-slate-500">đ</span>
           </div>
           <p className="text-xs text-slate-500 leading-snug">
-            Bị nhảy nấc cước do hãng cân lố 400g - 800g so với thực tế gói hàng.
+            Bị nhảy nấc cước do bưu cục kê lố 300g - 800g so với thực tế gói hàng.
           </p>
         </div>
 
@@ -249,12 +255,12 @@ export default function AuditDashboard({
           onClick={() => onFilterChange('RETURN_STALLED')}
           className={`p-5 rounded-2xl border transition-all cursor-pointer ${
             activeFilter === 'RETURN_STALLED' 
-              ? 'bg-rose-50/80 border-rose-400 shadow-sm ring-1 ring-rose-400' 
-              : 'bg-white border-slate-200/90 hover:border-slate-300 shadow-xs'
+              ? 'bg-rose-50/90 border-rose-400 shadow-sm ring-2 ring-rose-400' 
+              : 'bg-white border-slate-200/90 hover:border-rose-300 shadow-xs hover:shadow-sm'
           }`}
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-rose-700">Hàng hoàn ngâm quá hạn</span>
+            <span className="text-xs font-black uppercase tracking-wider text-rose-800">Hàng hoàn ngâm quá hạn</span>
             <div className="p-2 rounded-xl bg-rose-100 text-rose-700">
               <PackageX className="w-4 h-4" />
             </div>
@@ -272,12 +278,12 @@ export default function AuditDashboard({
           onClick={() => onFilterChange('FEE_ANOMALY')}
           className={`p-5 rounded-2xl border transition-all cursor-pointer ${
             activeFilter === 'FEE_ANOMALY' 
-              ? 'bg-blue-50/80 border-blue-400 shadow-sm ring-1 ring-blue-400' 
-              : 'bg-white border-slate-200/90 hover:border-slate-300 shadow-xs'
+              ? 'bg-blue-50/90 border-blue-400 shadow-sm ring-2 ring-blue-400' 
+              : 'bg-white border-slate-200/90 hover:border-blue-300 shadow-xs hover:shadow-sm'
           }`}
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-blue-700">Phụ phí bất thường</span>
+            <span className="text-xs font-black uppercase tracking-wider text-blue-800">Phụ phí bất thường</span>
             <div className="p-2 rounded-xl bg-blue-100 text-blue-700">
               <Receipt className="w-4 h-4" />
             </div>
@@ -295,12 +301,12 @@ export default function AuditDashboard({
           onClick={() => onFilterChange('COD_DISCREPANCY')}
           className={`p-5 rounded-2xl border transition-all cursor-pointer ${
             activeFilter === 'COD_DISCREPANCY' 
-              ? 'bg-emerald-50/80 border-emerald-400 shadow-sm ring-1 ring-emerald-400' 
-              : 'bg-white border-slate-200/90 hover:border-slate-300 shadow-xs'
+              ? 'bg-emerald-50/90 border-emerald-400 shadow-sm ring-2 ring-emerald-400' 
+              : 'bg-white border-slate-200/90 hover:border-emerald-300 shadow-xs hover:shadow-sm'
           }`}
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-700">Lệch tiền thu hộ COD</span>
+            <span className="text-xs font-black uppercase tracking-wider text-emerald-800">Lệch tiền thu hộ COD</span>
             <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700">
               <Banknote className="w-4 h-4" />
             </div>
@@ -316,8 +322,8 @@ export default function AuditDashboard({
 
       {/* Visual Loss Distribution & Carrier Impact Analysis */}
       {anomalyCount > 0 && (
-        <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-7 mb-8 shadow-xs">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-5 pb-4 border-t-0 border-b border-slate-100">
+        <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 mb-8 shadow-xs">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
             <div>
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-indigo-600" />
@@ -331,7 +337,7 @@ export default function AuditDashboard({
             </div>
 
             {/* Shop Logistics Health Score Badge */}
-            <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/80 p-2.5 px-4 rounded-2xl shrink-0">
+            <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/90 p-2.5 px-4 rounded-2xl shrink-0">
               <div>
                 <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Điểm An Toàn Bảng Kê</span>
                 <span className={`text-xl font-black font-mono ${
@@ -342,10 +348,10 @@ export default function AuditDashboard({
               </div>
               <div className={`px-2.5 py-1 rounded-xl text-xs font-bold ${
                 healthScore >= 80 
-                  ? 'bg-emerald-100 text-emerald-800' 
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
                   : healthScore >= 60 
-                    ? 'bg-amber-100 text-amber-800' 
-                    : 'bg-rose-100 text-rose-800'
+                    ? 'bg-amber-100 text-amber-800 border border-amber-200' 
+                    : 'bg-rose-100 text-rose-800 border border-rose-200'
               }`}>
                 {healthScore >= 80 ? '🟢 Ổn định' : healthScore >= 60 ? '🟡 Cảnh báo' : '🔴 Nguy cơ cao'}
               </div>
@@ -393,19 +399,19 @@ export default function AuditDashboard({
             {/* Legend pills */}
             <div className="flex flex-wrap items-center gap-4 mt-3 text-xs">
               <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-amber-400"></span>
+                <span className="w-3 h-3 rounded-full bg-amber-400" />
                 <span className="text-slate-600">Kê cân: <b>{weightPct}%</b> ({breakdown.weight.toLocaleString('vi-VN')} đ)</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-rose-500"></span>
+                <span className="w-3 h-3 rounded-full bg-rose-500" />
                 <span className="text-slate-600">Hàng hoàn giam: <b>{returnsPct}%</b> ({breakdown.returns.toLocaleString('vi-VN')} đ)</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-blue-500"></span>
+                <span className="w-3 h-3 rounded-full bg-blue-500" />
                 <span className="text-slate-600">Phụ phí ảo: <b>{feePct}%</b> ({breakdown.fee.toLocaleString('vi-VN')} đ)</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
+                <span className="w-3 h-3 rounded-full bg-emerald-500" />
                 <span className="text-slate-600">Lệch COD: <b>{codPct}%</b> ({breakdown.cod.toLocaleString('vi-VN')} đ)</span>
               </div>
             </div>
@@ -426,7 +432,7 @@ export default function AuditDashboard({
                   return (
                     <div 
                       key={item.carrier}
-                      className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/80 flex items-center justify-between hover:bg-slate-100/70 transition-colors"
+                      className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/80 flex items-center justify-between hover:bg-slate-100/70 transition-colors shadow-2xs"
                     >
                       <div className="flex items-center gap-2.5">
                         <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs ${
@@ -463,12 +469,13 @@ export default function AuditDashboard({
         </div>
       )}
 
-      {/* Filters pill bar */}
+      {/* Filters Pill Bar */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
-        <span className="text-xs text-slate-500 font-semibold mr-2">Lọc theo loại lỗi:</span>
+        <span className="text-xs text-slate-500 font-bold mr-1">Lọc theo loại lỗi:</span>
         <button
+          type="button"
           onClick={() => onFilterChange('ALL')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeFilter === 'ALL'
               ? 'bg-slate-900 text-white shadow-xs'
               : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
@@ -477,8 +484,9 @@ export default function AuditDashboard({
           Tất cả lỗi ({anomalyCount})
         </button>
         <button
+          type="button"
           onClick={() => onFilterChange('WEIGHT_INFLATION')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeFilter === 'WEIGHT_INFLATION'
               ? 'bg-amber-500 text-white shadow-xs'
               : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
@@ -487,8 +495,9 @@ export default function AuditDashboard({
           Lệch cân nặng
         </button>
         <button
+          type="button"
           onClick={() => onFilterChange('RETURN_STALLED')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeFilter === 'RETURN_STALLED'
               ? 'bg-rose-600 text-white shadow-xs'
               : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
@@ -497,8 +506,9 @@ export default function AuditDashboard({
           Đơn hoàn ngâm
         </button>
         <button
+          type="button"
           onClick={() => onFilterChange('FEE_ANOMALY')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeFilter === 'FEE_ANOMALY'
               ? 'bg-blue-600 text-white shadow-xs'
               : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
@@ -507,8 +517,9 @@ export default function AuditDashboard({
           Phụ phí ảo
         </button>
         <button
+          type="button"
           onClick={() => onFilterChange('COD_DISCREPANCY')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeFilter === 'COD_DISCREPANCY'
               ? 'bg-emerald-600 text-white shadow-xs'
               : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
