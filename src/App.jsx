@@ -179,7 +179,7 @@ export default function App() {
     setIsAutoChangelog(false);
   };
 
-  // Phím tắt toàn cục ESC đóng tất cả các modal
+  // Phím tắt toàn cục: ESC đóng modal & Ctrl+Shift+A mở Admin bí mật
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
@@ -200,8 +200,21 @@ export default function App() {
         setIsDisputePlaybookOpen(false);
         setIsDamageClaimOpen(false);
       }
+
+      // 🔐 Phím tắt bí mật chỉ anh Bùi Quốc Thái biết: Ctrl + Shift + A (hoặc Cmd + Shift + A trên Mac)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+        e.preventDefault();
+        setIsAdminModalOpen(true);
+      }
     };
+
     window.addEventListener('keydown', handleKeyDown);
+
+    // Mở nhanh bằng URL bí mật có #admin hoặc ?admin=true
+    if (window.location.hash === '#admin' || window.location.search.includes('admin=true')) {
+      setIsAdminModalOpen(true);
+    }
+
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
@@ -533,10 +546,11 @@ export default function App() {
         onClearAll={handleClearAllHistory}
       />
 
-      {/* Trung Tâm Quản Trị Admin */}
+      {/* Trung Tâm Quản Trị Admin (Chỉ Bùi Quốc Thái) */}
       <AdminModal 
         isOpen={isAdminModalOpen}
         onClose={() => setIsAdminModalOpen(false)}
+        currentUser={user}
         onManualUnlockCurrentFile={() => {
           setIsUnlocked(true);
           if (fileName) {

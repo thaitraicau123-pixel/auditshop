@@ -31,6 +31,27 @@ export default function Navbar({
   const [isToolsDropdownOpen, setIsToolsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  // Secret 5-tap gesture on Logo để mở Admin trên mọi thiết bị
+  const logoClicksRef = useRef(0);
+  const logoTimerRef = useRef(null);
+
+  const handleLogoSecretClick = () => {
+    logoClicksRef.current += 1;
+    if (logoTimerRef.current) clearTimeout(logoTimerRef.current);
+
+    if (logoClicksRef.current >= 5) {
+      logoClicksRef.current = 0;
+      if (onOpenAdminModal) onOpenAdminModal();
+      return;
+    }
+
+    logoTimerRef.current = setTimeout(() => {
+      logoClicksRef.current = 0;
+    }, 2000);
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // Close dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -49,8 +70,9 @@ export default function Navbar({
         {/* Brand identity */}
         <div className="flex items-center gap-3">
           <div 
-            className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/25 shrink-0 relative group cursor-pointer" 
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/25 shrink-0 relative group cursor-pointer active:scale-95 transition-transform" 
+            onClick={handleLogoSecretClick}
+            title="SoatDon.vn"
           >
             <ShieldCheck className="w-5 h-5 text-white transition-transform group-hover:scale-110" />
             <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 ring-1 ring-emerald-400/40" />
@@ -58,8 +80,8 @@ export default function Navbar({
           <div>
             <div className="flex items-center gap-2">
               <span 
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
-                className="font-black text-xl tracking-tight text-slate-900 dark:text-white cursor-pointer"
+                onClick={handleLogoSecretClick} 
+                className="font-black text-xl tracking-tight text-slate-900 dark:text-white cursor-pointer select-none"
               >
                 SoatDon<span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">.vn</span>
               </span>
@@ -312,16 +334,18 @@ export default function Navbar({
             )}
           </button>
 
-          {/* Admin Portal Button */}
-          <button 
-            type="button"
-            onClick={onOpenAdminModal}
-            className="text-xs sm:text-sm font-bold px-2.5 py-1.5 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border border-slate-700 hover:border-slate-600"
-            title="Trung tâm Quản trị Admin"
-          >
-            <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">Admin</span>
-          </button>
+          {/* Admin Portal Button - CHỈ HIỂN THỊ KHI ĐĂNG NHẬP ĐÚNG TÀI KHOẢN ANH THÁI (0986019623) */}
+          {(user?.phone === '0986019623' || user?.role === 'admin' || user?.isAdmin) && (
+            <button 
+              type="button"
+              onClick={onOpenAdminModal}
+              className="text-xs sm:text-sm font-bold px-2.5 py-1.5 rounded-xl bg-amber-500/10 dark:bg-amber-950/60 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border border-amber-300/80 dark:border-amber-700/80"
+              title="Trung tâm Quản trị Admin (Chỉ Bùi Quốc Thái)"
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+              <span className="hidden sm:inline">Admin</span>
+            </button>
+          )}
         </nav>
       </div>
     </header>

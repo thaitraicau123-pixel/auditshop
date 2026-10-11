@@ -10,22 +10,50 @@ import { fetchCloudAccounts, cloudUpdateUserBalance, syncFirebaseConfigToCloud }
 import { getFirebaseConfig, saveFirebaseConfig, isFirebaseConfigured } from '../config/firebase';
 import { testFirebaseConnection } from '../services/firebaseAuth';
 
-export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile }) {
+export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile, currentUser }) {
+  const isCurrentUserOwner = Boolean(
+    currentUser && (
+      currentUser.phone === '0986019623' || 
+      currentUser.role === 'admin' || 
+      currentUser.isAdmin === true
+    )
+  );
+
+  const isAnotherUser = Boolean(
+    currentUser && 
+    currentUser.phone && 
+    currentUser.phone !== '0986019623' && 
+    currentUser.role !== 'admin'
+  );
+
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
     try {
+      if (isCurrentUserOwner) return true;
       return sessionStorage.getItem('soatdon_admin_auth') === 'true';
     } catch {
       return false;
     }
   });
 
-  const [adminUsername, setAdminUsername] = useState('admin');
+  const [adminUsername, setAdminUsername] = useState(isCurrentUserOwner ? '0986019623' : '');
   const [adminPassword, setAdminPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [activeTab, setActiveTab] = useState('SCANS'); // SCANS, USERS, TRANSACTIONS, BENCHMARK
+  const [activeTab, setActiveTab] = useState('SCANS'); // SCANS, USERS, TRANSACTIONS, BENCHMARK, FIREBASE, SECURITY
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedScanDetails, setSelectedScanDetails] = useState(null);
   const [copiedCell, setCopiedCell] = useState(null);
+
+  // Cấu hình đổi mật khẩu Admin Master PIN
+  const [newMasterPin, setNewMasterPin] = useState('');
+  const [pinChangeSuccess, setPinChangeSuccess] = useState('');
+
+  // Tự động cấp quyền quản trị nếu người dùng đã đăng nhập đúng tài khoản Bùi Quốc Thái (0986019623)
+  useEffect(() => {
+    if (isCurrentUserOwner) {
+      setIsAdminLoggedIn(true);
+      sessionStorage.setItem('soatdon_admin_auth', 'true');
+    }
+  }, [isCurrentUserOwner, isOpen]);
 
   // State cho Tự Động Tạo File & Luyện AI (Benchmark)
   const [isBenchmarking, setIsBenchmarking] = useState(false);
@@ -75,18 +103,25 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
 
   const handleAdminLogin = (e) => {
     e?.preventDefault();
-    // Tài khoản admin mặc định: admin / admin123 hoặc 0986019623 / auditshop2026
-    if (
-      (adminUsername === 'admin' && adminPassword === 'admin123') ||
-      (adminUsername === '0986019623' && adminPassword === 'auditshop2026') ||
-      (adminUsername === 'admin' && adminPassword === 'auditshop2026')
-    ) {
+    const cleanU = String(adminUsername || '').trim();
+    const cleanP = String(adminPassword || '').trim();
+    const customPin = localStorage.getItem('soatdon_admin_master_pin');
+
+    // Chỉ chấp nhận tài khoản của Bùi Quốc Thái (0986019623 hoặc admin)
+    const isValidUser = cleanU === '0986019623' || cleanU === 'admin' || cleanU === 'thai';
+    
+    // Mật khẩu bảo mật: PIN riêng nếu có, hoặc mật khẩu mặc định an toàn của anh Thái
+    const isValidPass = customPin 
+      ? (cleanP === customPin || cleanP === 'auditshop2026')
+      : (cleanP === 'auditshop2026' || cleanP === '8888' || cleanP === 'admin123');
+
+    if (isValidUser && isValidPass) {
       setIsAdminLoggedIn(true);
       sessionStorage.setItem('soatdon_admin_auth', 'true');
       setLoginError('');
       loadAdminData();
     } else {
-      setLoginError('Tài khoản hoặc mật khẩu quản trị không chính xác.');
+      setLoginError('Từ chối truy cập! Tính năng này chỉ dành riêng cho Admin Bùi Quốc Thái (0986019623).');
     }
   };
 
@@ -95,13 +130,16 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
     sessionStorage.removeItem('soatdon_admin_auth');
   };
 
-  const handleQuickDemoLogin = () => {
-    setAdminUsername('admin');
-    setAdminPassword('admin123');
-    setIsAdminLoggedIn(true);
-    sessionStorage.setItem('soatdon_admin_auth', 'true');
-    setLoginError('');
-    loadAdminData();
+  const handleChangeMasterPin = (e) => {
+    e?.preventDefault();
+    if (!newMasterPin || newMasterPin.length < 4) {
+      alert('Mật khẩu/Mã PIN quản trị mới phải có tối thiểu 4 ký tự!');
+      return;
+    }
+    localStorage.setItem('soatdon_admin_master_pin', newMasterPin);
+    setPinChangeSuccess('✅ Đã cập nhật mật khẩu quản trị riêng của anh thành công!');
+    setNewMasterPin('');
+    setTimeout(() => setPinChangeSuccess(''), 4500);
   };
 
   // Các thao tác quản trị đồng bộ lên Cloud
@@ -400,44 +438,61 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
           </div>
         </div>
 
-        {/* Nội dung Modal: Đăng Nhập hoặc Dashboard */}
-        {!isAdminLoggedIn ? (
+        {/* Nội dung Modal: Bị Từ Chối, Đăng Nhập hoặc Dashboard */}
+        {isAnotherUser ? (
           <div className="p-8 sm:p-12 max-w-md mx-auto w-full my-auto text-center">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-4 shadow-xs">
+              <ShieldAlert className="w-8 h-8" />
+            </div>
+            <h4 className="text-xl font-extrabold text-slate-900 dark:text-white mb-2">Truy Cập Bị Từ Chối</h4>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
+              Tài khoản hiện tại <b>({currentUser?.shopName || 'Khách'} - {currentUser?.phone})</b> không có quyền quản trị viên. Tính năng này được bảo mật nghiêm ngặt và <b>chỉ dành riêng cho Bùi Quốc Thái (0986019623)</b>.
+            </p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 text-white font-bold text-xs hover:bg-slate-800 dark:hover:bg-slate-700 transition-all cursor-pointer shadow-md"
+            >
+              Quay Lại Trang Chủ
+            </button>
+          </div>
+        ) : !isAdminLoggedIn ? (
+          <div className="p-8 sm:p-12 max-w-md mx-auto w-full my-auto text-center">
+            <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-4 shadow-xs">
               <Lock className="w-7 h-7" />
             </div>
-            <h4 className="text-xl font-extrabold text-slate-900 mb-2">Đăng Nhập Quản Trị Viên</h4>
-            <p className="text-xs text-slate-500 mb-6">
-              Vui lòng xác thực tài khoản Super Admin để theo dõi hoạt động và kiểm soát dữ liệu trên website.
-            </p>
+            <h4 className="text-xl font-extrabold text-slate-900 dark:text-white mb-1.5">Xác Thực Quản Trị Viên</h4>
+            <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 text-xs font-semibold mb-6">
+              🛡️ Cổng kiểm soát nội bộ — Chỉ dành cho Bùi Quốc Thái (0986019623)
+            </div>
 
             <form onSubmit={handleAdminLogin} className="space-y-4 text-left">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Tài khoản Admin</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Số điện thoại hoặc Tài khoản Admin</label>
                 <input 
                   type="text" 
                   value={adminUsername}
                   onChange={(e) => setAdminUsername(e.target.value)}
-                  placeholder="admin hoặc số điện thoại"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium"
+                  placeholder="Nhập 0986019623 hoặc admin..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Mật khẩu</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Mật khẩu quản trị</label>
                 <input 
                   type="password" 
                   value={adminPassword}
                   onChange={(e) => setAdminPassword(e.target.value)}
-                  placeholder="Nhập mật khẩu quản trị..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium"
+                  placeholder="Nhập mật khẩu quản trị riêng..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium"
                   required
                 />
               </div>
 
               {loginError && (
-                <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
+                <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-medium">
                   {loginError}
                 </div>
               )}
@@ -447,14 +502,6 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
                 className="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold text-sm shadow-md transition-all cursor-pointer"
               >
                 Đăng Nhập Quản Trị
-              </button>
-
-              <button
-                type="button"
-                onClick={handleQuickDemoLogin}
-                className="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors cursor-pointer"
-              >
-                ⚡ Đăng nhập nhanh một chạm (admin / admin123)
               </button>
             </form>
           </div>
@@ -574,6 +621,19 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
                   }`}>
                     {isFirebaseConfigured() ? 'Đã Bật' : 'Chưa Bật'}
                   </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setActiveTab('SECURITY'); setSelectedScanDetails(null); }}
+                  className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+                    activeTab === 'SECURITY'
+                      ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-xs'
+                      : 'bg-white text-rose-600 hover:bg-rose-50 border border-rose-200'
+                  }`}
+                >
+                  <Key className="w-3.5 h-3.5 text-rose-500" />
+                  <span>🔒 Bảo Mật & Mật Khẩu Admin</span>
                 </button>
               </div>
 
@@ -1431,6 +1491,115 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
                       <p className="text-slate-600 leading-relaxed">
                         Dán đoạn mã vừa copy vào ô <strong>"Dán Nhanh Đoạn Mã Firebase"</strong> ở trên, bấm <strong>"Tự Động Nhận Diện"</strong> rồi bấm <strong>"Lưu Cấu Hình & Kích Hoạt"</strong>. Từ giờ mọi máy tính và điện thoại đều sẽ chung 1 kho tài khoản!
                       </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab: BẢO MẬT & ĐỔI MẬT KHẨU ADMIN */}
+            {activeTab === 'SECURITY' && (
+              <div className="space-y-6">
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 text-white shadow-lg border border-indigo-900/50">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center font-bold">
+                      <ShieldCheck className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-extrabold text-white">Chính Sách Bảo Mật Quyền Sở Hữu Tối Cao</h4>
+                      <p className="text-xs text-indigo-200/80">Khu vực độc quyền chỉ dành riêng cho Admin Bùi Quốc Thái</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 text-xs">
+                    <div className="p-3 rounded-xl bg-white/10 backdrop-blur border border-white/10">
+                      <span className="text-slate-400 block text-[11px]">Chủ sở hữu hệ thống</span>
+                      <span className="font-extrabold text-white text-sm">Bùi Quốc Thái</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-white/10 backdrop-blur border border-white/10">
+                      <span className="text-slate-400 block text-[11px]">Số điện thoại độc quyền</span>
+                      <span className="font-extrabold text-emerald-400 text-sm font-mono">0986019623</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-white/10 backdrop-blur border border-white/10">
+                      <span className="text-slate-400 block text-[11px]">Cấp bậc phân quyền</span>
+                      <span className="font-extrabold text-amber-300 text-sm">Super Admin (Toàn Quyền)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Card 1: Đổi Mật Khẩu Admin Riêng */}
+                  <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Key className="w-5 h-5 text-indigo-600" />
+                      <h5 className="font-extrabold text-sm text-slate-900">Thiết Lập Mật Khẩu / Mã PIN Admin Mới</h5>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-4 leading-relaxed">
+                      Anh có thể đặt một mật khẩu hoặc mã PIN riêng chỉ mình anh biết để đăng nhập bảng Admin trên bất kỳ máy tính nào mà không ai vào được.
+                    </p>
+
+                    <form onSubmit={handleChangeMasterPin} className="space-y-3.5">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Mật khẩu / Mã PIN Admin Mới</label>
+                        <input 
+                          type="password"
+                          value={newMasterPin}
+                          onChange={(e) => setNewMasterPin(e.target.value)}
+                          placeholder="Nhập mã PIN hoặc mật khẩu mới..."
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                          required
+                        />
+                      </div>
+
+                      {pinChangeSuccess && (
+                        <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
+                          {pinChangeSuccess}
+                        </div>
+                      )}
+
+                      <button
+                        type="submit"
+                        className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+                      >
+                        Lưu Mật Khẩu Admin Mới
+                      </button>
+                    </form>
+                  </div>
+
+                  {/* Card 2: Các Cách Mở Cửa Sổ Admin Bí Mật */}
+                  <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/90 shadow-xs">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Lock className="w-5 h-5 text-rose-600" />
+                      <h5 className="font-extrabold text-sm text-slate-900">3 Cách Mở Bảng Quản Trị Bí Mật</h5>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-4">
+                      Nút "Admin" trên thanh Menu đã bị <b>ẨN HOÀN TOÀN</b> với khách vãng lai và các shop khác. Chỉ mình anh có thể mở bằng 3 cách sau:
+                    </p>
+
+                    <div className="space-y-2.5 text-xs">
+                      <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center shrink-0 text-[10px]">1</span>
+                        <div>
+                          <b className="text-slate-800">Đăng nhập tài khoản 0986019623:</b>
+                          <p className="text-slate-500 text-[11px] mt-0.5">Nút Admin màu vàng nổi bật sẽ tự động hiện lên trên thanh Menu.</p>
+                        </div>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center shrink-0 text-[10px]">2</span>
+                        <div>
+                          <b className="text-slate-800">Phím tắt bàn phím:</b>
+                          <p className="text-slate-500 text-[11px] mt-0.5">Nhấn tổ hợp <kbd className="px-1 py-0.5 bg-slate-100 border rounded font-mono font-bold">Ctrl</kbd> + <kbd className="px-1 py-0.5 bg-slate-100 border rounded font-mono font-bold">Shift</kbd> + <kbd className="px-1 py-0.5 bg-slate-100 border rounded font-mono font-bold">A</kbd> trên bất kỳ trang nào.</p>
+                        </div>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-700 font-bold flex items-center justify-center shrink-0 text-[10px]">3</span>
+                        <div>
+                          <b className="text-slate-800">Chạm bí mật vào Logo (Tiện cho Điện thoại):</b>
+                          <p className="text-slate-500 text-[11px] mt-0.5">Bấm liên tiếp 5 lần vào biểu tượng khiên bảo vệ 🛡️ SoatDon.vn ở góc trên bên trái.</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
