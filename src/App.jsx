@@ -17,8 +17,7 @@ import RoiCalculator from './components/RoiCalculator';
 import Testimonials from './components/Testimonials';
 import Footer from './components/Footer';
 import CoffeeDonateModal from './components/CoffeeDonateModal';
-import PetCompanionWidget from './components/PetCompanionWidget';
-import PetGameModal from './components/PetGameModal';
+import HallOfFameModal from './components/HallOfFameModal';
 import CrossReconcileModal from './components/CrossReconcileModal';
 import RateCompareModal from './components/RateCompareModal';
 import QuickAuditModal from './components/QuickAuditModal';
@@ -27,7 +26,6 @@ import DamageClaimModal from './components/DamageClaimModal';
 import { analyzeOrders } from './utils/auditEngine';
 import { syncLocalAccountsToCloud, fetchCloudAccounts } from './utils/cloudDatabase';
 import { CURRENT_SYSTEM_VERSION } from './data/changelog';
-import { addOrdersToPet } from './utils/petGameEngine';
 
 export default function App() {
   const [auditResult, setAuditResult] = useState(null);
@@ -49,6 +47,10 @@ export default function App() {
 
   // Tự động đồng bộ tài khoản từ Cloud Database khi tải trang (Đa thiết bị / Mọi máy tính)
   useEffect(() => {
+    try {
+      localStorage.removeItem('soatdon_unlocked');
+    } catch {}
+
     syncLocalAccountsToCloud().then(() => {
       fetchCloudAccounts().then(accounts => {
         if (user && accounts && Array.isArray(accounts)) {
@@ -152,23 +154,16 @@ export default function App() {
   const [isDisputePlaybookOpen, setIsDisputePlaybookOpen] = useState(false);
   const [isDamageClaimOpen, setIsDamageClaimOpen] = useState(false);
 
-  // Pet Game & Hall of Fame State (Mini-game nuôi thú cưng & Bảng Vàng)
-  const [isPetGameOpen, setIsPetGameOpen] = useState(false);
-  const [petGameTab, setPetGameTab] = useState('PET');
+  // Hall of Fame State (Bảng Vàng Tri Ân)
+  const [isHallOfFameOpen, setIsHallOfFameOpen] = useState(false);
 
   const handleOpenCoffeeModal = (context) => {
     setCoffeeModalContext(context || null);
     setIsCoffeeModalOpen(true);
   };
 
-  const handleOpenPetGame = (tab = 'PET') => {
-    setPetGameTab(tab);
-    setIsPetGameOpen(true);
-  };
-
   const handleOpenHallOfFame = () => {
-    setPetGameTab('HALL');
-    setIsPetGameOpen(true);
+    setIsHallOfFameOpen(true);
   };
 
   const handleCloseChangelog = () => {
@@ -193,7 +188,7 @@ export default function App() {
         setIsAdminModalOpen(false);
         handleCloseChangelog();
         setIsCoffeeModalOpen(false);
-        setIsPetGameOpen(false);
+        setIsHallOfFameOpen(false);
         setIsCrossReconcileOpen(false);
         setIsRateCompareOpen(false);
         setIsQuickAuditOpen(false);
@@ -218,14 +213,9 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleAuditComplete = (orders, name, aiResult) => {
+  const handleAuditComplete = (orders, name, aiResult, isSample = false) => {
     // 1. Phân tích số liệu chuẩn
     const baseResult = analyzeOrders(orders);
-
-    // Tự động nạp thức ăn hạt và EXP cho Thú cưng từ lượng đơn soát
-    try {
-      addOrdersToPet(baseResult.totalOrders);
-    } catch {}
 
     // 2. Nếu AI Chuyên Sâu trả về kết quả
     if (aiResult && aiResult.summaryDiagnosis) {
@@ -254,14 +244,17 @@ export default function App() {
     setFileName(name);
     setActiveFilter('ALL');
 
-    // Tự động mở khóa nếu có gói tháng hoặc còn lượt quét
+    // Tự động mở khóa nếu là bảng kê mẫu HOẶC tài khoản có gói tháng / còn lượt quét
     let shouldUnlock = false;
-    if (user) {
+    if (isSample) {
+      // 1-Click AI Test: Bảng kê mẫu thử nghiệm mở khóa để khách trải nghiệm thử tính năng mà không bị trừ lượt quét thật
+      shouldUnlock = true;
+    } else if (user) {
       if (user.plan === 'monthly') {
         shouldUnlock = true;
       } else if ((user.balanceScans || 0) > 0) {
         shouldUnlock = true;
-        // Trừ 1 lượt quét
+        // Trừ 1 lượt quét cho file thật
         const updatedUser = { ...user, balanceScans: Math.max(0, user.balanceScans - 1) };
         setUser(updatedUser);
         localStorage.setItem('soatdon_user', JSON.stringify(updatedUser));
@@ -274,8 +267,6 @@ export default function App() {
           }
         } catch (e) {}
       }
-    } else if (localStorage.getItem('soatdon_unlocked') === 'true') {
-      shouldUnlock = true;
     }
 
     setIsUnlocked(shouldUnlock);
@@ -457,7 +448,6 @@ export default function App() {
 
       <Footer 
         onOpenCoffeeModal={handleOpenCoffeeModal} 
-        onOpenPetGame={handleOpenPetGame}
         onOpenHallOfFame={handleOpenHallOfFame}
       />
 
@@ -578,19 +568,11 @@ export default function App() {
         onOpenHallOfFame={handleOpenHallOfFame}
       />
 
-      {/* 🐶🐱 Thú Cưng Mini Đồng Hành (Cún Soi Cước & Mèo Thần Tài) */}
-      <PetCompanionWidget 
+      {/* 🏆 Cửa Sổ Bảng Vàng Tri Ân Cộng Đồng Shop */}
+      <HallOfFameModal 
+        isOpen={isHallOfFameOpen}
+        onClose={() => setIsHallOfFameOpen(false)}
         onOpenCoffeeModal={handleOpenCoffeeModal}
-        onOpenPetGame={handleOpenPetGame}
-        onOpenHallOfFame={handleOpenHallOfFame}
-      />
-
-      {/* 🎮 Cửa Sổ Mini-Game Nuôi Thú Cưng & Bảng Vàng Tri Ân */}
-      <PetGameModal 
-        isOpen={isPetGameOpen}
-        onClose={() => setIsPetGameOpen(false)}
-        onOpenCoffeeModal={handleOpenCoffeeModal}
-        initialTab={petGameTab}
       />
 
       {/* ⚔️ Modal So Khớp 2 Chiều File Kho vs File Bưu Cục */}

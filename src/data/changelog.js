@@ -3,16 +3,56 @@
  * Lưu trữ phiên bản, thời gian phát hành và toàn bộ tính năng mới đã thêm.
  */
 
-export const CURRENT_SYSTEM_VERSION = 'v3.0';
+export const CURRENT_SYSTEM_VERSION = 'v3.1';
 
 export const CHANGELOG_HISTORY = [
   {
+    version: 'v3.1',
+    releaseDate: '12/10/2026 - 01:30',
+    title: '🔒 Siết Chặt Bản Quyền Đối Soát & Tinh Gọn Giao Diện Logistics Pro',
+    isCurrent: true,
+    badges: ['Khóa Bản Quyền Chuẩn 🔒', 'Bảng Vàng Tri Ân 🏆', 'Giao Diện Logistics Pro', 'Loại Bỏ Thú Cưng Mini'],
+    summary: 'Sửa triệt để lỗ hổng quét đơn miễn phí, siết chặt cơ chế bảo vệ thương mại và nạp lượt quét; tinh gọn toàn bộ giao diện theo phong cách AI Logistics chuyên nghiệp, độc lập và trang trọng.',
+    categories: [
+      {
+        name: 'Bảo Vệ Thương Mại & Cơ Chế Bản Quyền',
+        tag: 'SECURITY & PAYWALL',
+        color: 'emerald',
+        items: [
+          {
+            title: 'Khắc Phục Triệt Để Lỗ Hổng Quét Miễn Phí (Zero-Bypass)',
+            desc: 'Loại bỏ hoàn toàn cơ chế bypass tự động mở khóa cũ; file tải lên thực tế chỉ được mở khóa khi tài khoản có gói cước hợp lệ hoặc nạp lượt quét.'
+          },
+          {
+            title: 'Tách Biệt Bảng Kê Mẫu Dùng Thử & File Thực Tế',
+            desc: '7 bảng kê mẫu (1-Click AI Test) vẫn cho phép trải nghiệm đầy đủ mà không trừ lượt quét; trong khi file đối soát thật tải lên từ máy tính được bảo vệ bản quyền nghiêm ngặt.'
+          }
+        ]
+      },
+      {
+        name: 'Chuẩn Hóa Giao Diện & Bảng Vàng Tri Ân',
+        tag: 'UI/UX CLEANUP',
+        color: 'blue',
+        items: [
+          {
+            title: 'Loại Bỏ Thú Cưng Mini-Game & Mascot Đồ Họa',
+            desc: 'Gỡ bỏ toàn bộ widget thú cưng, các hiệu ứng lắc lư và giọng thoại cún mèo; chuyển đổi giao diện sang phong cách kiểm toán dữ liệu chuyên nghiệp, tinh tế.'
+          },
+          {
+            title: 'Bảng Vàng Tri Ân Độc Lập (Hall of Fame)',
+            desc: 'Tách riêng Bảng Vàng Tri Ân thành cửa sổ vinh danh trang trọng dành cho các chủ shop đã mời ly cà phê tiếp sức máy chủ AI.'
+          }
+        ]
+      }
+    ]
+  },
+  {
     version: 'v3.0',
     releaseDate: '11/10/2026 - 21:30',
-    title: '🐶🐱 Ra Mắt Mini-Game Nuôi Thú Cưng Soi Đơn, Bảng Vàng Tri Ân & Khắc Phục Lỗi Dấu X',
-    isCurrent: true,
-    badges: ['Nuôi Thú Cưng 🐶🐱', 'Bảng Vàng Tri Ân 🏆', 'Sửa Nút Đóng X 🛡️', 'Thoát Nhanh Bằng Esc', 'Giao Diện HUD Mới'],
-    summary: 'Cập nhật lớn mang đến tính năng nuôi thú cưng (Cún & Mèo) tăng trưởng theo lượng đơn soát và tiền donate, Bảng Vàng Tri Ân công khai vinh danh các nhà bán hàng hảo tâm, cùng việc sửa triệt để lỗi che khuất dấu X và tối ưu cơ chế thoát cửa sổ bằng phím Esc.',
+    title: '🏆 Ra Mắt Bảng Vàng Tri Ân Shop & Khắc Phục Lỗi Dấu X Modal',
+    isCurrent: false,
+    badges: ['Bảng Vàng Tri Ân 🏆', 'Sửa Nút Đóng X 🛡️', 'Thoát Nhanh Bằng Esc', 'Giao Diện HUD Mới'],
+    summary: 'Cập nhật mang đến Bảng Vàng Tri Ân công khai vinh danh các nhà bán hàng hảo tâm, cùng việc sửa triệt để lỗi che khuất dấu X và tối ưu cơ chế thoát cửa sổ bằng phím Esc.',
     categories: [
       {
         name: 'Trải nghiệm Người dùng & Tương tác Vui nhộn',

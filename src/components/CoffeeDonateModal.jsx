@@ -19,10 +19,10 @@ export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = nu
 
   // Mức ủng hộ mặc định
   const PRESET_AMOUNTS = [
-    { amount: 15000, label: 'Cốc trà đá', icon: '🥤', desc: 'Thanh mát & 1 cái bánh quy cho cún 🐶' },
-    { amount: 25000, label: 'Ly cà phê muối', icon: '☕', desc: 'Tiếp sức dev & cây xúc xích cho mèo 🐱', popular: true },
-    { amount: 50000, label: 'Bữa cơm trưa', icon: '🍱', desc: 'Ấm lòng dev + hộp pate cho cún mèo 🍖' },
-    { amount: 100000, label: 'Tiếp sức Server AI', icon: '🚀', desc: 'Duy trì máy chủ 1 tuần + bao hạt to ✨' }
+    { amount: 15000, label: 'Cốc trà đá', icon: '🥤', desc: 'Thanh mát & tiếp thêm năng lượng làm việc' },
+    { amount: 25000, label: 'Ly cà phê muối', icon: '☕', desc: 'Tiếp sức dev tỉnh táo tối ưu thuật toán', popular: true },
+    { amount: 50000, label: 'Bữa cơm trưa', icon: '🍱', desc: 'Ấm lòng đội ngũ phát triển SoatDon' },
+    { amount: 100000, label: 'Tiếp sức Server AI', icon: '🚀', desc: 'Duy trì máy chủ AI hoạt động 24/7' }
   ];
 
   const [selectedAmount, setSelectedAmount] = useState(25000);
@@ -63,12 +63,12 @@ export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = nu
       origin: { y: 0.6 }
     });
 
-    // Tự động ghi danh vào Bảng Vàng Tri Ân (Hall of Fame) & nạp EXP nuôi thú cưng
+    // Tự động ghi danh vào Bảng Vàng Tri Ân (Hall of Fame)
     try {
       addSupporterToHallOfFame({
         name: donorName.trim() || 'Shop Hảo Tâm Ẩn Danh',
         amount: actualAmount,
-        note: donorMessage.trim() || 'Ủng hộ cà phê tiếp sức SoatDon.vn & nuôi cún mèo!'
+        note: donorMessage.trim() || 'Ủng hộ cà phê tiếp sức SoatDon.vn!'
       });
     } catch (e) {
       console.warn("Lỗi lưu supporter:", e);
@@ -89,8 +89,7 @@ export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = nu
         
         {/* Header Cố Định (Sticky Header) - Dấu X luôn hiển thị 100% không bao giờ bị cắt */}
         <div className="sticky top-0 z-30 flex items-center justify-between px-5 sm:px-6 py-3.5 bg-white/95 backdrop-blur-md border-b border-slate-100 shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="text-xl animate-pet-wag">🐶</span>
+          <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-400 text-white flex items-center justify-center shadow-xs">
               <Coffee className="w-4 h-4" />
             </div>
@@ -98,7 +97,7 @@ export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = nu
               <h3 className="font-extrabold text-slate-900 text-sm sm:text-base leading-tight">
                 Mời Dev Một Ly Cà Phê ☕
               </h3>
-              <p className="text-[10px] text-amber-700 font-semibold">Tiếp sức máy chủ & Nuôi béo Cún Mèo</p>
+              <p className="text-[10px] text-amber-700 font-semibold">Tiếp sức máy chủ & Duy trì hệ thống AI</p>
             </div>
           </div>
 
@@ -118,11 +117,11 @@ export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = nu
           <div className="text-center">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-bold uppercase tracking-wider mb-2">
               <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              <span>Tiếp Sức Đội Ngũ Phát Triển & Nuôi Cún Mèo</span>
+              <span>Tiếp Sức Đội Ngũ Phát Triển SoatDon.vn</span>
             </div>
 
             <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-              {defaultContext || "SoatDon.vn hoạt động bảo vệ quyền lợi shop online. Mỗi ly cà phê giúp duy trì máy chủ AI và chăm sóc đàn thú cưng của shop!"}
+              {defaultContext || "SoatDon.vn hoạt động bảo vệ quyền lợi shop online. Mỗi ly cà phê giúp duy trì máy chủ AI và cập nhật thuật toán liên tục!"}
             </p>
           </div>
 
@@ -312,7 +311,7 @@ export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = nu
               <div className="space-y-1.5 max-h-24 overflow-y-auto pr-1">
                 {recentSupporters.length === 0 ? (
                   <div className="text-[11px] text-slate-400 italic py-2 text-center bg-slate-50 rounded-lg border border-dashed border-slate-200">
-                    Chưa có shop nào ghi danh — Hãy là người đầu tiên tiếp sức cún &amp; mèo nhé!
+                    Chưa có shop nào ghi danh — Hãy là người đầu tiên tiếp sức duy trì máy chủ nhé!
                   </div>
                 ) : (
                   recentSupporters.map((s, idx) => (

@@ -116,9 +116,6 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
       origin: { y: 0.6 }
     });
 
-    // Lưu trạng thái mở khóa vào máy khách
-    localStorage.setItem('soatdon_unlocked', 'true');
-
     // Cập nhật lượt quét nếu người dùng có tài khoản
     try {
       const storedUser = JSON.parse(localStorage.getItem('soatdon_user') || 'null');

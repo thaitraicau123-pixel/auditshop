@@ -1,7 +1,7 @@
 import React from 'react';
 import { ShieldCheck, MessageCircle, Mail, Coffee, Heart, Trophy, Sparkles, ExternalLink, Phone } from 'lucide-react';
 
-export default function Footer({ onOpenCoffeeModal, onOpenPetGame, onOpenHallOfFame }) {
+export default function Footer({ onOpenCoffeeModal, onOpenHallOfFame }) {
   return (
     <footer className="border-t border-slate-200/90 bg-white pt-12 pb-10 text-xs text-slate-500">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -61,17 +61,6 @@ export default function Footer({ onOpenCoffeeModal, onOpenPetGame, onOpenHallOfF
               Cộng Đồng & Tri Ân
             </h5>
             <div className="space-y-2">
-              {onOpenPetGame && (
-                <button
-                  type="button"
-                  onClick={() => onOpenPetGame('PET')}
-                  className="w-full text-left inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-50/80 hover:bg-indigo-100 text-indigo-900 border border-indigo-200/90 font-bold text-xs transition-all shadow-2xs cursor-pointer group"
-                  title="Mini-game nuôi thú cưng theo đơn hàng và donate"
-                >
-                  <span className="text-base group-hover:animate-pet-wag">🐶🐱</span>
-                  <span>Nông trại Pet Soi Đơn</span>
-                </button>
-              )}
 
               {onOpenHallOfFame && (
                 <button

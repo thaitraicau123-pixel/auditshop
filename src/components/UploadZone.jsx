@@ -26,7 +26,7 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
     { title: "Rà soát đơn hoàn ngâm > 72h & tiền thu hộ COD", icon: "📦" }
   ];
 
-  const runAiAuditFlow = async (orders, filename) => {
+  const runAiAuditFlow = async (orders, filename, isSample = false) => {
     setIsScanning(true);
     setError(null);
     setScanProgress(15);
@@ -66,11 +66,11 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
       }
 
       setIsScanning(false);
-      onAuditComplete(orders, filename, aiResult);
+      onAuditComplete(orders, filename, aiResult, isSample);
     } catch (err) {
       console.warn("AI flow error, fallback gracefully:", err);
       setIsScanning(false);
-      onAuditComplete(orders, filename, null);
+      onAuditComplete(orders, filename, null, isSample);
     }
   };
 
@@ -86,7 +86,7 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
         setScanStep("🏆 Đang nạp bảng kê đối soát chuẩn 100% không phát sinh lỗi...");
         const dataset = generateTestDataset(50, 'CLEAN', 'GHTK');
         const parsedOrders = parseExcelWorkbook(dataset.workbook || dataset.wb);
-        await runAiAuditFlow(parsedOrders, "Bang_Ke_Chuan_Doi_Soat_100_Phan_Tram.xlsx");
+        await runAiAuditFlow(parsedOrders, "Bang_Ke_Chuan_Doi_Soat_100_Phan_Tram.xlsx", true);
         return;
       }
 
@@ -103,10 +103,10 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
       setScanStep(`📂 Đang khởi tạo bảng kê ${carrierKey} (${info.count} đơn)...`);
       const dataset = generateTestDataset(info.count, 'MIXED', carrierKey);
       const parsedOrders = parseExcelWorkbook(dataset.workbook || dataset.wb);
-      await runAiAuditFlow(parsedOrders, info.name);
+      await runAiAuditFlow(parsedOrders, info.name, true);
     } catch (err) {
       console.warn("Lỗi load sample carrier:", err);
-      runAiAuditFlow(SAMPLE_ORDERS, "Bang_Ke_Doi_Soat_Mau.xlsx");
+      runAiAuditFlow(SAMPLE_ORDERS, "Bang_Ke_Doi_Soat_Mau.xlsx", true);
     }
   };
 
@@ -121,7 +121,7 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
       setIsScanning(true);
       setScanStep("📂 Đang đọc dữ liệu file Excel...");
       const parsedOrders = await parseExcelFile(file);
-      await runAiAuditFlow(parsedOrders, file.name);
+      await runAiAuditFlow(parsedOrders, file.name, false);
     } catch (err) {
       setIsScanning(false);
       setError("Lỗi khi đọc file: " + (err.message || "File không đúng cấu trúc bảng kê."));
@@ -145,13 +145,13 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
         const blob = await res.blob();
         const file = new File([blob], "Bang_Ke_Doi_Soat_300_Don_GHTK_GHN_SPX.xlsx", { type: blob.type });
         const parsedOrders = await parseExcelFile(file);
-        await runAiAuditFlow(parsedOrders, "Bang_Ke_Doi_Soat_300_Don_GHTK_GHN_SPX.xlsx");
+        await runAiAuditFlow(parsedOrders, "Bang_Ke_Doi_Soat_300_Don_GHTK_GHN_SPX.xlsx", true);
         return;
       }
     } catch (e) {
       console.warn("Lỗi tải file 300 đơn, fallback:", e);
     }
-    runAiAuditFlow(SAMPLE_ORDERS, "File_Mau_Shop_Thoi_Trang_130_Don.xlsx");
+    runAiAuditFlow(SAMPLE_ORDERS, "File_Mau_Shop_Thoi_Trang_130_Don.xlsx", true);
   };
 
   return (
@@ -215,11 +215,10 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
         {isScanning ? (
           /* SCANNING HUD STATE */
           <div className="py-8 sm:py-12 text-center max-w-lg mx-auto animate-fadeIn">
-            {/* Mascot Companion Badge */}
+            {/* AI Engine Status Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-900 text-xs font-bold uppercase tracking-wider mb-6 shadow-2xs">
-              <span className="text-base animate-pet-wag">🐶</span>
-              <span>Cún Soi Cước & Mèo Thần Tài</span>
-              <span className="text-base animate-pet-bounce">🐱</span>
+              <Bot className="w-4 h-4 text-indigo-600 animate-pulse" />
+              <span>Hệ Thống AI Đối Soát Độc Quyền</span>
               <span className="text-slate-300 mx-1">•</span>
               <span className="font-mono text-indigo-700 font-black">{scanProgress}%</span>
             </div>
@@ -252,10 +251,10 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
 
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                 <div className="text-3xl mb-0.5">
-                  {scanStageIndex === 0 && <span className="animate-pet-wag inline-block">🐶🔎</span>}
-                  {scanStageIndex === 1 && <span className="animate-pet-bounce inline-block">🐶⚖️🐱</span>}
-                  {scanStageIndex === 2 && <span className="animate-pet-nod inline-block">🐱🧮</span>}
-                  {scanStageIndex >= 3 && <span className="animate-bounce inline-block">🐶✨🐱</span>}
+                  {scanStageIndex === 0 && <span className="inline-block animate-pulse">📂</span>}
+                  {scanStageIndex === 1 && <span className="inline-block animate-bounce">⚖️</span>}
+                  {scanStageIndex === 2 && <span className="inline-block animate-pulse">💰</span>}
+                  {scanStageIndex >= 3 && <span className="inline-block animate-bounce">✨</span>}
                 </div>
                 <div className="font-mono text-2xl font-black text-slate-900 tracking-tight">
                   {scanProgress}%
@@ -269,9 +268,9 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
             </h3>
 
             <p className="text-xs sm:text-sm font-semibold text-indigo-800 bg-indigo-50/90 py-2.5 px-4 rounded-xl border border-indigo-100 max-w-md mx-auto mb-6 shadow-2xs">
-              {scanStageIndex === 0 && `🐶 [Cún Soi Cước]: "Gâu gâu! Em đang đọc file và bỏ qua banner đầu trang..."`}
-              {scanStageIndex === 1 && `⚖️ [AI Thẩm Định]: "Đang soi từng gam cân nặng thực tế và thể tích DxRxC..."`}
-              {scanStageIndex === 2 && `🐱 [Mèo Thần Tài]: "Meo meo! Đang đếm lại tiền cước và phụ phí vùng xa..."`}
+              {scanStageIndex === 0 && `📂 [Hệ Thống]: "Đang nạp file, tự động loại bỏ dòng banner và tiêu đề..."`}
+              {scanStageIndex === 1 && `⚖️ [AI Thẩm Định]: "Đang tính toán nấc cân nặng thực tế và thể tích quy đổi DxRxC..."`}
+              {scanStageIndex === 2 && `💰 [Kiểm Toán Cước]: "Đang đối chiếu biểu phí thỏa thuận và phụ phí vùng xa..."`}
               {scanStageIndex >= 3 && `✨ [Bảo Vệ Doanh Thu]: "Rà soát đơn hoàn ngâm > 72h & tiền thu hộ COD!"`}
             </p>
 
@@ -329,17 +328,18 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
               {/* Upload Graphic */}
               <div className="w-18 h-18 mx-auto mb-4 rounded-3xl bg-indigo-50 border border-indigo-200/90 flex items-center justify-center text-indigo-600 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-xs relative">
                 <UploadCloud className="w-9 h-9" />
-                <span className="absolute -top-1.5 -right-1.5 text-lg animate-pet-wag">🐶</span>
-                <span className="absolute -bottom-1.5 -left-1.5 text-lg animate-pet-bounce">🐱</span>
               </div>
 
-              {/* Pet Assistant Helper Pills */}
+              {/* Feature Highlights Pills */}
               <div className="flex items-center justify-center gap-2 mb-3">
                 <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-[11px] font-bold inline-flex items-center gap-1.5 shadow-2xs">
-                  <span>🐶</span> Cún canh nấc cân
+                  <span>⚖️</span> Tự động soi nấc cân
                 </span>
                 <span className="px-3 py-1 rounded-full bg-rose-50 text-rose-900 border border-rose-200 text-[11px] font-bold inline-flex items-center gap-1.5 shadow-2xs">
-                  <span>🐱</span> Mèo đếm tiền COD
+                  <span>📦</span> Bắt đền đơn ngâm hoàn
+                </span>
+                <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-200 text-[11px] font-bold inline-flex items-center gap-1.5 shadow-2xs">
+                  <span>💰</span> Đối chiếu thu hộ COD
                 </span>
               </div>
 
@@ -368,8 +368,7 @@ export default function UploadZone({ onAuditComplete, lastScan, onOpenHistory, s
             <div className="mt-7 pt-6 border-t border-slate-100">
               <div className="flex items-center justify-between mb-3.5 flex-wrap gap-2">
                 <div className="text-xs font-extrabold text-slate-800 flex items-center gap-2">
-                  <span className="text-base animate-pet-wag">🐶</span>
-                  <span className="text-base animate-pet-bounce">🐱</span>
+                  <Sparkles className="w-4 h-4 text-indigo-600" />
                   <span>Chưa có file sẵn? Thử ngay 7 bảng kê mẫu thực tế (1-Click AI Test):</span>
                 </div>
                 <button
