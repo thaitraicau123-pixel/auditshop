@@ -121,12 +121,14 @@ export default function PetGameModal({
     }
   };
 
-  // Lọc Bảng Vàng
-  const filteredHall = hallOfFame.filter(item => {
+  // Lọc Bảng Vàng (Bảo vệ an toàn chống lỗi null/undefined)
+  const filteredHall = (hallOfFame || []).filter(item => {
+    if (!item) return false;
     const matchRank = rankFilter === 'ALL' || item.rank === rankFilter;
-    const matchSearch = !searchTerm || 
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      item.note.toLowerCase().includes(searchTerm.toLowerCase());
+    const itemName = (item.name || '').toLowerCase();
+    const itemNote = (item.note || '').toLowerCase();
+    const q = (searchTerm || '').toLowerCase().trim();
+    const matchSearch = !q || itemName.includes(q) || itemNote.includes(q);
     return matchRank && matchSearch;
   });
 

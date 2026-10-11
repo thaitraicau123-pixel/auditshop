@@ -132,6 +132,14 @@ export default function App() {
     setIsPetGameOpen(true);
   };
 
+  const handleCloseChangelog = () => {
+    try {
+      localStorage.setItem('soatdon_last_seen_version', CURRENT_SYSTEM_VERSION);
+    } catch {}
+    setIsChangelogOpen(false);
+    setIsAutoChangelog(false);
+  };
+
   // Phím tắt toàn cục ESC đóng tất cả các modal
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -144,7 +152,7 @@ export default function App() {
         setIsProfileModalOpen(false);
         setIsHistoryModalOpen(false);
         setIsAdminModalOpen(false);
-        setIsChangelogOpen(false);
+        handleCloseChangelog();
         setIsCoffeeModalOpen(false);
         setIsPetGameOpen(false);
       }
@@ -484,7 +492,7 @@ export default function App() {
       {/* Bảng Thông Báo Cập Nhật Hệ Thống & Tính Năng Mới */}
       <ChangelogModal 
         isOpen={isChangelogOpen}
-        onClose={() => setIsChangelogOpen(false)}
+        onClose={handleCloseChangelog}
         isAutoOpen={isAutoChangelog}
       />
 

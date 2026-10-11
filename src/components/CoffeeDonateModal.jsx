@@ -4,6 +4,7 @@ import {
   Flame, MessageSquare, Send, CheckCircle2, ShieldCheck, ThumbsUp
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { addSupporterToHallOfFame } from '../utils/petGameEngine';
 
 export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = null, onOpenHallOfFame = null }) {
   if (!isOpen) return null;
@@ -63,26 +64,16 @@ export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = nu
       origin: { y: 0.6 }
     });
 
-    // Tự động ghi danh vào Bảng Vàng Tri Ân (Hall of Fame)
+    // Tự động ghi danh vào Bảng Vàng Tri Ân (Hall of Fame) & nạp EXP nuôi thú cưng
     try {
-      const existingHall = JSON.parse(localStorage.getItem('soatdon_hall_of_fame') || '[]');
-      const newEntry = {
-        id: 'DONOR_' + Date.now(),
+      addSupporterToHallOfFame({
         name: donorName.trim() || 'Shop Hảo Tâm Ẩn Danh',
         amount: actualAmount,
-        note: donorMessage.trim() || 'Ủng hộ cà phê tiếp sức SoatDon.vn & nuôi cún mèo!',
-        timestamp: new Date().toISOString()
-      };
-      localStorage.setItem('soatdon_hall_of_fame', JSON.stringify([newEntry, ...existingHall]));
-
-      // Tăng điểm kinh nghiệm nuôi thú cưng
-      const pet = JSON.parse(localStorage.getItem('soatdon_pet_data') || '{}');
-      pet.exp = (pet.exp || 0) + Math.round(actualAmount / 100);
-      pet.totalDonated = (pet.totalDonated || 0) + actualAmount;
-      pet.happiness = 100;
-      pet.hunger = Math.min(100, (pet.hunger || 50) + 30);
-      localStorage.setItem('soatdon_pet_data', JSON.stringify(pet));
-    } catch (e) {}
+        note: donorMessage.trim() || 'Ủng hộ cà phê tiếp sức SoatDon.vn & nuôi cún mèo!'
+      });
+    } catch (e) {
+      console.warn("Lỗi lưu supporter:", e);
+    }
   };
 
   // Danh sách các shop đã ủng hộ gần đây (Social Proof)

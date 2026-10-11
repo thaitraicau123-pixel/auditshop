@@ -3,14 +3,62 @@
  * Lưu trữ phiên bản, thời gian phát hành và toàn bộ tính năng mới đã thêm.
  */
 
-export const CURRENT_SYSTEM_VERSION = 'v2.9';
+export const CURRENT_SYSTEM_VERSION = 'v3.0';
 
 export const CHANGELOG_HISTORY = [
+  {
+    version: 'v3.0',
+    releaseDate: '11/10/2026 - 21:30',
+    title: '🐶🐱 Ra Mắt Mini-Game Nuôi Thú Cưng Soi Đơn, Bảng Vàng Tri Ân & Khắc Phục Lỗi Dấu X',
+    isCurrent: true,
+    badges: ['Nuôi Thú Cưng 🐶🐱', 'Bảng Vàng Tri Ân 🏆', 'Sửa Nút Đóng X 🛡️', 'Thoát Nhanh Bằng Esc', 'Giao Diện HUD Mới'],
+    summary: 'Cập nhật lớn mang đến tính năng nuôi thú cưng (Cún & Mèo) tăng trưởng theo lượng đơn soát và tiền donate, Bảng Vàng Tri Ân công khai vinh danh các nhà bán hàng hảo tâm, cùng việc sửa triệt để lỗi che khuất dấu X và tối ưu cơ chế thoát cửa sổ bằng phím Esc.',
+    categories: [
+      {
+        name: 'Trải nghiệm Người dùng & Tương tác Vui nhộn',
+        tag: 'MINI-GAME',
+        color: 'emerald',
+        items: [
+          {
+            title: 'Hệ Thống Nuôi Thú Cưng Cún & Mèo (Pet Nurturing Lv.1 - Lv.7)',
+            desc: 'Thú cưng tự động tích lũy thức ăn hạt và EXP mỗi khi shop quét đơn Excel; nhận thức ăn Pate VIP khi donate. Thăng tiến 7 cấp danh hiệu từ Cún Mèo Tập Sự đến Vua Soi Cước Huyền Thoại.'
+          },
+          {
+            title: 'Mini Clicker Game "Bắt Đền Kê Khống Nấc Cân"',
+            desc: 'Tương tác clicker hấp dẫn: Bấm để cún mèo tóm gọn 3 kiện hàng bị bưu cục tính lố nấc cân, nhận ngay 60 EXP thăng cấp!'
+          },
+          {
+            title: 'Bảng Vàng Tri Ân Cộng Đồng Công Khai',
+            desc: 'Vinh danh công khai danh sách các shop đã chung tay mời ly cà phê tiếp sức máy chủ AI, phân hạng Kim Cương, Vàng, Bạc kèm tìm kiếm và lọc danh hiệu.'
+          }
+        ]
+      },
+      {
+        name: 'Tối ưu Giao diện & Điều hướng Thoát Cửa Sổ',
+        tag: 'UX/UI FIX',
+        color: 'blue',
+        items: [
+          {
+            title: 'Sửa Triệt Để Lỗi Che Dấu X Trên Mọi Kích Thước Màn Hình',
+            desc: 'Thiết kế Sticky Header cố định cho tất cả các modal, nút đóng X to tròn nổi bật và không bao giờ bị thụt lên trên nóc màn hình dù dùng trình duyệt nào.'
+          },
+          {
+            title: '3 Cơ Chế Quay Lại Web Dễ Dàng Khi Bấm Nhầm',
+            desc: 'Hỗ trợ bấm phím Escape (Esc) thoát tức thì, click chuột ra ngoài vùng xám (backdrop) để đóng, và thêm nút lớn "← Đóng & Quay lại web (Esc)" dưới chân mọi cửa sổ.'
+          },
+          {
+            title: 'Tinh Gọn HUD & Biểu Tượng Cún Mèo Trực Quan',
+            desc: 'Bố cục lại các nút bấm, giảm rối mắt, thêm thanh đo sức khỏe logistics và linh vật thú cưng nhắc nhở vui tươi.'
+          }
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.9',
     releaseDate: '11/10/2026 - 20:20',
     title: '☕ Ra Mắt Tính Năng "Mời Dev Ly Cà Phê" & 3 Điểm Rơi Tri Ân Thông Minh',
-    isCurrent: true,
+    isCurrent: false,
     badges: ['Mời Cà Phê ☕', 'VietQR 1-Chạm', '3 Điểm Rơi Cảm Xúc', 'Bảng Vàng Tri Ân'],
     summary: 'Tích hợp tiện ích Mời Dev Ly Cà Phê (Buy Me A Coffee) qua VietQR MB Bank tại 3 thời điểm tâm lý vàng: ngay sau khi xuất file khiếu nại, tại chân trang Footer và trong cửa sổ vinh danh chiến thắng để lấy hên bão đơn!',
     categories: [
