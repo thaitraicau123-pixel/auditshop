@@ -5,8 +5,17 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = null }) {
+export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = null, onOpenHallOfFame = null }) {
   if (!isOpen) return null;
+
+  // Lắng nghe phím Escape (ESC) để đóng modal ngay lập tức nếu lỡ bấm nhầm
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   // Mức ủng hộ mặc định
   const PRESET_AMOUNTS = [
@@ -49,10 +58,31 @@ export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = nu
   const handleSimulateDonated = () => {
     setIsDonatedSuccess(true);
     confetti({
-      particleCount: 50,
-      spread: 70,
+      particleCount: 70,
+      spread: 80,
       origin: { y: 0.6 }
     });
+
+    // Tự động ghi danh vào Bảng Vàng Tri Ân (Hall of Fame)
+    try {
+      const existingHall = JSON.parse(localStorage.getItem('soatdon_hall_of_fame') || '[]');
+      const newEntry = {
+        id: 'DONOR_' + Date.now(),
+        name: donorName.trim() || 'Shop Hảo Tâm Ẩn Danh',
+        amount: actualAmount,
+        note: donorMessage.trim() || 'Ủng hộ cà phê tiếp sức SoatDon.vn & nuôi cún mèo!',
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem('soatdon_hall_of_fame', JSON.stringify([newEntry, ...existingHall]));
+
+      // Tăng điểm kinh nghiệm nuôi thú cưng
+      const pet = JSON.parse(localStorage.getItem('soatdon_pet_data') || '{}');
+      pet.exp = (pet.exp || 0) + Math.round(actualAmount / 100);
+      pet.totalDonated = (pet.totalDonated || 0) + actualAmount;
+      pet.happiness = 100;
+      pet.hunger = Math.min(100, (pet.hunger || 50) + 30);
+      localStorage.setItem('soatdon_pet_data', JSON.stringify(pet));
+    } catch (e) {}
   };
 
   // Danh sách các shop đã ủng hộ gần đây (Social Proof)
@@ -64,40 +94,50 @@ export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = nu
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md overflow-y-auto animate-fadeIn">
-      <div className="bg-white border border-slate-200/90 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative my-8 text-slate-800">
-        {/* Nút đóng */}
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-        >
-          <X className="w-5 h-5 stroke-[2.5]" />
-        </button>
-
-        {/* Header */}
-        <div className="text-center mb-6">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <span className="text-3xl animate-pet-wag">🐶</span>
-            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-400 text-white flex items-center justify-center shadow-lg shadow-amber-500/25">
-              <Coffee className="w-7 h-7" />
-              <Heart className="w-4 h-4 text-rose-300 fill-rose-300 absolute -top-1 -right-1 animate-bounce" />
+    <div 
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-md overflow-y-auto animate-fadeIn"
+    >
+      <div className="bg-white border border-slate-200/90 rounded-3xl max-w-lg w-full shadow-2xl relative my-auto max-h-[92vh] flex flex-col text-slate-800 overflow-hidden">
+        
+        {/* Header Cố Định (Sticky Header) - Dấu X luôn hiển thị 100% không bao giờ bị cắt */}
+        <div className="sticky top-0 z-30 flex items-center justify-between px-5 sm:px-6 py-3.5 bg-white/95 backdrop-blur-md border-b border-slate-100 shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-xl animate-pet-wag">🐶</span>
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-400 text-white flex items-center justify-center shadow-xs">
+              <Coffee className="w-4 h-4" />
             </div>
-            <span className="text-3xl animate-pet-bounce">🐱</span>
+            <div>
+              <h3 className="font-extrabold text-slate-900 text-sm sm:text-base leading-tight">
+                Mời Dev Một Ly Cà Phê ☕
+              </h3>
+              <p className="text-[10px] text-amber-700 font-semibold">Tiếp sức máy chủ & Nuôi béo Cún Mèo</p>
+            </div>
           </div>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold uppercase tracking-wider mb-2">
-            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-            <span>Tiếp Sức Đội Ngũ Phát Triển & Nuôi Cún Mèo</span>
-          </div>
-
-          <h3 className="text-2xl font-black text-slate-900 tracking-tight">
-            Mời Dev Một Ly Cà Phê ☕
-          </h3>
-
-          <p className="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto mt-1 leading-relaxed">
-            {defaultContext || "SoatDon.vn hoạt động nhằm bảo vệ quyền lợi các nhà bán hàng. Sự ủng hộ của bạn là nguồn động lực to lớn giúp duy trì máy chủ AI và nâng cấp tính năng mới!"}
-          </p>
+          {/* Dấu X To Nổi Bật, Bấm Là Đóng Ngay */}
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+            title="Đóng (Phím Esc)"
+            aria-label="Đóng"
+          >
+            <X className="w-4 h-4 stroke-[2.5]" />
+          </button>
         </div>
+
+        {/* Nội dung có thể cuộn mượt mà bên trong nếu màn hình bé */}
+        <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4">
+          <div className="text-center">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-bold uppercase tracking-wider mb-2">
+              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+              <span>Tiếp Sức Đội Ngũ Phát Triển & Nuôi Cún Mèo</span>
+            </div>
+
+            <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+              {defaultContext || "SoatDon.vn hoạt động bảo vệ quyền lợi shop online. Mỗi ly cà phê giúp duy trì máy chủ AI và chăm sóc đàn thú cưng của shop!"}
+            </p>
+          </div>
 
         {isDonatedSuccess ? (
           /* Màn hình cảm ơn sau khi chuyển khoản */
@@ -264,9 +304,23 @@ export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = nu
 
             {/* Bảng vàng các shop đã mời cà phê gần đây */}
             <div className="pt-3 border-t border-slate-100">
-              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                <Heart className="w-3 h-3 text-rose-400 fill-rose-400" />
-                <span>Cộng đồng shop đã tiếp sức gần đây:</span>
+              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                <span className="flex items-center gap-1">
+                  <Heart className="w-3 h-3 text-rose-400 fill-rose-400" />
+                  <span>Cộng đồng shop đã tiếp sức gần đây:</span>
+                </span>
+                {onOpenHallOfFame && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onOpenHallOfFame();
+                    }}
+                    className="text-amber-700 hover:underline font-bold text-[11px] cursor-pointer"
+                  >
+                    Xem tất cả 🏆
+                  </button>
+                )}
               </div>
               <div className="space-y-1.5 max-h-24 overflow-y-auto pr-1">
                 {RECENT_SUPPORTERS.map((s, idx) => (
@@ -279,8 +333,20 @@ export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = nu
                 ))}
               </div>
             </div>
+
+            {/* Nút Quay Lại Rõ Ràng Cho Người Lỡ Bấm Nhầm */}
+            <div className="pt-2 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full py-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <span>← Đóng cửa sổ & Quay lại web (Esc)</span>
+              </button>
+            </div>
           </>
         )}
+        </div>
       </div>
     </div>
   );

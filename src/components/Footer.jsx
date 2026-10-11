@@ -1,7 +1,7 @@
 import React from 'react';
 import { ShieldCheck, MessageCircle, Mail, Coffee, Heart } from 'lucide-react';
 
-export default function Footer({ onOpenCoffeeModal }) {
+export default function Footer({ onOpenCoffeeModal, onOpenPetGame, onOpenHallOfFame }) {
   return (
     <footer className="border-t border-slate-200 bg-white py-10 text-xs text-slate-500">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -15,8 +15,30 @@ export default function Footer({ onOpenCoffeeModal }) {
           </div>
         </div>
 
-        {/* Điểm rơi 2: Nút Mời ly cà phê trang trọng ở Footer */}
-        <div className="flex items-center gap-2">
+        {/* Các nút Tri Ân, Nuôi Pet & Mời ly cà phê ở Footer */}
+        <div className="flex items-center flex-wrap justify-center gap-2">
+          {onOpenPetGame && (
+            <button
+              type="button"
+              onClick={() => onOpenPetGame('PET')}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200/90 font-bold text-xs transition-all shadow-2xs cursor-pointer"
+              title="Mini-game nuôi thú cưng theo đơn hàng và donate"
+            >
+              <span>🐶🐱 Nuôi Pet</span>
+            </button>
+          )}
+
+          {onOpenHallOfFame && (
+            <button
+              type="button"
+              onClick={() => onOpenHallOfFame()}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/90 font-bold text-xs transition-all shadow-2xs cursor-pointer"
+              title="Xem Bảng Vàng Tri Ân các shop hảo tâm"
+            >
+              <span>🏆 Bảng Vàng Tri Ân</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => onOpenCoffeeModal?.("Ủng hộ duy trì máy chủ AI và cập nhật thuật toán SoatDon.vn")}
@@ -24,7 +46,7 @@ export default function Footer({ onOpenCoffeeModal }) {
             title="Mời đội ngũ phát triển 1 ly cà phê muối tiếp sức duy trì máy chủ"
           >
             <Coffee className="w-4 h-4 text-amber-600 group-hover:rotate-12 transition-transform" />
-            <span>Mời dev ly cà phê ☕</span>
+            <span>Mời dev cà phê ☕</span>
             <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
           </button>
         </div>

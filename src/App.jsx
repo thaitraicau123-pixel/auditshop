@@ -18,9 +18,11 @@ import Testimonials from './components/Testimonials';
 import Footer from './components/Footer';
 import CoffeeDonateModal from './components/CoffeeDonateModal';
 import PetCompanionWidget from './components/PetCompanionWidget';
+import PetGameModal from './components/PetGameModal';
 import { analyzeOrders } from './utils/auditEngine';
 import { syncLocalAccountsToCloud, fetchCloudAccounts } from './utils/cloudDatabase';
 import { CURRENT_SYSTEM_VERSION } from './data/changelog';
+import { addOrdersToPet } from './utils/petGameEngine';
 
 export default function App() {
   const [auditResult, setAuditResult] = useState(null);
@@ -111,9 +113,23 @@ export default function App() {
   const [isCoffeeModalOpen, setIsCoffeeModalOpen] = useState(false);
   const [coffeeModalContext, setCoffeeModalContext] = useState(null);
 
+  // Pet Game & Hall of Fame State (Mini-game nuôi thú cưng & Bảng Vàng)
+  const [isPetGameOpen, setIsPetGameOpen] = useState(false);
+  const [petGameTab, setPetGameTab] = useState('PET');
+
   const handleOpenCoffeeModal = (context) => {
     setCoffeeModalContext(context || null);
     setIsCoffeeModalOpen(true);
+  };
+
+  const handleOpenPetGame = (tab = 'PET') => {
+    setPetGameTab(tab);
+    setIsPetGameOpen(true);
+  };
+
+  const handleOpenHallOfFame = () => {
+    setPetGameTab('HALL');
+    setIsPetGameOpen(true);
   };
 
   // Phím tắt toàn cục ESC đóng tất cả các modal
@@ -130,6 +146,7 @@ export default function App() {
         setIsAdminModalOpen(false);
         setIsChangelogOpen(false);
         setIsCoffeeModalOpen(false);
+        setIsPetGameOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -139,6 +156,11 @@ export default function App() {
   const handleAuditComplete = (orders, name, aiResult) => {
     // 1. Phân tích số liệu chuẩn
     const baseResult = analyzeOrders(orders);
+
+    // Tự động nạp thức ăn hạt và EXP cho Thú cưng từ lượng đơn soát
+    try {
+      addOrdersToPet(baseResult.totalOrders);
+    } catch {}
 
     // 2. Nếu AI Chuyên Sâu trả về kết quả
     if (aiResult && aiResult.summaryDiagnosis) {
@@ -352,7 +374,11 @@ export default function App() {
         <Testimonials />
       </main>
 
-      <Footer onOpenCoffeeModal={handleOpenCoffeeModal} />
+      <Footer 
+        onOpenCoffeeModal={handleOpenCoffeeModal} 
+        onOpenPetGame={handleOpenPetGame}
+        onOpenHallOfFame={handleOpenHallOfFame}
+      />
 
       {/* 🚨 CỬA SỔ BÁO ĐỘNG ĐỎ KHI PHÁT HIỆN THẤT THOÁT TIỀN */}
       <EmergencyAlertModal 
@@ -467,10 +493,23 @@ export default function App() {
         isOpen={isCoffeeModalOpen}
         onClose={() => setIsCoffeeModalOpen(false)}
         defaultContext={coffeeModalContext}
+        onOpenHallOfFame={handleOpenHallOfFame}
       />
 
       {/* 🐶🐱 Thú Cưng Mini Đồng Hành (Cún Soi Cước & Mèo Thần Tài) */}
-      <PetCompanionWidget onOpenCoffeeModal={handleOpenCoffeeModal} />
+      <PetCompanionWidget 
+        onOpenCoffeeModal={handleOpenCoffeeModal}
+        onOpenPetGame={handleOpenPetGame}
+        onOpenHallOfFame={handleOpenHallOfFame}
+      />
+
+      {/* 🎮 Cửa Sổ Mini-Game Nuôi Thú Cưng & Bảng Vàng Tri Ân */}
+      <PetGameModal 
+        isOpen={isPetGameOpen}
+        onClose={() => setIsPetGameOpen(false)}
+        onOpenCoffeeModal={handleOpenCoffeeModal}
+        initialTab={petGameTab}
+      />
     </div>
   );
 }

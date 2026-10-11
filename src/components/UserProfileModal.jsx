@@ -4,27 +4,40 @@ import { X, User, Store, Phone, Award, Zap, LogOut, PlusCircle, ShieldCheck, Che
 export default function UserProfileModal({ isOpen, onClose, user, onLogout, onOpenPricing, onOpenHistory }) {
   if (!isOpen || !user) return null;
 
+  // Thoát nhanh bằng phím Escape
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fadeIn font-sans">
-      <div className="bg-white border border-slate-200/90 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden relative my-auto text-slate-800">
+    <div 
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fadeIn font-sans"
+    >
+      <div className="bg-white border border-slate-200/90 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden relative my-auto max-h-[92vh] flex flex-col text-slate-800">
         
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+        {/* Header Cố Định */}
+        <div className="sticky top-0 z-30 flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white/95 backdrop-blur-md">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-xs">
               <User className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-extrabold text-slate-900 text-base">Hồ Sơ Nhà Bán Hàng</h3>
+              <h3 className="font-extrabold text-slate-900 text-base leading-tight">Hồ Sơ Nhà Bán Hàng</h3>
               <p className="text-[11px] text-slate-500 font-medium">Tài khoản & Quản lý lượt quét</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+            title="Đóng (Phím Esc)"
           >
-            <X className="w-5 h-5 stroke-[2.5]" />
+            <X className="w-4 h-4 stroke-[2.5]" />
           </button>
         </div>
 
@@ -92,9 +105,8 @@ export default function UserProfileModal({ isOpen, onClose, user, onLogout, onOp
             <span>Nạp Thêm Lượt Quét / Nâng Cấp Gói Tháng</span>
           </button>
 
-          {/* Đăng xuất */}
+          {/* Đăng xuất & Quay lại */}
           <div className="pt-2 border-t border-slate-100 flex justify-between items-center">
-            <span className="text-[11px] text-slate-400">Đã đăng nhập trên thiết bị này</span>
             <button
               onClick={() => {
                 onLogout();
@@ -104,6 +116,13 @@ export default function UserProfileModal({ isOpen, onClose, user, onLogout, onOp
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>Đăng Xuất</span>
+            </button>
+
+            <button
+              onClick={onClose}
+              className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 font-bold text-xs transition-colors cursor-pointer"
+            >
+              ← Đóng (Esc)
             </button>
           </div>
         </div>

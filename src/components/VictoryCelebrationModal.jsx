@@ -46,26 +46,38 @@ export default function VictoryCelebrationModal({ isOpen, onClose, totalOrders, 
       });
     }, 250);
 
-    return () => clearInterval(interval);
-  }, []);
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-2xl animate-fadeIn">
+    <div 
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 bg-slate-950/90 backdrop-blur-2xl overflow-y-auto animate-fadeIn"
+    >
       {/* Radiant rotating sunburst rays effect */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
         <div className="w-[800px] h-[800px] bg-gradient-to-tr from-amber-500/15 via-emerald-500/15 to-purple-500/15 rounded-full blur-3xl animate-spin duration-10000" />
       </div>
 
-      <div className="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-3 border-amber-400/80 rounded-3xl max-w-xl w-full p-6 sm:p-10 text-center shadow-[0_0_100px_rgba(245,158,11,0.4)] relative my-8 overflow-hidden animate-scaleUp">
+      <div className="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-3 border-amber-400/80 rounded-3xl max-w-xl w-full p-6 sm:p-10 text-center shadow-[0_0_100px_rgba(245,158,11,0.4)] relative my-auto max-h-[92vh] overflow-y-auto animate-scaleUp">
         {/* Shimmering top accent */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-400 via-amber-300 to-emerald-400 animate-pulse" />
 
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors z-10"
+          className="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-900 border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors z-20 flex items-center justify-center cursor-pointer shadow-md"
+          title="Đóng (Phím Esc)"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4 stroke-[2.5]" />
         </button>
 
         {/* Massive 3D Trophy Badge with Glow */}
@@ -150,6 +162,17 @@ export default function VictoryCelebrationModal({ isOpen, onClose, totalOrders, 
           >
             <Coffee className="w-4 h-4 text-amber-400" />
             <span>Mời cà phê lấy hên ☕</span>
+          </button>
+        </div>
+
+        {/* Nút quay lại web */}
+        <div className="mt-4 pt-3 border-t border-slate-800/60">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full py-2.5 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-400 hover:text-white font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+          >
+            ← Đóng cửa sổ & Quay lại web (Esc)
           </button>
         </div>
       </div>

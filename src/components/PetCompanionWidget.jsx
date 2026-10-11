@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Heart, X, MessageCircle } from 'lucide-react';
+import { Sparkles, Heart, X, MessageCircle, Trophy, Gamepad2 } from 'lucide-react';
+import { getPetData } from '../utils/petGameEngine';
 
-export default function PetCompanionWidget({ onOpenCoffeeModal }) {
+export default function PetCompanionWidget({ onOpenCoffeeModal, onOpenPetGame, onOpenHallOfFame }) {
   const [activeSpeech, setActiveSpeech] = useState(null);
   const [activePet, setActivePet] = useState('dog'); // 'dog' or 'cat'
   const [isMinimized, setIsMinimized] = useState(false);
+  const [petLevel, setPetLevel] = useState(2);
+
+  useEffect(() => {
+    try {
+      const data = getPetData();
+      if (data && data.level) setPetLevel(data.level);
+    } catch {}
+  }, []);
 
   const DOG_QUOTES = [
     "Gâu gâu! Shop cứ yên tâm đăng đơn, để cún đánh hơi xem bưu cục nào dám kê khống nấc cân! 🐶🔎",
@@ -43,10 +52,11 @@ export default function PetCompanionWidget({ onOpenCoffeeModal }) {
         <button
           onClick={() => setIsMinimized(false)}
           className="p-2.5 rounded-full bg-white border border-slate-200 shadow-lg hover:shadow-xl text-lg flex items-center gap-1 hover:scale-110 transition-all cursor-pointer group"
-          title="Mở thú cưng đồng hành (Cún 🐶 & Mèo 🐱)"
+          title="Mở thú cưng đồng hành & Mini-Game"
         >
           <span className="animate-pet-wag">🐶</span>
           <span className="animate-pet-bounce">🐱</span>
+          <span className="text-[10px] font-black px-1.5 py-0.2 rounded-full bg-indigo-600 text-white ml-0.5">Lv.{petLevel}</span>
         </button>
       </div>
     );
@@ -82,28 +92,55 @@ export default function PetCompanionWidget({ onOpenCoffeeModal }) {
       )}
 
       {/* Thanh Pet Dock Mini */}
-      <div className="flex items-center gap-2 p-1.5 px-3 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-xl shadow-indigo-500/10 hover:shadow-2xl transition-all">
+      <div className="flex items-center gap-1.5 p-1.5 px-2.5 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-xl shadow-indigo-500/10 hover:shadow-2xl transition-all">
         {/* Nút bé Cún */}
         <button
           type="button"
           onClick={() => handlePetClick('dog')}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs group"
+          className="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs group"
           title="Bấm để Cún Soi Cước sủa lời bảo vệ doanh thu!"
         >
-          <span className="text-lg group-hover:animate-pet-wag inline-block">🐶</span>
-          <span className="text-[11px] hidden sm:inline">Cún Soi Cước</span>
+          <span className="text-base group-hover:animate-pet-wag inline-block">🐶</span>
+          <span className="text-[11px] hidden lg:inline">Cún</span>
         </button>
 
         {/* Nút bé Mèo */}
         <button
           type="button"
           onClick={() => handlePetClick('cat')}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-900 border border-rose-200 text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs group"
+          className="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-900 border border-rose-200 text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs group"
           title="Bấm để Mèo Thần Tài chiêu lộc bão đơn!"
         >
-          <span className="text-lg group-hover:animate-pet-bounce inline-block">🐱</span>
-          <span className="text-[11px] hidden sm:inline">Mèo Thần Tài</span>
+          <span className="text-base group-hover:animate-pet-bounce inline-block">🐱</span>
+          <span className="text-[11px] hidden lg:inline">Mèo</span>
         </button>
+
+        {/* Nút Mở Mini-Game Nuôi Thú Cưng */}
+        {onOpenPetGame && (
+          <button
+            type="button"
+            onClick={() => onOpenPetGame('PET')}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
+            title="Mở Mini-Game Nuôi Thú Cưng dựa theo lượng đơn soát"
+          >
+            <span>🎮</span>
+            <span className="text-[11px] font-extrabold hidden sm:inline">Nuôi Pet</span>
+            <span className="px-1.5 py-0.2 rounded-full bg-indigo-600 text-white text-[9px] font-black">Lv.{petLevel}</span>
+          </button>
+        )}
+
+        {/* Nút Mở Bảng Vàng Tri Ân */}
+        {onOpenHallOfFame && (
+          <button
+            type="button"
+            onClick={() => onOpenHallOfFame()}
+            className="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
+            title="Xem Bảng Vàng Tri Ân các shop hảo tâm"
+          >
+            <span>🏆</span>
+            <span className="text-[11px] hidden md:inline">Bảng Vàng</span>
+          </button>
+        )}
 
         {/* Nút Mời Cà Phê Siêu Cute */}
         {onOpenCoffeeModal && (
@@ -111,10 +148,10 @@ export default function PetCompanionWidget({ onOpenCoffeeModal }) {
             type="button"
             onClick={() => onOpenCoffeeModal("🐱☕ Mèo & Cún xin mời dev ly cà phê muối tiếp sức duy trì máy chủ SoatDon.vn nha!")}
             className="p-1.5 px-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-xs transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xs flex items-center gap-1"
-            title="Mời dev ly cà phê"
+            title="Mời dev ly cà phê tiếp sức server"
           >
             <span>☕</span>
-            <span className="text-[10px] hidden md:inline">Mời Cà Phê</span>
+            <span className="text-[10px] hidden xl:inline">Mời Cà Phê</span>
           </button>
         )}
 

@@ -113,92 +113,133 @@ export default function DisputeTemplateModal({ isOpen, onClose, anomalies }) {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fadeIn">
-      <div className="bg-white border border-slate-200/90 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative my-8 text-slate-800">
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-        >
-          <X className="w-5 h-5 stroke-[2.5]" />
-        </button>
+  // Thoát nhanh bằng phím Escape
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600 border border-amber-200 shadow-xs">
-              <FileCheck className="w-6 h-6" />
+  return (
+    <div 
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fadeIn"
+    >
+      <div className="bg-white border border-slate-200/90 rounded-3xl max-w-2xl w-full shadow-2xl relative my-auto max-h-[92vh] flex flex-col text-slate-800 overflow-hidden">
+        {/* Header Cố Định (Sticky Header) - Dấu X luôn hiển thị 100% */}
+        <div className="sticky top-0 z-30 flex items-center justify-between px-5 sm:px-6 py-3.5 bg-white/95 backdrop-blur-md border-b border-slate-100 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-amber-50 text-amber-600 border border-amber-200 shadow-xs">
+              <FileCheck className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-slate-900">Mẫu thư khiếu nại bồi hoàn chuẩn</h3>
-              <p className="text-xs text-slate-500">Gửi email / Zalo bưu cục hoặc in biên bản nộp trực tiếp</p>
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-tight">Mẫu thư khiếu nại bồi hoàn chuẩn</h3>
+              <p className="text-[11px] text-slate-500 font-medium">Gửi email / Zalo bưu cục hoặc in biên bản nộp trực tiếp</p>
             </div>
           </div>
 
-          <button
-            onClick={handleAiDraft}
-            disabled={isGeneratingAi}
-            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-blue-500/20 transition-all shrink-0 cursor-pointer disabled:opacity-50"
-          >
-            {isGeneratingAi ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bot className="w-3.5 h-3.5" />}
-            <span>{isGeneratingAi ? "AI đang viết..." : "🤖 AI Soạn Đơn Đanh Thép"}</span>
-          </button>
-        </div>
-
-        {/* Carrier selection */}
-        <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2">
-          {['GHTK', 'GHN', 'Shopee Xpress', 'TikTok Shop', 'Viettel Post'].map((c) => (
+          <div className="flex items-center gap-2">
             <button
-              key={c}
-              onClick={() => {
-                setCarrier(c);
-                setCustomText(null);
-              }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${
-                carrier === c
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
+              onClick={handleAiDraft}
+              disabled={isGeneratingAi}
+              className="hidden sm:flex px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs items-center gap-1.5 shadow-xs transition-all shrink-0 cursor-pointer disabled:opacity-50"
             >
-              {c}
+              {isGeneratingAi ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bot className="w-3.5 h-3.5" />}
+              <span>{isGeneratingAi ? "AI soạn..." : "🤖 AI Soạn Đơn"}</span>
             </button>
-          ))}
-        </div>
 
-        {/* Template textarea */}
-        <div className="relative mb-4">
-          <pre className="w-full h-64 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-800 font-mono overflow-y-auto whitespace-pre-wrap leading-relaxed select-text shadow-inner">
-            {activeText}
-          </pre>
-          <div className="absolute top-3 right-3 flex items-center gap-2">
             <button
-              onClick={handlePrintFormalLetter}
-              className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer"
-              title="In công văn khiếu nại trang trọng hoặc xuất ra file PDF nộp bưu cục"
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+              title="Đóng (Phím Esc)"
             >
-              <Printer className="w-3.5 h-3.5 text-slate-600" />
-              <span>In Biên Bản / PDF</span>
-            </button>
-            <button
-              onClick={handleCopy}
-              className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95 cursor-pointer"
-            >
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              <span>{copied ? 'Đã sao chép!' : 'Sao chép thư'}</span>
+              <X className="w-4 h-4 stroke-[2.5]" />
             </button>
           </div>
         </div>
 
-        {/* 3 Step Guide to Dispute */}
-        <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-xs text-emerald-900 space-y-2">
-          <div className="font-bold text-emerald-950 flex items-center gap-1.5">
-            <Info className="w-4 h-4 text-emerald-600" />
-            <span>Mẹo gửi khiếu nại thành công 100%:</span>
+        {/* Nội dung cuộn mượt mà */}
+        <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4">
+          <div className="flex sm:hidden justify-end">
+            <button
+              onClick={handleAiDraft}
+              disabled={isGeneratingAi}
+              className="w-full py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer disabled:opacity-50"
+            >
+              {isGeneratingAi ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bot className="w-3.5 h-3.5" />}
+              <span>{isGeneratingAi ? "AI đang viết..." : "🤖 AI Soạn Đơn Đanh Thép"}</span>
+            </button>
           </div>
-          <ol className="list-decimal list-inside space-y-1 text-emerald-800/90 pl-1">
-            <li>Đính kèm file Excel danh sách mã vừa tải về từ web vào email/tin nhắn.</li>
-            <li>Gửi trực tiếp cho bạn Trưởng bưu cục phụ trách lấy hàng của shop (thường duyệt nhanh hơn tổng đài CSKH).</li>
-            <li>Nhắc nhở hạn xử lý 48h theo đúng quy chế bồi thường của hãng.</li>
-          </ol>
+
+          {/* Carrier selection */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <span className="text-xs font-bold text-slate-500 shrink-0">Hãng nhận:</span>
+            {['GHTK', 'GHN', 'Shopee Xpress', 'TikTok Shop', 'Viettel Post'].map((c) => (
+              <button
+                key={c}
+                onClick={() => {
+                  setCarrier(c);
+                  setCustomText(null);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
+                  carrier === c
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+
+          {/* Template textarea */}
+          <div className="relative">
+            <pre className="w-full h-56 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-800 font-mono overflow-y-auto whitespace-pre-wrap leading-relaxed select-text shadow-inner">
+              {activeText}
+            </pre>
+            <div className="flex items-center justify-end gap-2 mt-2">
+              <button
+                onClick={handlePrintFormalLetter}
+                className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer"
+                title="In công văn khiếu nại trang trọng hoặc xuất ra file PDF nộp bưu cục"
+              >
+                <Printer className="w-3.5 h-3.5 text-slate-600" />
+                <span>In Biên Bản / PDF</span>
+              </button>
+              <button
+                onClick={handleCopy}
+                className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95 cursor-pointer"
+              >
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span>{copied ? 'Đã sao chép!' : 'Sao chép thư'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 3 Step Guide to Dispute */}
+          <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-xs text-emerald-900 space-y-2">
+            <div className="font-bold text-emerald-950 flex items-center gap-1.5">
+              <Info className="w-4 h-4 text-emerald-600" />
+              <span>Mẹo gửi khiếu nại thành công 100%:</span>
+            </div>
+            <ol className="list-decimal list-inside space-y-1 text-emerald-800/90 pl-1">
+              <li>Đính kèm file Excel danh sách mã vừa tải về từ web vào email/tin nhắn.</li>
+              <li>Gửi trực tiếp cho bạn Trưởng bưu cục phụ trách lấy hàng của shop (thường duyệt nhanh hơn tổng đài CSKH).</li>
+              <li>Nhắc nhở hạn xử lý 48h theo đúng quy chế bồi thường của hãng.</li>
+            </ol>
+          </div>
+
+          {/* Nút quay lại rõ ràng cho người lỡ bấm nhầm */}
+          <div className="pt-2">
+            <button
+              onClick={onClose}
+              className="w-full py-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <span>← Đóng cửa sổ & Quay lại web (Esc)</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -163,12 +163,24 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     `Chào Admin Bùi Quốc Thái, tôi là chủ tài khoản SĐT [${phone || '...'}], Tên Shop [${verifyShopName || shopName || '...'}]. Tôi cần hỗ trợ cấp lại mật khẩu cho tài khoản SoatDon.vn. Nhờ Admin kiểm tra và hỗ trợ giúp tôi!`
   )}`;
 
+  // Thoát nhanh bằng phím Escape
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fadeIn font-sans">
-      <div className="bg-white border border-slate-200/90 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden relative my-auto text-slate-800">
+    <div 
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fadeIn font-sans"
+    >
+      <div className="bg-white border border-slate-200/90 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden relative my-auto max-h-[92vh] flex flex-col text-slate-800">
         
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+        {/* Header Cố Định */}
+        <div className="sticky top-0 z-30 flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white/95 backdrop-blur-md">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
               {mode === 'register' && <UserPlus className="w-5 h-5" />}
@@ -176,7 +188,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
               {mode === 'forgot' && <KeyRound className="w-5 h-5" />}
             </div>
             <div>
-              <h3 className="font-extrabold text-slate-900 text-base">
+              <h3 className="font-extrabold text-slate-900 text-base leading-tight">
                 {mode === 'register' && 'Tạo Tài Khoản Nhà Bán Hàng'}
                 {mode === 'login' && 'Đăng Nhập Tài Khoản'}
                 {mode === 'forgot' && 'Khôi Phục Mật Khẩu (Bảo Mật 2 Lớp)'}
@@ -187,9 +199,10 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+            title="Đóng (Phím Esc)"
           >
-            <X className="w-5 h-5 stroke-[2.5]" />
+            <X className="w-4 h-4 stroke-[2.5]" />
           </button>
         </div>
 
@@ -434,6 +447,14 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
           <p className="text-[11px] text-center text-slate-400">
             Dữ liệu được mã hóa và bảo mật 100% theo tiêu chuẩn an toàn thông tin.
           </p>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full py-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+          >
+            ← Đóng cửa sổ & Quay lại web (Esc)
+          </button>
         </div>
 
       </div>

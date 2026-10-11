@@ -4,27 +4,40 @@ import { X, Clock, FileSpreadsheet, AlertTriangle, ArrowRight, Trash2, CheckCirc
 export default function ScanHistoryModal({ isOpen, onClose, history = [], onSelectScan, onDeleteScan, onClearAll }) {
   if (!isOpen) return null;
 
+  // Thoát nhanh bằng phím Escape
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fadeIn font-sans">
+    <div 
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fadeIn font-sans"
+    >
       <div className="bg-white border border-slate-200/90 rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden relative my-auto max-h-[90vh] flex flex-col text-slate-800">
         
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/70">
+        {/* Header Cố Định */}
+        <div className="sticky top-0 z-30 flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white/95 backdrop-blur-md">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
               <Clock className="w-5 h-5 text-indigo-600" />
             </div>
             <div>
-              <h3 className="font-extrabold text-slate-900 text-base">Lịch Sử Soát Đơn Gần Đây</h3>
+              <h3 className="font-extrabold text-slate-900 text-base leading-tight">Lịch Sử Soát Đơn Gần Đây</h3>
               <p className="text-[11px] text-slate-500 font-medium">Lưu tự động kết quả các lần tải file trước đó</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+            title="Đóng (Phím Esc)"
           >
-            <X className="w-5 h-5 stroke-[2.5]" />
+            <X className="w-4 h-4 stroke-[2.5]" />
           </button>
         </div>
 
@@ -112,18 +125,29 @@ export default function ScanHistoryModal({ isOpen, onClose, history = [], onSele
         </div>
 
         {/* Footer */}
-        {history.length > 0 && (
-          <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/50 flex justify-between items-center text-xs">
-            <span className="text-slate-400 text-[11px]">Đang lưu {history.length} bản ghi gần nhất trên thiết bị</span>
-            <button
-              onClick={onClearAll}
-              className="text-rose-600 hover:text-rose-700 font-bold transition-colors cursor-pointer flex items-center gap-1"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Xóa toàn bộ lịch sử</span>
-            </button>
-          </div>
-        )}
+        <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs">
+          {history.length > 0 ? (
+            <div className="flex items-center justify-between w-full sm:w-auto gap-4">
+              <span className="text-slate-400 text-[11px]">Đang lưu {history.length} bản ghi gần nhất trên thiết bị</span>
+              <button
+                onClick={onClearAll}
+                className="text-rose-600 hover:text-rose-700 font-bold transition-colors cursor-pointer flex items-center gap-1"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Xóa hết</span>
+              </button>
+            </div>
+          ) : (
+            <div />
+          )}
+
+          <button
+            onClick={onClose}
+            className="w-full sm:w-auto px-4 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-200/60 text-slate-600 font-bold text-xs transition-colors cursor-pointer ml-auto"
+          >
+            ← Đóng & Quay lại (Esc)
+          </button>
+        </div>
 
       </div>
     </div>

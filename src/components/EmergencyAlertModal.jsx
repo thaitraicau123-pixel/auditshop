@@ -10,6 +10,11 @@ export default function EmergencyAlertModal({ isOpen, onClose, totalLeakage, ano
   useEffect(() => {
     sounds.playAlarm();
 
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
@@ -19,15 +24,21 @@ export default function EmergencyAlertModal({ isOpen, onClose, totalLeakage, ano
       });
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, []);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-red-950/85 backdrop-blur-xl animate-fadeIn">
+    <div 
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 bg-red-950/85 backdrop-blur-xl overflow-y-auto animate-fadeIn"
+    >
       {/* Background strobe flashes */}
       <div className="absolute inset-0 bg-radial from-red-600/20 via-transparent to-transparent animate-pulse pointer-events-none" />
 
-      <div className="bg-slate-950 border-3 border-red-500 rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-[0_0_80px_rgba(239,68,68,0.5)] relative my-8 overflow-hidden animate-scaleUp">
+      <div className="bg-slate-950 border-3 border-red-500 rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-[0_0_80px_rgba(239,68,68,0.5)] relative my-auto max-h-[92vh] overflow-y-auto animate-scaleUp">
         {/* Glowing background gradient */}
         <div className="absolute -top-20 -right-20 w-64 h-64 bg-red-600/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-rose-600/20 rounded-full blur-3xl pointer-events-none" />
@@ -35,9 +46,10 @@ export default function EmergencyAlertModal({ isOpen, onClose, totalLeakage, ano
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors z-10"
+          className="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-900 border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors z-20 flex items-center justify-center cursor-pointer shadow-md"
+          title="Đóng (Phím Esc)"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4 stroke-[2.5]" />
         </button>
 
         {/* Siren Header */}
