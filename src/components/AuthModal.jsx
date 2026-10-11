@@ -7,8 +7,6 @@ import confetti from 'canvas-confetti';
 import { cloudRegister, cloudLogin } from '../utils/cloudDatabase';
 
 export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
-  if (!isOpen) return null;
-
   const [mode, setMode] = useState('register'); // 'register' | 'login' | 'forgot'
   const [shopName, setShopName] = useState('');
   const [verifyShopName, setVerifyShopName] = useState('');
@@ -163,14 +161,17 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     `Chào Admin Bùi Quốc Thái, tôi là chủ tài khoản SĐT [${phone || '...'}], Tên Shop [${verifyShopName || shopName || '...'}]. Tôi cần hỗ trợ cấp lại mật khẩu cho tài khoản SoatDon.vn. Nhờ Admin kiểm tra và hỗ trợ giúp tôi!`
   )}`;
 
-  // Thoát nhanh bằng phím Escape
+  // Thoát nhanh bằng phím Escape (Chạy hợp lệ trước return)
   React.useEffect(() => {
+    if (!isOpen) return;
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
 
   return (
     <div 

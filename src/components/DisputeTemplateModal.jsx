@@ -4,8 +4,6 @@ import { DISPUTE_TEMPLATES } from '../utils/exportDispute';
 import { aiGenerateDisputeScript } from '../utils/aiAuditor';
 
 export default function DisputeTemplateModal({ isOpen, onClose, anomalies }) {
-  if (!isOpen) return null;
-
   const [carrier, setCarrier] = useState('GHTK');
   const [copied, setCopied] = useState(false);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
@@ -113,14 +111,17 @@ export default function DisputeTemplateModal({ isOpen, onClose, anomalies }) {
     }
   };
 
-  // Thoát nhanh bằng phím Escape
+  // Thoát nhanh bằng phím Escape (Chạy hợp lệ trước return)
   React.useEffect(() => {
+    if (!isOpen) return;
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
 
   return (
     <div 

@@ -6,8 +6,6 @@ import {
 import confetti from 'canvas-confetti';
 
 export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess, onUpdateUser }) {
-  if (!isOpen) return null;
-
   const [selectedPlan, setSelectedPlan] = useState('single');
   // Mã đơn hàng chuẩn VietQR: Tối đa 13 ký tự (Ví dụ: SD839102)
   const [orderId] = useState(() => 'SD' + Math.floor(100000 + Math.random() * 900000));
@@ -60,8 +58,19 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
     `Chào bạn, tôi vừa chuyển khoản gói "${currentPlan.name}" (${currentPlan.price.toLocaleString('vi-VN')} đ) vào STK MB Bank 0986019623. Nội dung: ${transferContent}. Nhờ bạn hỗ trợ kiểm tra giúp tôi nhé!`
   )}`;
 
+  // Thoát nhanh bằng phím Escape
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   // Tự động gọi API khởi tạo VietQR động khi chọn gói
   useEffect(() => {
+    if (!isOpen) return;
     let isMounted = true;
     fetch(`/api/vietqr-generate?amount=${currentPlan.price}&orderId=${orderId}&content=${transferContent}`)
       .then(res => res.json())
@@ -72,7 +81,7 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
       })
       .catch(() => {});
     return () => { isMounted = false; };
-  }, [currentPlan.price, orderId, transferContent]);
+  }, [isOpen, currentPlan.price, orderId, transferContent]);
 
   // Tự động kiểm tra ngầm mỗi 3.5s: Nếu khách vừa chuyển tiền vào MB Bank xong thì tự mở khóa ngay
   useEffect(() => {
@@ -204,8 +213,13 @@ export default function PaymentModal({ isOpen, onClose, onSimulatePaymentSuccess
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fadeIn">
+    <div 
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fadeIn"
+    >
       {/* Modal Container: Rộng rãi, hiển thị QR to rõ ràng, nền trắng tươi sáng & uy tín */}
       <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl max-w-xl sm:max-w-2xl w-full shadow-2xl overflow-hidden relative my-auto max-h-[92vh] flex flex-col text-slate-800 font-sans">
         

@@ -2,16 +2,17 @@ import React from 'react';
 import { X, Clock, FileSpreadsheet, AlertTriangle, ArrowRight, Trash2, CheckCircle2, Lock, Unlock, Eye, Sparkles } from 'lucide-react';
 
 export default function ScanHistoryModal({ isOpen, onClose, history = [], onSelectScan, onDeleteScan, onClearAll }) {
-  if (!isOpen) return null;
-
-  // Thoát nhanh bằng phím Escape
+  // Thoát nhanh bằng phím Escape (Chạy hợp lệ trước return)
   React.useEffect(() => {
+    if (!isOpen) return;
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
 
   return (
     <div 

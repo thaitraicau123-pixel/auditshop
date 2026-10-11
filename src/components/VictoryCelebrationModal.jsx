@@ -4,9 +4,8 @@ import confetti from 'canvas-confetti';
 import { sounds } from '../utils/soundEffects';
 
 export default function VictoryCelebrationModal({ isOpen, onClose, totalOrders, fileName, onReset, onOpenCoffeeModal }) {
-  if (!isOpen) return null;
-
   useEffect(() => {
+    if (!isOpen) return;
     // 1. Kích hoạt âm thanh chiến thắng
     sounds.playVictory();
 
@@ -55,7 +54,9 @@ export default function VictoryCelebrationModal({ isOpen, onClose, totalOrders, 
       clearInterval(interval);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onClose]);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
 
   return (
     <div 

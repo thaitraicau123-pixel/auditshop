@@ -3,11 +3,10 @@ import { AlertOctagon, X, ShieldAlert, Clock, ArrowRight, Flame, Scale, PackageX
 import { sounds } from '../utils/soundEffects';
 
 export default function EmergencyAlertModal({ isOpen, onClose, totalLeakage, anomalyCount, fileName, onGoToDispute, breakdown }) {
-  if (!isOpen) return null;
-
   const [timeLeft, setTimeLeft] = useState({ hours: 47, minutes: 59, seconds: 45 });
 
   useEffect(() => {
+    if (!isOpen) return;
     sounds.playAlarm();
 
     const handleKeyDown = (e) => {
@@ -28,7 +27,9 @@ export default function EmergencyAlertModal({ isOpen, onClose, totalLeakage, ano
       clearInterval(timer);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onClose]);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
 
   return (
     <div 

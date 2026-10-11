@@ -4,19 +4,18 @@ import {
   Flame, MessageSquare, Send, CheckCircle2, ShieldCheck, ThumbsUp
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { addSupporterToHallOfFame } from '../utils/petGameEngine';
+import { addSupporterToHallOfFame, getHallOfFameList } from '../utils/petGameEngine';
 
 export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = null, onOpenHallOfFame = null }) {
-  if (!isOpen) return null;
-
   // Lắng nghe phím Escape (ESC) để đóng modal ngay lập tức nếu lỡ bấm nhầm
   useEffect(() => {
+    if (!isOpen) return;
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [isOpen, onClose]);
 
   // Mức ủng hộ mặc định
   const PRESET_AMOUNTS = [
@@ -76,13 +75,10 @@ export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = nu
     }
   };
 
-  // Danh sách các shop đã ủng hộ gần đây (Social Proof)
-  const RECENT_SUPPORTERS = [
-    { name: 'Shop Mẹ & Bé Hà Nội', amount: '50.000 đ', note: 'Đòi lại được 2.3 củ GHTK, cún mèo ăn ngon nha!' },
-    { name: 'Gia Dụng Thông Minh SG', amount: '100.000 đ', note: 'Tool quá đỉnh cao, tiếp sức server nhé!' },
-    { name: 'Kho Sỉ Thời Trang Mía', amount: '25.000 đ', note: 'Mời ly cà phê muối! Buôn may bán đắt nha!' },
-    { name: 'Phụ Kiện Điện Thoại Z', amount: '50.000 đ', note: 'Rà ra 18 đơn ngâm hoàn, thưởng cún hộp pate!' }
-  ];
+  // Lấy danh sách các shop đã ủng hộ thực tế (tối đa 4 người gần nhất)
+  const recentSupporters = getHallOfFameList().slice(0, 4);
+
+  if (!isOpen) return null;
 
   return (
     <div 
@@ -314,14 +310,22 @@ export default function CoffeeDonateModal({ isOpen, onClose, defaultContext = nu
                 )}
               </div>
               <div className="space-y-1.5 max-h-24 overflow-y-auto pr-1">
-                {RECENT_SUPPORTERS.map((s, idx) => (
-                  <div key={idx} className="flex items-center justify-between text-[11px] bg-slate-50 p-1.5 px-2.5 rounded-lg border border-slate-100">
-                    <div className="truncate max-w-[220px]">
-                      <b className="text-slate-800">{s.name}</b>: <span className="text-slate-500 italic">"{s.note}"</span>
-                    </div>
-                    <span className="font-mono font-bold text-amber-600 shrink-0">{s.amount}</span>
+                {recentSupporters.length === 0 ? (
+                  <div className="text-[11px] text-slate-400 italic py-2 text-center bg-slate-50 rounded-lg border border-dashed border-slate-200">
+                    Chưa có shop nào ghi danh — Hãy là người đầu tiên tiếp sức cún &amp; mèo nhé!
                   </div>
-                ))}
+                ) : (
+                  recentSupporters.map((s, idx) => (
+                    <div key={s.id || idx} className="flex items-center justify-between text-[11px] bg-slate-50 p-1.5 px-2.5 rounded-lg border border-slate-100">
+                      <div className="truncate max-w-[220px]">
+                        <b className="text-slate-800">{s.name}</b>: <span className="text-slate-500 italic">"{s.note}"</span>
+                      </div>
+                      <span className="font-mono font-bold text-amber-600 shrink-0">
+                        {Number(s.amount).toLocaleString('vi-VN')} đ
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 

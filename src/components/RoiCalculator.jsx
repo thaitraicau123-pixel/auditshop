@@ -31,10 +31,10 @@ export default function RoiCalculator({ onOpenPricing }) {
             <span>Công Cụ Mô Phỏng Tổn Thất Tài Chính</span>
           </div>
           <h3 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-            Ước tính số tiền shop bạn đang bị "chảy máu" mỗi tháng
+            Ước tính số tiền cước lệch & rủi ro hoàn hàng mỗi tháng
           </h3>
           <p className="text-xs sm:text-sm text-slate-500 mt-2 leading-relaxed">
-            Kéo thanh trượt theo quy mô đơn hàng thực tế của shop để xem con số thất thoát giật mình.
+            Kéo thanh trượt theo quy mô đơn hàng thực tế của shop để ước tính khoản chi phí có thể thu hồi.
           </p>
         </div>
 

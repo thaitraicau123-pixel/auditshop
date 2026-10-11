@@ -6,57 +6,8 @@
 const PET_STORAGE_KEY = 'soatdon_pet_data';
 const HALL_OF_FAME_KEY = 'soatdon_hall_of_fame';
 
-// Danh sách nhà tài trợ ban đầu (Social proof & tri ân cộng đồng)
-export const INITIAL_HALL_OF_FAME = [
-  {
-    id: 'DONOR_INIT_1',
-    name: 'Shop Mẹ & Bé Hà Nội',
-    amount: 100000,
-    note: 'Đòi lại được 2.3 triệu GHTK ngâm đơn hoàn. Tiếp sức server AI và gửi cún mèo hộp pate to nha!',
-    timestamp: '2026-10-10T14:20:00.000Z',
-    rank: 'DIAMOND'
-  },
-  {
-    id: 'DONOR_INIT_2',
-    name: 'Gia Dụng Thông Minh SG',
-    amount: 100000,
-    note: 'Tool quá đỉnh cao, soi ra 32 đơn bị đội cân nặng. Chúc admin và thú cưng luôn khỏe mạnh!',
-    timestamp: '2026-10-10T16:45:00.000Z',
-    rank: 'DIAMOND'
-  },
-  {
-    id: 'DONOR_INIT_3',
-    name: 'Kho Sỉ Thời Trang Mía',
-    amount: 50000,
-    note: 'Mời dev bữa cơm trưa + cây xúc xích cho bé mèo thần tài nha! Buôn may bán đắt!',
-    timestamp: '2026-10-11T08:15:00.000Z',
-    rank: 'GOLD'
-  },
-  {
-    id: 'DONOR_INIT_4',
-    name: 'Phụ Kiện Điện Thoại Z Store',
-    amount: 50000,
-    note: 'Rà soát 18 đơn ngâm hoàn quá 72h đòi bồi thường thành công. Thưởng cún hộp pate xịn!',
-    timestamp: '2026-10-11T10:30:00.000Z',
-    rank: 'GOLD'
-  },
-  {
-    id: 'DONOR_INIT_5',
-    name: 'Mỹ Phẩm Xinh Cosmetics',
-    amount: 25000,
-    note: 'Mời dev ly cà phê muối tiếp sức duy trì server nha! Rất thích tính năng soi nấc cân.',
-    timestamp: '2026-10-11T12:05:00.000Z',
-    rank: 'SILVER'
-  },
-  {
-    id: 'DONOR_INIT_6',
-    name: 'Giày Xuất Khẩu Zen',
-    amount: 25000,
-    note: 'Cún soi cước sủa chuẩn quá, cứu shop được gần 800k tiền chênh lệch COD!',
-    timestamp: '2026-10-11T13:20:00.000Z',
-    rank: 'SILVER'
-  }
-];
+// Danh sách nhà tài trợ vinh danh (Chỉ ghi nhận người ủng hộ thật, không tạo dữ liệu ảo)
+export const INITIAL_HALL_OF_FAME = [];
 
 // Danh hiệu theo cấp độ
 export const PET_RANKS = [
@@ -169,13 +120,15 @@ export function getHallOfFameList() {
   try {
     const raw = localStorage.getItem(HALL_OF_FAME_KEY);
     if (!raw) {
-      localStorage.setItem(HALL_OF_FAME_KEY, JSON.stringify(INITIAL_HALL_OF_FAME));
-      return INITIAL_HALL_OF_FAME;
+      return [];
     }
     const stored = JSON.parse(raw);
-    return Array.isArray(stored) && stored.length > 0 ? stored : INITIAL_HALL_OF_FAME;
+    if (!Array.isArray(stored)) return [];
+    // Tự động loại bỏ bất kỳ dữ liệu mẫu thử nghiệm cũ nào (bắt đầu bằng DONOR_INIT_)
+    const cleanList = stored.filter(d => d && typeof d === 'object' && !d.id?.startsWith('DONOR_INIT_'));
+    return cleanList;
   } catch {
-    return INITIAL_HALL_OF_FAME;
+    return [];
   }
 }
 

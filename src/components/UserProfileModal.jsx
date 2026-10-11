@@ -2,16 +2,17 @@ import React from 'react';
 import { X, User, Store, Phone, Award, Zap, LogOut, PlusCircle, ShieldCheck, CheckCircle2, Clock } from 'lucide-react';
 
 export default function UserProfileModal({ isOpen, onClose, user, onLogout, onOpenPricing, onOpenHistory }) {
-  if (!isOpen || !user) return null;
-
-  // Thoát nhanh bằng phím Escape
+  // Thoát nhanh bằng phím Escape (Chạy hợp lệ trước return)
   React.useEffect(() => {
+    if (!isOpen || !user) return;
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [isOpen, user, onClose]);
+
+  if (!isOpen || !user) return null;
 
   return (
     <div 

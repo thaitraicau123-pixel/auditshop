@@ -15,13 +15,13 @@ export default function Hero({ onStartDemo }) {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center relative z-10">
         
         {/* Badge Alert */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-50 border border-rose-200/90 text-rose-800 text-xs sm:text-sm font-bold mb-6 shadow-xs animate-float">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-200/90 text-indigo-900 text-xs sm:text-sm font-bold mb-6 shadow-xs animate-float">
           <span className="flex h-2 w-2 relative">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-600" />
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-600" />
           </span>
-          <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
-          <span>Báo động: 87% Shop Online bị "chảy máu" 3 - 10 triệu/tháng vì kê khống nấc cân & giam đơn hoàn</span>
+          <ShieldAlert className="w-4 h-4 text-indigo-600 shrink-0" />
+          <span>Công cụ đối soát độc lập: Tự động rà soát nấc cân nặng, hạn khiếu nại 72h & sai lệch cước COD</span>
         </div>
 
         {/* Main Headline */}
@@ -34,50 +34,50 @@ export default function Hero({ onStartDemo }) {
           Hệ thống AI tự động phát hiện <b>kê khống cân nặng</b>, <b>đơn hoàn ngâm kho quá 72h</b>, <b>phụ phí khống</b> và <b>lệch tiền COD</b> từ file đối soát Excel của GHTK, GHN, Viettel Post, SPX, TikTok Shop. Xuất ngay biên bản khiếu nại chuẩn để đòi tiền về ví!
         </p>
 
-        {/* 4 Live Trust Metric Badges */}
+        {/* 4 Authentic Technical Value Badges */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 max-w-4xl mx-auto mb-10 text-left">
           <div className="p-3 sm:p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-indigo-200 transition-all">
             <div className="flex items-center gap-2 mb-1">
               <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
-                <Zap className="w-4 h-4 text-blue-600" />
+                <Clock className="w-4 h-4 text-blue-600" />
               </div>
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Đã rà soát</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tốc độ quét</span>
             </div>
-            <div className="text-lg sm:text-xl font-black font-mono text-slate-900 tracking-tight">1.482.000+</div>
-            <div className="text-[11px] text-slate-500">Đơn hàng tự động</div>
+            <div className="text-lg sm:text-xl font-black font-mono text-slate-900 tracking-tight">&lt; 10 Giây</div>
+            <div className="text-[11px] text-slate-500">Xử lý xong 1.000 đơn Excel</div>
           </div>
 
           <div className="p-3 sm:p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-emerald-200 transition-all">
             <div className="flex items-center gap-2 mb-1">
               <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-                <DollarSign className="w-4 h-4 text-emerald-600" />
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
               </div>
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Đã thu hồi</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Bảo mật</span>
             </div>
-            <div className="text-lg sm:text-xl font-black font-mono text-emerald-700 tracking-tight">4.62+ Tỷ VNĐ</div>
-            <div className="text-[11px] text-slate-500">Tiền oan về ví shop</div>
+            <div className="text-lg sm:text-xl font-black font-mono text-emerald-700 tracking-tight">100% Client</div>
+            <div className="text-[11px] text-slate-500">Chạy trên máy, không lưu data</div>
           </div>
 
           <div className="p-3 sm:p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-indigo-200 transition-all">
             <div className="flex items-center gap-2 mb-1">
               <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-                <Clock className="w-4 h-4 text-indigo-600" />
+                <Zap className="w-4 h-4 text-indigo-600" />
               </div>
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tốc độ quét</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tương thích</span>
             </div>
-            <div className="text-lg sm:text-xl font-black font-mono text-indigo-700 tracking-tight">10 Giây</div>
-            <div className="text-[11px] text-slate-500">Xử lý xong 1.000 đơn</div>
+            <div className="text-lg sm:text-xl font-black font-mono text-indigo-700 tracking-tight">6 Hãng Lớn</div>
+            <div className="text-[11px] text-slate-500">GHTK, GHN, Viettel, SPX, TikTok, J&T</div>
           </div>
 
           <div className="p-3 sm:p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-amber-200 transition-all">
             <div className="flex items-center gap-2 mb-1">
               <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-                <ShieldCheck className="w-4 h-4 text-amber-600" />
+                <Scale className="w-4 h-4 text-amber-600" />
               </div>
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Bảo mật</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Quy chuẩn</span>
             </div>
-            <div className="text-lg sm:text-xl font-black font-mono text-slate-900 tracking-tight">100% Client</div>
-            <div className="text-[11px] text-slate-500">Không lưu data khách</div>
+            <div className="text-lg sm:text-xl font-black font-mono text-amber-700 tracking-tight">Chuẩn 72h</div>
+            <div className="text-[11px] text-slate-500">Bám sát thời hạn khiếu nại bưu cục</div>
           </div>
         </div>
 

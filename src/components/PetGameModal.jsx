@@ -439,9 +439,19 @@ export default function PetGameModal({
 
               {/* Danh sách Nhà Tài Trợ */}
               <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
-                {filteredHall.length === 0 ? (
+                {hallOfFame.length === 0 ? (
+                  <div className="text-center py-10 px-4 bg-amber-50/50 rounded-2xl border border-dashed border-amber-200">
+                    <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xl mx-auto mb-2 shadow-2xs">
+                      🌟
+                    </div>
+                    <div className="font-extrabold text-slate-800 text-sm mb-1">Chưa có shop nào ghi danh</div>
+                    <p className="text-slate-500 max-w-sm mx-auto text-[11px] leading-relaxed">
+                      Hãy là shop đầu tiên gửi tặng cún & mèo ly cà phê muối để mở bát Bảng Vàng vinh danh nhé!
+                    </p>
+                  </div>
+                ) : filteredHall.length === 0 ? (
                   <div className="text-center py-8 text-slate-400 text-xs">
-                    Chưa tìm thấy shop nào phù hợp với bộ lọc.
+                    Chưa tìm thấy shop nào phù hợp với từ khóa "{searchTerm}".
                   </div>
                 ) : (
                   filteredHall.map((donor, idx) => {

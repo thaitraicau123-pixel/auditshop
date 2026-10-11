@@ -339,45 +339,49 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
   const totalLeakageFound = scanHistory.reduce((sum, item) => sum + (item.totalLeakage || 0), 0);
   const totalRevenue = transactions.reduce((sum, item) => sum + (item.amount || 0), 0) + (scanHistory.filter(s => s.isUnlocked).length * 9000);
 
-  if (!isOpen) return null;
-
-  // Thoát nhanh bằng phím Escape
+  // Thoát nhanh bằng phím Escape (Chạy hợp lệ tuân thủ React Rules of Hooks)
   useEffect(() => {
+    if (!isOpen) return;
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
 
   return (
     <div 
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 bg-slate-900/80 backdrop-blur-md overflow-y-auto animate-fade-in"
+      className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md p-2 sm:p-4 md:p-6 flex items-start justify-center animate-fade-in"
     >
-      <div className="bg-white border border-slate-200 w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-        {/* Header Quản Trị */}
-        <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600/30 border border-indigo-500/40 text-indigo-400 flex items-center justify-center">
+      <div className="bg-white border border-slate-200/90 w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh] relative">
+        {/* Header Quản Trị - Cố Định Luôn Nhìn Thấy */}
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800 shrink-0 sticky top-0 z-30">
+          <div className="flex items-center gap-3 min-w-0 mr-2">
+            <div className="w-10 h-10 rounded-xl bg-indigo-600/30 border border-indigo-500/40 text-indigo-400 flex items-center justify-center shrink-0">
               <ShieldCheck className="w-6 h-6" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-bold text-base sm:text-lg tracking-wide">Trung Tâm Quản Trị Hệ Thống (Admin Portal)</h3>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-extrabold text-sm sm:text-base md:text-lg tracking-wide truncate">
+                  Trung Tâm Quản Trị Hệ Thống (Admin Portal)
+                </h3>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
                   LIVE
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
-                Kiểm soát toàn bộ hoạt động quét file, địa chỉ ô Excel nghi ngờ & quản trị tài khoản
+              <p className="text-[11px] sm:text-xs text-slate-400 truncate hidden sm:block">
+                Kiểm soát toàn bộ hoạt động quét file, địa chỉ ô Excel nghi ngờ &amp; quản trị tài khoản
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {isAdminLoggedIn && (
               <button
+                type="button"
                 onClick={handleAdminLogout}
                 className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
               >
@@ -385,8 +389,11 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
               </button>
             )}
             <button
+              type="button"
               onClick={onClose}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-full bg-slate-800 hover:bg-rose-600 hover:text-white text-slate-300 transition-colors flex items-center justify-center cursor-pointer shrink-0 shadow-xs"
+              title="Đóng cửa sổ quản trị (Esc)"
+              aria-label="Đóng cửa sổ quản trị"
             >
               <X className="w-5 h-5" />
             </button>
@@ -496,12 +503,13 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
               </div>
             </div>
 
-            {/* Navigation Tabs */}
-            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-              <div className="flex items-center gap-2">
+            {/* Navigation Tabs - Cho phép cuộn ngang mượt mà trên mọi màn hình */}
+            <div className="flex items-center justify-between border-b border-slate-200 pb-2.5 gap-2 overflow-hidden shrink-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 max-w-full no-scrollbar">
                 <button
+                  type="button"
                   onClick={() => { setActiveTab('SCANS'); setSelectedScanDetails(null); }}
-                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                  className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     activeTab === 'SCANS'
                       ? 'bg-indigo-600 text-white shadow-xs'
                       : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
@@ -511,8 +519,9 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => { setActiveTab('USERS'); setSelectedScanDetails(null); }}
-                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                  className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     activeTab === 'USERS'
                       ? 'bg-indigo-600 text-white shadow-xs'
                       : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
@@ -522,8 +531,9 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => { setActiveTab('TRANSACTIONS'); setSelectedScanDetails(null); }}
-                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                  className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     activeTab === 'TRANSACTIONS'
                       ? 'bg-indigo-600 text-white shadow-xs'
                       : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
@@ -533,8 +543,9 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => { setActiveTab('BENCHMARK'); setSelectedScanDetails(null); }}
-                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
                     activeTab === 'BENCHMARK'
                       ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xs'
                       : 'bg-white text-emerald-700 hover:bg-emerald-50 border border-emerald-200'
@@ -548,8 +559,9 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => { setActiveTab('FIREBASE'); setSelectedScanDetails(null); }}
-                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
                     activeTab === 'FIREBASE'
                       ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs'
                       : 'bg-white text-orange-600 hover:bg-orange-50 border border-orange-200'
@@ -566,8 +578,9 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
               </div>
 
               <button
+                type="button"
                 onClick={loadAdminData}
-                className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
+                className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer shrink-0 shadow-2xs"
                 title="Làm mới dữ liệu"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -619,7 +632,7 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
 
                     {/* Bảng chi tiết từng đơn hàng dính nghi ngờ với tọa độ ô Excel */}
                     <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                      <table className="w-full text-left text-xs border-collapse">
+                      <table className="w-full text-left text-xs border-collapse min-w-[700px]">
                         <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 uppercase text-[11px]">
                           <tr>
                             <th className="py-2.5 px-3">STT</th>
@@ -681,7 +694,7 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
                       </div>
                     ) : (
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs border-collapse">
+                        <table className="w-full text-left text-xs border-collapse min-w-[650px]">
                           <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 uppercase text-[11px]">
                             <tr>
                               <th className="py-3 px-4">Tên File</th>
@@ -769,7 +782,7 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs border-collapse">
+                    <table className="w-full text-left text-xs border-collapse min-w-[650px]">
                       <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 uppercase text-[11px]">
                         <tr>
                           <th className="py-3 px-4">Tên Shop / Chủ Shop</th>
@@ -870,7 +883,7 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs border-collapse">
+                      <table className="w-full text-left text-xs border-collapse min-w-[550px]">
                         <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 uppercase text-[11px]">
                           <tr>
                             <th className="py-2.5 px-3">Mã GD</th>
@@ -1425,6 +1438,26 @@ export default function AdminModal({ isOpen, onClose, onManualUnlockCurrentFile 
             )}
           </div>
         )}
+
+        {/* Footer Thanh Trạng Thái & Nút Đóng Quản Trị Cố Định */}
+        <div className="px-5 py-3 bg-slate-100 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-semibold text-slate-700">Admin Portal • Hệ thống hoạt động bình thường</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:inline text-slate-400">
+              Nhấn phím <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-300 font-mono text-[10px]">Esc</kbd> để thoát
+            </span>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-3.5 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold transition-colors cursor-pointer"
+            >
+              ← Đóng Cửa Sổ
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
