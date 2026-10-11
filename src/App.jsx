@@ -19,6 +19,11 @@ import Footer from './components/Footer';
 import CoffeeDonateModal from './components/CoffeeDonateModal';
 import PetCompanionWidget from './components/PetCompanionWidget';
 import PetGameModal from './components/PetGameModal';
+import CrossReconcileModal from './components/CrossReconcileModal';
+import RateCompareModal from './components/RateCompareModal';
+import QuickAuditModal from './components/QuickAuditModal';
+import DisputePlaybookModal from './components/DisputePlaybookModal';
+import DamageClaimModal from './components/DamageClaimModal';
 import { analyzeOrders } from './utils/auditEngine';
 import { syncLocalAccountsToCloud, fetchCloudAccounts } from './utils/cloudDatabase';
 import { CURRENT_SYSTEM_VERSION } from './data/changelog';
@@ -113,6 +118,40 @@ export default function App() {
   const [isCoffeeModalOpen, setIsCoffeeModalOpen] = useState(false);
   const [coffeeModalContext, setCoffeeModalContext] = useState(null);
 
+  // Chế độ Giao diện Sáng / Tối (Dark / Light Mode)
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem('soatdon_theme');
+      if (saved) return saved === 'dark';
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      if (isDarkMode) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('soatdon_theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('soatdon_theme', 'light');
+      }
+    } catch {}
+  }, [isDarkMode]);
+
+  const handleToggleDarkMode = () => {
+    setIsDarkMode(prev => !prev);
+  };
+
+  // 5 Tiện ích đối soát chuyên sâu mới (V3.0 Logistics Suite)
+  const [isCrossReconcileOpen, setIsCrossReconcileOpen] = useState(false);
+  const [isRateCompareOpen, setIsRateCompareOpen] = useState(false);
+  const [isQuickAuditOpen, setIsQuickAuditOpen] = useState(false);
+  const [isDisputePlaybookOpen, setIsDisputePlaybookOpen] = useState(false);
+  const [isDamageClaimOpen, setIsDamageClaimOpen] = useState(false);
+
   // Pet Game & Hall of Fame State (Mini-game nuôi thú cưng & Bảng Vàng)
   const [isPetGameOpen, setIsPetGameOpen] = useState(false);
   const [petGameTab, setPetGameTab] = useState('PET');
@@ -155,6 +194,11 @@ export default function App() {
         handleCloseChangelog();
         setIsCoffeeModalOpen(false);
         setIsPetGameOpen(false);
+        setIsCrossReconcileOpen(false);
+        setIsRateCompareOpen(false);
+        setIsQuickAuditOpen(false);
+        setIsDisputePlaybookOpen(false);
+        setIsDamageClaimOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -315,9 +359,9 @@ export default function App() {
   ) : [];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8fafc] text-slate-800 font-sans selection:bg-indigo-500 selection:text-white relative">
+    <div className="min-h-screen flex flex-col bg-[#f8fafc] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans selection:bg-indigo-500 selection:text-white relative transition-colors duration-200">
       {/* Ambient background tech mesh pattern */}
-      <div className="fixed inset-0 pointer-events-none bg-tech-grid opacity-35 -z-10" />
+      <div className="fixed inset-0 pointer-events-none bg-tech-grid opacity-35 dark:opacity-20 -z-10" />
       <Navbar 
         onOpenPricing={() => setIsPaymentModalOpen(true)}
         onScrollToCalculator={handleScrollToCalculator}
@@ -334,11 +378,25 @@ export default function App() {
         soundEnabled={soundEnabled}
         onToggleSound={handleToggleSound}
         onOpenCoffeeModal={handleOpenCoffeeModal}
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={handleToggleDarkMode}
+        onOpenCrossReconcile={() => setIsCrossReconcileOpen(true)}
+        onOpenRateCompare={() => setIsRateCompareOpen(true)}
+        onOpenQuickAudit={() => setIsQuickAuditOpen(true)}
+        onOpenDisputePlaybook={() => setIsDisputePlaybookOpen(true)}
+        onOpenDamageClaim={() => setIsDamageClaimOpen(true)}
       />
 
       <main className="flex-1">
         {/* Hero Section */}
-        <Hero onStartDemo={() => {}} />
+        <Hero 
+          onStartDemo={() => {}} 
+          onOpenCrossReconcile={() => setIsCrossReconcileOpen(true)}
+          onOpenRateCompare={() => setIsRateCompareOpen(true)}
+          onOpenQuickAudit={() => setIsQuickAuditOpen(true)}
+          onOpenDisputePlaybook={() => setIsDisputePlaybookOpen(true)}
+          onOpenDamageClaim={() => setIsDamageClaimOpen(true)}
+        />
 
         {/* Upload & Scanner Zone */}
         <UploadZone 
@@ -520,6 +578,45 @@ export default function App() {
         onOpenCoffeeModal={handleOpenCoffeeModal}
         initialTab={petGameTab}
       />
+
+      {/* ⚔️ Modal So Khớp 2 Chiều File Kho vs File Bưu Cục */}
+      <CrossReconcileModal 
+        isOpen={isCrossReconcileOpen}
+        onClose={() => setIsCrossReconcileOpen(false)}
+        onOpenDisputePlaybook={() => {
+          setIsCrossReconcileOpen(false);
+          setIsDisputePlaybookOpen(true);
+        }}
+      />
+
+      {/* 📊 Modal Ma Trận Tra Cứu & So Sánh Cước 6 Hãng */}
+      <RateCompareModal 
+        isOpen={isRateCompareOpen}
+        onClose={() => setIsRateCompareOpen(false)}
+      />
+
+      {/* 🔍 Modal Soi Nhanh 1 Mã Vận Đơn */}
+      <QuickAuditModal 
+        isOpen={isQuickAuditOpen}
+        onClose={() => setIsQuickAuditOpen(false)}
+        onOpenDisputePlaybook={() => {
+          setIsQuickAuditOpen(false);
+          setIsDisputePlaybookOpen(true);
+        }}
+      />
+
+      {/* 💬 Modal Kịch Bản Đòi Tiền Zalo Dẫn Luật Bưu Chính 2010 */}
+      <DisputePlaybookModal 
+        isOpen={isDisputePlaybookOpen}
+        onClose={() => setIsDisputePlaybookOpen(false)}
+      />
+
+      {/* 📸 Modal Lập Biên Bản Hàng Bể Vỡ / Tráo Hàng In Ra Bản A4 */}
+      <DamageClaimModal 
+        isOpen={isDamageClaimOpen}
+        onClose={() => setIsDamageClaimOpen(false)}
+      />
     </div>
   );
 }
+

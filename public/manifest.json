@@ -1,0 +1,18 @@
+{
+  "short_name": "SoatDon.vn",
+  "name": "SoatDon.vn - Hệ Thống Kiểm Toán Cước & Đối Soát Vận Chuyển",
+  "description": "Phần mềm đối soát 2 chiều kho & hãng vận chuyển, tính cước 6 hãng, soi mã vận đơn và lập biên bản bồi thường.",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%234f46e5'/><text y='.9em' x='10' font-size='75'>🛡️</text></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "display": "standalone",
+  "orientation": "portrait-primary"
+}
