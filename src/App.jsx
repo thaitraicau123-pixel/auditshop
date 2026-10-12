@@ -293,7 +293,7 @@ export default function App() {
       anomalies: record.anomalies
     });
     setFileName(record.fileName);
-    setIsUnlocked(record.isUnlocked || false);
+    setIsUnlocked(true);
     setAiDiagnosis(record.aiDiagnosis);
     setActiveFilter('ALL');
 
