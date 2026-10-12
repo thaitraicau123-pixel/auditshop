@@ -31,7 +31,7 @@ export default function App() {
   const [auditResult, setAuditResult] = useState(null);
   const [fileName, setFileName] = useState('');
   const [activeFilter, setActiveFilter] = useState('ALL');
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(true);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
@@ -244,32 +244,9 @@ export default function App() {
     setFileName(name);
     setActiveFilter('ALL');
 
-    // Tự động mở khóa nếu là bảng kê mẫu HOẶC tài khoản có gói tháng / còn lượt quét
-    let shouldUnlock = false;
-    if (isSample) {
-      // 1-Click AI Test: Bảng kê mẫu thử nghiệm mở khóa để khách trải nghiệm thử tính năng mà không bị trừ lượt quét thật
-      shouldUnlock = true;
-    } else if (user) {
-      if (user.plan === 'monthly') {
-        shouldUnlock = true;
-      } else if ((user.balanceScans || 0) > 0) {
-        shouldUnlock = true;
-        // Trừ 1 lượt quét cho file thật
-        const updatedUser = { ...user, balanceScans: Math.max(0, user.balanceScans - 1) };
-        setUser(updatedUser);
-        localStorage.setItem('soatdon_user', JSON.stringify(updatedUser));
-        try {
-          const accounts = JSON.parse(localStorage.getItem('soatdon_accounts') || '[]');
-          const idx = accounts.findIndex(a => a.phone === user.phone);
-          if (idx !== -1) {
-            accounts[idx] = updatedUser;
-            localStorage.setItem('soatdon_accounts', JSON.stringify(accounts));
-          }
-        } catch (e) {}
-      }
-    }
-
-    setIsUnlocked(shouldUnlock);
+    // DỰ ÁN CỘNG ĐỒNG PHI LỢI NHUẬN: 100% các file quét đều được mở khóa đầy đủ không điều kiện
+    const shouldUnlock = true;
+    setIsUnlocked(true);
 
     // 3. Tự động lưu thông tin lần soát đơn này vào lịch sử
     const newScanRecord = {
@@ -341,7 +318,7 @@ export default function App() {
   const handleReset = () => {
     setAuditResult(null);
     setFileName('');
-    setIsUnlocked(false);
+    setIsUnlocked(true);
     setAiDiagnosis(null);
     setIsEmergencyModalOpen(false);
     setIsVictoryModalOpen(false);
@@ -367,7 +344,7 @@ export default function App() {
       {/* Ambient background tech mesh pattern */}
       <div className="fixed inset-0 pointer-events-none bg-tech-grid opacity-35 dark:opacity-20 -z-10" />
       <Navbar 
-        onOpenPricing={() => setIsPaymentModalOpen(true)}
+        onOpenPricing={() => handleOpenCoffeeModal("Ủng hộ tiếp sức duy trì máy chủ AI SoatDon.vn phi lợi nhuận")}
         onScrollToCalculator={handleScrollToCalculator}
         user={user}
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
@@ -420,7 +397,7 @@ export default function App() {
               activeFilter={activeFilter}
               onFilterChange={setActiveFilter}
               isUnlocked={isUnlocked}
-              onUnlockClick={() => setIsPaymentModalOpen(true)}
+              onUnlockClick={() => handleOpenCoffeeModal("Ủng hộ tiếp sức duy trì máy chủ AI SoatDon.vn phi lợi nhuận")}
               aiDiagnosis={aiDiagnosis}
               isLoadingAi={isLoadingAi}
             />
@@ -430,7 +407,7 @@ export default function App() {
               <DisputeTable 
                 anomalies={displayedAnomalies}
                 isUnlocked={isUnlocked}
-                onUnlockClick={() => setIsPaymentModalOpen(true)}
+                onUnlockClick={() => handleOpenCoffeeModal("Ủng hộ tiếp sức duy trì máy chủ AI SoatDon.vn phi lợi nhuận")}
                 onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
                 shopName={fileName.replace(/\.[^/.]+$/, "")}
                 onOpenCoffeeModal={handleOpenCoffeeModal}
@@ -440,7 +417,7 @@ export default function App() {
         )}
 
         {/* ROI Calculator for conversion & social content demo */}
-        <RoiCalculator onOpenPricing={() => setIsPaymentModalOpen(true)} />
+        <RoiCalculator onOpenPricing={() => handleOpenCoffeeModal("Ủng hộ tiếp sức duy trì máy chủ AI SoatDon.vn phi lợi nhuận")} />
 
         {/* Social Proof / Reviews */}
         <Testimonials />
@@ -518,9 +495,7 @@ export default function App() {
           localStorage.removeItem('soatdon_user');
           setUser(null);
         }}
-        onOpenPricing={() => {
-          setIsPaymentModalOpen(true);
-        }}
+        onOpenCoffeeModal={() => handleOpenCoffeeModal("Ủng hộ tiếp sức duy trì máy chủ AI SoatDon.vn phi lợi nhuận")}
         onOpenHistory={() => {
           setIsHistoryModalOpen(true);
         }}

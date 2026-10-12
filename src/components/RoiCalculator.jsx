@@ -130,19 +130,21 @@ export default function RoiCalculator({ onOpenPricing }) {
             <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 mb-6 relative z-10">
               <div className="text-xs font-bold text-emerald-300 flex items-center gap-1.5 mb-1">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Hiệu quả đầu tư (ROI vượt trội):</span>
+                <span>Dự Án Cộng Đồng Phi Lợi Nhuận:</span>
               </div>
               <p className="text-[11px] text-slate-200 leading-relaxed">
-                Chỉ với chi phí quét đối soát từ <b>9.000 đ/lần</b>, bạn có thể cứu lại hàng triệu đồng doanh thu mỗi tháng.
+                SoatDon.vn phục vụ <b>100% MIỄN PHÍ</b> cho toàn bộ nhà bán hàng online. Không thu phí quét, không bán gói cước, chỉ nhận đóng góp tự nguyện từ ly cà phê của bạn!
               </p>
             </div>
 
             <button
               type="button"
-              onClick={onOpenPricing}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-indigo-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98] relative z-10"
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-emerald-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98] relative z-10"
             >
-              <span>Xem Bảng Giá & Bắt Đầu Bảo Vệ Doanh Thu</span>
+              <span>Tải File Bảng Kê Lên Quét Ngay (Miễn Phí 100%)</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

@@ -1,7 +1,7 @@
 import React from 'react';
-import { X, User, Store, Phone, Award, Zap, LogOut, PlusCircle, ShieldCheck, CheckCircle2, Clock } from 'lucide-react';
+import { X, User, Store, Phone, Award, Zap, LogOut, PlusCircle, ShieldCheck, CheckCircle2, Clock, Coffee, Heart } from 'lucide-react';
 
-export default function UserProfileModal({ isOpen, onClose, user, onLogout, onOpenPricing, onOpenHistory }) {
+export default function UserProfileModal({ isOpen, onClose, user, onLogout, onOpenPricing, onOpenHistory, onOpenCoffeeModal }) {
   // Thoát nhanh bằng phím Escape (Chạy hợp lệ trước return)
   React.useEffect(() => {
     if (!isOpen || !user) return;
@@ -66,18 +66,18 @@ export default function UserProfileModal({ isOpen, onClose, user, onLogout, onOp
                 <Award className="w-3.5 h-3.5 text-slate-400" />
                 <span>Gói dịch vụ:</span>
               </span>
-              <span className="px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold uppercase text-[10px]">
-                {user.plan === 'monthly' ? 'Gói Tháng (Vô Hạn)' : (user.balanceScans > 0 ? 'Gói Nạp Lượt' : 'Tài Khoản Tiêu Chuẩn')}
+              <span className="px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold uppercase text-[10px]">
+                {user.role === 'admin' ? 'Quản Trị Viên' : 'Dự Án Phi Lợi Nhuận'}
               </span>
             </div>
 
             <div className="flex justify-between items-center text-xs pt-1">
               <span className="text-slate-500 flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5 text-amber-500" />
-                <span>Lượt quét còn lại:</span>
+                <Heart className="w-3.5 h-3.5 text-emerald-500 fill-emerald-500" />
+                <span>Quyền sử dụng:</span>
               </span>
-              <span className="font-black text-rose-600 font-mono text-base">
-                {user.plan === 'monthly' ? '∞ Không giới hạn' : `${user.balanceScans || 0} lượt`}
+              <span className="font-black text-emerald-700 font-mono text-sm">
+                ∞ Không giới hạn (Free 100%)
               </span>
             </div>
           </div>
@@ -94,16 +94,16 @@ export default function UserProfileModal({ isOpen, onClose, user, onLogout, onOp
             <span>Xem Lịch Sử Các Lần Soát Đơn</span>
           </button>
 
-          {/* Nút Nạp Thêm Lượt / Mua Gói */}
+          {/* Nút Mời Cà Phê Tiếp Sức */}
           <button
             onClick={() => {
               onClose();
-              onOpenPricing();
+              if (onOpenCoffeeModal) onOpenCoffeeModal("Ủng hộ tiếp sức duy trì máy chủ AI SoatDon.vn phi lợi nhuận");
             }}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
-            <PlusCircle className="w-4 h-4" />
-            <span>Nạp Thêm Lượt Quét / Nâng Cấp Gói Tháng</span>
+            <Coffee className="w-4 h-4" />
+            <span>Mời Dev Ly Cà Phê Tiếp Sức Máy Chủ ☕</span>
           </button>
 
           {/* Đăng xuất & Quay lại */}

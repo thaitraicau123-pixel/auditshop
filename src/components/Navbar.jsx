@@ -85,9 +85,9 @@ export default function Navbar({
               >
                 SoatDon<span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">.vn</span>
               </span>
-              <div className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/80 dark:border-indigo-800/80 text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-300 shadow-2xs">
+              <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/80 text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300 shadow-2xs">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span>AI Logistics 3.0</span>
+                <span>Phi Lợi Nhuận • Free 100%</span>
               </div>
             </div>
             <p className="text-[11px] text-slate-400 dark:text-slate-400 font-medium hidden md:block">
@@ -264,15 +264,16 @@ export default function Navbar({
             )}
           </button>
 
-          {/* Pricing Button */}
+          {/* Coffee Donate Button */}
           <button 
             type="button"
-            onClick={onOpenPricing}
-            className="text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200/80 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer border border-slate-200/80 dark:border-slate-700"
-            title="Bảng giá các gói quét bản quyền"
+            onClick={() => onOpenCoffeeModal?.("Ủng hộ tiếp sức duy trì máy chủ AI SoatDon.vn phi lợi nhuận")}
+            className="text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/60 dark:to-orange-950/60 hover:from-amber-100 hover:to-orange-100 dark:hover:from-amber-900/60 dark:hover:to-orange-900/60 text-amber-900 dark:text-amber-200 border border-amber-200/90 dark:border-amber-800 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs group"
+            title="Dự án phi lợi nhuận: Mời dev một ly cà phê tiếp sức máy chủ"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span className="hidden sm:inline">Bảng giá</span>
+            <Coffee className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 group-hover:rotate-12 transition-transform" />
+            <span className="hidden sm:inline">Mời Cà Phê ☕</span>
+            <span className="sm:hidden">☕</span>
           </button>
 
           {/* User Account / Login Button */}
@@ -286,9 +287,9 @@ export default function Navbar({
                 {user.shopName?.charAt(0).toUpperCase() || 'S'}
               </div>
               <span className="max-w-[90px] sm:max-w-[120px] truncate">{user.shopName}</span>
-              <span className="px-1.5 py-0.5 rounded-full bg-indigo-200/70 dark:bg-indigo-800 text-indigo-900 dark:text-indigo-100 text-[10px] font-black flex items-center gap-0.5">
-                <Zap className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
-                {user.plan === 'monthly' ? 'Vô hạn' : `${user.balanceScans || 0}`}
+              <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-black flex items-center gap-0.5">
+                <Heart className="w-2.5 h-2.5 text-emerald-600 fill-emerald-600" />
+                <span>Free 100%</span>
               </span>
             </button>
           ) : (

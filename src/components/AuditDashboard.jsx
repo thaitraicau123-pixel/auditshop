@@ -211,16 +211,17 @@ export default function AuditDashboard({
             </div>
           </div>
 
-          {!isUnlocked && (
-            <button
-              type="button"
-              onClick={onUnlockClick}
-              className="w-full md:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-extrabold text-sm sm:text-base shadow-lg shadow-indigo-600/25 transition-all transform hover:scale-105 active:scale-95 shrink-0 flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <FileText className="w-5 h-5" />
-              <span>Mở khóa mã đơn & Xuất file khiếu nại</span>
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => {
+              const el = document.getElementById('dispute-section');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="w-full md:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-extrabold text-sm sm:text-base shadow-lg shadow-indigo-600/25 transition-all transform hover:scale-105 active:scale-95 shrink-0 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <FileText className="w-5 h-5" />
+            <span>Xem Bảng Đối Soát & Xuất File (Free 100%)</span>
+          </button>
         </div>
       </div>
 

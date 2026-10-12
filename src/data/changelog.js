@@ -3,14 +3,43 @@
  * Lưu trữ phiên bản, thời gian phát hành và toàn bộ tính năng mới đã thêm.
  */
 
-export const CURRENT_SYSTEM_VERSION = 'v3.1';
+export const CURRENT_SYSTEM_VERSION = 'v3.2';
 
 export const CHANGELOG_HISTORY = [
+  {
+    version: 'v3.2',
+    releaseDate: '12/10/2026 - 10:30',
+    title: '💚 Chuyển Đổi Nền Tảng Cộng Đồng Phi Lợi Nhuận (Free 100%)',
+    isCurrent: true,
+    badges: ['Phi Lợi Nhuận 💚', 'Mở Khóa Toàn Bộ 100%', 'Ủng Hộ Cà Phê ☕', 'Ẩn Mua Bán Thương Mại'],
+    summary: 'Chuyển đổi toàn diện SoatDon.vn sang hình thức dự án cộng đồng phi lợi nhuận: mở khóa vĩnh viễn toàn bộ tính năng đối soát và xuất file cho tất cả chủ shop, ẩn các gói mua bán thương mại, chỉ duy trì hình thức mời cà phê tự nguyện.',
+    categories: [
+      {
+        name: 'Dự Án Cộng Đồng & Tự Nguyện',
+        tag: 'NON-PROFIT',
+        color: 'emerald',
+        items: [
+          {
+            title: 'Mở Khóa Không Giới Hạn Toàn Bộ Bảng Kê (Free 100%)',
+            desc: 'Tất cả file bảng kê tải lên đều được phân tích, hiển thị đầy đủ mã vận đơn không làm mờ và cho phép xuất file Excel khiếu nại hoàn toàn miễn phí.'
+          },
+          {
+            title: 'Ẩn Giao Diện Mua Bán Gói Cước',
+            desc: 'Ẩn toàn bộ nút bảng giá, nạp lượt và thanh toán thương mại; bảo lưu toàn bộ mã nguồn API VietQR trong hệ thống để quản trị viên tái sử dụng khi cần.'
+          },
+          {
+            title: 'Tiếp Sức Duy Trì Máy Chủ Qua Cà Phê Tự Nguyện',
+            desc: 'Duy trì hình thức quét mã QR mời dev ly cà phê muối tùy tâm để hỗ trợ chi phí máy chủ AI, cùng Bảng Vàng Tri Ân ghi nhận tấm lòng của các chủ shop.'
+          }
+        ]
+      }
+    ]
+  },
   {
     version: 'v3.1',
     releaseDate: '12/10/2026 - 01:30',
     title: '🔒 Siết Chặt Bản Quyền Đối Soát & Tinh Gọn Giao Diện Logistics Pro',
-    isCurrent: true,
+    isCurrent: false,
     badges: ['Khóa Bản Quyền Chuẩn 🔒', 'Bảng Vàng Tri Ân 🏆', 'Giao Diện Logistics Pro', 'Loại Bỏ Thú Cưng Mini'],
     summary: 'Sửa triệt để lỗ hổng quét đơn miễn phí, siết chặt cơ chế bảo vệ thương mại và nạp lượt quét; tinh gọn toàn bộ giao diện theo phong cách AI Logistics chuyên nghiệp, độc lập và trang trọng.',
     categories: [

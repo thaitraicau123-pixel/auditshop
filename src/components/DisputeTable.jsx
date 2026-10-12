@@ -152,10 +152,10 @@ export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onO
             ) : (
               <button
                 onClick={onUnlockClick}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/20 transition-all transform hover:scale-105 active:scale-95 cursor-pointer group"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-600/20 transition-all transform hover:scale-105 active:scale-95 cursor-pointer group"
               >
-                <Lock className="w-4 h-4" />
-                <span>Mở khóa tất cả mã đơn & Tải file khiếu nại</span>
+                <Unlock className="w-4 h-4" />
+                <span>Xem Toàn Bộ Mã Đơn & Tải File (Free 100%)</span>
               </button>
             )}
           </div>
@@ -518,9 +518,9 @@ export default function DisputeTable({ anomalies, isUnlocked, onUnlockClick, onO
               </p>
               <button
                 onClick={onUnlockClick}
-                className="w-full sm:w-auto px-8 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-sm shadow-md shadow-indigo-600/20 transition-all transform hover:scale-105 active:scale-95 cursor-pointer"
+                className="w-full sm:w-auto px-8 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-sm shadow-md shadow-emerald-600/20 transition-all transform hover:scale-105 active:scale-95 cursor-pointer"
               >
-                Mở khóa ngay chỉ từ 9.000 đ
+                Xem Toàn Bộ Mã Đơn (Miễn Phí 100%)
               </button>
             </div>
           </div>
