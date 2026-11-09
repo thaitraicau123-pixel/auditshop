@@ -1,0 +1,221 @@
+import React, { useState, useRef, useEffect } from 'react'; import { ShieldCheck, ShieldAlert, Sparkles, TrendingUp, User, UserPlus, Zap, Clock, Rocket, Volume2, VolumeX, Flame, Coffee, HelpCircle, Heart, Sun, Moon, ChevronDown, Layers, Calculator, Search, MessageSquareQuote, Camera, FileSpreadsheet, ArrowLeftRight, CheckCircle2, Radio, Satellite
+} from 'lucide-react'; import { CURRENT_SYSTEM_VERSION } from '../data/changelog'; export default function Navbar({ onOpenPricing, onScrollToCalculator, user, onOpenAuthModal, onOpenProfileModal, onOpenHistory, historyCount = 0, onOpenAdminModal, onOpenChangelog, soundEnabled = true, onToggleSound, onOpenCoffeeModal, isDarkMode = false,
+onToggleDarkMode, onOpenCrossReconcile, onOpenRateCompare, onOpenQuickAudit, onOpenDisputePlaybook, onOpenDamageClaim
+}) { const [isToolsDropdownOpen, setIsToolsDropdownOpen] = useState(false); const dropdownRef = useRef(null); const logoClicksRef = useRef(0); const logoTimerRef = useRef(null); const handleLogoSecretClick = () => { logoClicksRef.current += 1; if (logoTimerRef.current) clearTimeout(logoTimerRef.current); if (logoClicksRef.current >= 5) {
+logoClicksRef.current = 0; if (onOpenAdminModal) onOpenAdminModal(); return; } logoTimerRef.current = setTimeout(() => { logoClicksRef.current = 0; }, 2000); window.scrollTo({ top: 0, behavior: 'smooth' }); }; useEffect(() => { const handleClickOutside = (e) => { if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+setIsToolsDropdownOpen(false); } }; document.addEventListener('mousedown', handleClickOutside); return () => document.removeEventListener('mousedown', handleClickOutside); }, []); return (
+<header className="sticky top-0 z-40 bg-white/85 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_-3px_rgba(0,0,0,0.4)] transition-all">
+<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+{} <div className="flex items-center gap-3">
+<div
+className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/25 shrink-0 relative group cursor-pointer active:scale-95 transition-transform"
+onClick={handleLogoSecretClick} title="SoatDon.vn"
+>
+<ShieldCheck className="w-5 h-5 text-white transition-transform group-hover:scale-110" />
+<span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 ring-1 ring-emerald-400/40" />
+</div>
+<div>
+<div className="flex items-center gap-2">
+<span
+onClick={handleLogoSecretClick} className="font-black text-xl tracking-tight text-slate-900 dark:text-white cursor-pointer select-none"
+>
+SoatDon<span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">.vn</span>
+</span>
+<div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/80 text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300 shadow-2xs">
+<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+<span>Phi Lợi Nhuận • Free 100%</span>
+</div>
+</div>
+<p className="text-[11px] text-slate-400 dark:text-slate-400 font-medium hidden md:block">
+Hệ thống kiểm toán cước vận chuyển & bảo vệ doanh thu bán hàng
+</p>
+</div>
+</div>
+{} <nav className="flex items-center gap-1.5 sm:gap-2">
+{} <div className="relative" ref={dropdownRef}>
+<button
+type="button"
+onClick={() => setIsToolsDropdownOpen(!isToolsDropdownOpen)}
+className="text-xs sm:text-sm font-extrabold px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 hover:from-indigo-500/20 hover:to-purple-500/20 dark:from-indigo-900/30 dark:to-purple-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-300/60 dark:border-indigo-700/60 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs group"
+title="Mở bộ công cụ kiểm toán và cứu tiền chuyên sâu"
+>
+<ArrowLeftRight className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 group-hover:rotate-180 transition-transform duration-300" />
+<span>Tiện Ích</span>
+<span className="hidden sm:inline px-1 py-0.2 rounded-md bg-rose-500 text-white text-[9px] font-black uppercase tracking-tight">Mới</span>
+<ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isToolsDropdownOpen ? 'rotate-180' : ''}`} />
+</button>
+{} {isToolsDropdownOpen && (
+<div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+<div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+<span className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+Bộ Công Cụ Cứu Tiền Chuyên Sâu
+</span>
+<span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-full">
+5 Tiện ích chuyên sâu
+</span>
+</div>
+<div className="p-1 space-y-1">
+{} <button
+type="button"
+onClick={() => { setIsToolsDropdownOpen(false); if (onOpenCrossReconcile) onOpenCrossReconcile(); }} className="w-full text-left p-2.5 rounded-xl hover:bg-indigo-50/80 dark:hover:bg-slate-800/80 transition-colors flex items-start gap-3 cursor-pointer group"
+>
+<div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+<FileSpreadsheet className="w-5 h-5" />
+</div>
+<div className="flex-1 min-w-0">
+<div className="flex items-center gap-1.5">
+<span className="text-xs font-black text-slate-900 dark:text-white">So Khớp 2 Chiều (Kho vs Hãng)</span>
+<span className="text-[9px] font-black bg-emerald-500 text-white px-1.5 py-0.2 rounded-full">HOT</span>
+</div>
+<p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
+Bắt lệch COD, nuốt đơn, cân khống từ file KiotViet/Sapo
+</p>
+</div>
+</button>
+{} <button
+type="button"
+onClick={() => { setIsToolsDropdownOpen(false); if (onOpenRateCompare) onOpenRateCompare(); }} className="w-full text-left p-2.5 rounded-xl hover:bg-emerald-50/80 dark:hover:bg-slate-800/80 transition-colors flex items-start gap-3 cursor-pointer group"
+>
+<div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+<Calculator className="w-5 h-5" />
+</div>
+<div className="flex-1 min-w-0">
+<div className="flex items-center gap-1.5">
+<span className="text-xs font-black text-slate-900 dark:text-white">Ma Trận Cước 6 Hãng</span>
+<span className="text-[9px] font-black bg-blue-500 text-white px-1.5 py-0.2 rounded-full">TIẾT KIỆM</span>
+</div>
+<p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
+Tra cước chuẩn & xếp hạng GHTK, GHN, Viettel, SPX, J&T
+</p>
+</div>
+</button>
+{} <button
+type="button"
+onClick={() => { setIsToolsDropdownOpen(false); if (onOpenQuickAudit) onOpenQuickAudit(); }} className="w-full text-left p-2.5 rounded-xl hover:bg-blue-50/80 dark:hover:bg-slate-800/80 transition-colors flex items-start gap-3 cursor-pointer group"
+>
+<div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+<Search className="w-5 h-5" />
+</div>
+<div className="flex-1 min-w-0">
+<div className="text-xs font-black text-slate-900 dark:text-white">Soi Nhanh 1 Mã Vận Đơn</div>
+<p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
+Gõ mã đơn bóc tách ngay cước khống và bản sao khiếu nại
+</p>
+</div>
+</button>
+{} <button
+type="button"
+onClick={() => { setIsToolsDropdownOpen(false); if (onOpenDisputePlaybook) onOpenDisputePlaybook(); }} className="w-full text-left p-2.5 rounded-xl hover:bg-purple-50/80 dark:hover:bg-slate-800/80 transition-colors flex items-start gap-3 cursor-pointer group"
+>
+<div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+<MessageSquareQuote className="w-5 h-5" />
+</div>
+<div className="flex-1 min-w-0">
+<div className="text-xs font-black text-slate-900 dark:text-white">Kịch Bản Đòi Tiền Zalo Cứng Rắn</div>
+<p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
+6 mẫu phản hồi thép dẫn Luật Bưu chính 2010 ép bưu cục hoàn tiền
+</p>
+</div>
+</button>
+{} <button
+type="button"
+onClick={() => { setIsToolsDropdownOpen(false); if (onOpenDamageClaim) onOpenDamageClaim(); }} className="w-full text-left p-2.5 rounded-xl hover:bg-rose-50/80 dark:hover:bg-slate-800/80 transition-colors flex items-start gap-3 cursor-pointer group"
+>
+<div className="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+<Camera className="w-5 h-5" />
+</div>
+<div className="flex-1 min-w-0">
+<div className="text-xs font-black text-slate-900 dark:text-white">Lập Biên Bản Bể Vỡ / Tráo Hàng</div>
+<p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
+Tải ảnh hiện trường, đóng dấu thời gian & xuất biên bản A4
+</p>
+</div>
+</button>
+</div>
+</div>
+)} </div>
+{} <button
+type="button"
+onClick={onOpenChangelog} className="text-xs font-bold px-2.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100/90 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200/90 dark:border-emerald-800/80 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs group"
+title="Xem nhật ký tính năng mới & thời gian phát hành v3.0"
+>
+<Rocket className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 group-hover:rotate-12 transition-transform" />
+<span className="font-black tracking-tight">{CURRENT_SYSTEM_VERSION}</span>
+<span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+</button>
+{} <button
+type="button"
+onClick={onOpenHistory} className="text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-1.5 transition-all cursor-pointer py-1.5 px-2.5 rounded-xl hover:bg-slate-100/80 dark:hover:bg-slate-800"
+title="Lịch sử các lần đối soát đơn trước"
+>
+<Clock className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+<span className="hidden sm:inline">Lịch sử</span>
+{historyCount > 0 && (
+<span className="px-1.5 py-0.2 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-[10px] font-black">
+{historyCount} </span>
+)} </button>
+{} <button
+type="button"
+onClick={() => onOpenCoffeeModal?.("Ủng hộ tiếp sức duy trì máy chủ AI SoatDon.vn phi lợi nhuận")}
+className="text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/60 dark:to-orange-950/60 hover:from-amber-100 hover:to-orange-100 dark:hover:from-amber-900/60 dark:hover:to-orange-900/60 text-amber-900 dark:text-amber-200 border border-amber-200/90 dark:border-amber-800 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs group"
+title="Dự án phi lợi nhuận: Mời dev một ly cà phê tiếp sức máy chủ"
+>
+<Coffee className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 group-hover:rotate-12 transition-transform" />
+<span className="hidden sm:inline">Mời Cà Phê ☕</span>
+<span className="sm:hidden">☕</span>
+</button>
+{} {user ? (
+<button
+type="button"
+onClick={onOpenProfileModal}
+className="text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/60 dark:to-blue-950/60 hover:from-indigo-100 hover:to-blue-100 dark:hover:from-indigo-900/60 dark:hover:to-blue-900/60 text-indigo-800 dark:text-indigo-200 border border-indigo-200/90 dark:border-indigo-800 transition-all flex items-center gap-2 cursor-pointer shadow-2xs"
+>
+<div className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black shadow-xs">
+{user.shopName?.charAt(0).toUpperCase() || 'S'} </div>
+<span className="max-w-[90px] sm:max-w-[120px] truncate">{user.shopName}</span>
+<span className="px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-black flex items-center gap-0.5">
+<Heart className="w-2.5 h-2.5 text-emerald-600 fill-emerald-600" />
+<span>Free 100%</span>
+</span>
+</button>
+) : (
+<button
+type="button"
+onClick={onOpenAuthModal} className="text-xs sm:text-sm font-extrabold px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white shadow-md shadow-indigo-500/20 transition-all flex items-center gap-1.5 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+>
+<UserPlus className="w-3.5 h-3.5" />
+<span>Đăng Nhập</span>
+</button>
+)} {} <button
+type="button"
+onClick={onToggleDarkMode} className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-amber-400 hover:bg-slate-200/80 dark:hover:bg-slate-700 transition-all cursor-pointer shadow-2xs"
+title={isDarkMode ? "Chuyển sang chế độ Sáng (Light Mode)" : "Chuyển sang chế độ Tối (Dark Mode)"} >
+{isDarkMode ? (
+<Sun className="w-3.5 h-3.5 text-amber-400 animate-spin-slow" />
+) : (
+<Moon className="w-3.5 h-3.5 text-slate-600" />
+)} </button>
+{} <button
+type="button"
+onClick={onToggleSound} className={`p-2 rounded-xl border transition-all cursor-pointer ${ soundEnabled
+? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 shadow-2xs'
+: 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+}`} title={soundEnabled ? "Âm thanh hiệu ứng: Đang Bật (Click để tắt)" : "Âm thanh hiệu ứng: Đang Tắt (Click để bật)"} >
+{soundEnabled ? (
+<Volume2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+) : (
+<VolumeX className="w-3.5 h-3.5 text-slate-400" />
+)} </button>
+{} {(user?.phone === '0986019623' || user?.role === 'admin' || user?.isAdmin) && (
+<button
+type="button"
+onClick={onOpenAdminModal} className="text-xs sm:text-sm font-bold px-2.5 py-1.5 rounded-xl bg-amber-500/10 dark:bg-amber-950/60 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border border-amber-300/80 dark:border-amber-700/80"
+title="Trung tâm Quản trị Admin (Chỉ Bùi Quốc Thái)"
+>
+<ShieldAlert className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+<span className="hidden sm:inline">Admin</span>
+</button>
+)} </nav>
+</div>
+</header>
+); }
